@@ -3,9 +3,12 @@
     "outDir": "./dist/",
     "sourceMap": true,
     "noImplicitAny": true,
+    "strictNullChecks": true,
     "module": "commonjs",
     "target": "es5",
-    "jsx": "react"
+    "lib": ["es2017", "dom"],
+    "jsx": "react",
+    "typeRoots": ["./node_modules/@types", "./@types"]
   },
   "include": ["./src/**/*"]
 }

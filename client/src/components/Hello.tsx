@@ -1,8 +1,17 @@
 import * as React from "react";
+import { BooksListContainer } from "../containers/BooksListContainer";
 
-export interface HelloProps { compiler: string; framework: string; }
+export interface HelloProps {
+  compiler: string;
+  framework: string;
+}
 
 export const Hello = (props: HelloProps) => {
-    const compiler = props.compiler.toUpperCase();
-    return <h1>Hello from {compiler} and {props.framework}?</h1>
+  const compiler = props.compiler.toUpperCase();
+  return (
+    <h1>
+      Hello from {compiler} and {props.framework}?
+      <BooksListContainer />
+    </h1>
+  );
 };
