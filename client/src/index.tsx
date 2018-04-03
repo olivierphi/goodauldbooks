@@ -1,7 +1,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { Provider as ReduxStoreProvider } from "react-redux";
-import { Hello } from "./components/Hello";
+import { Header } from "./components/Header";
+import { Main } from "./components/Main";
 import { CurrentLangContext } from "./contexts/lang";
 import { initStore } from "./store-init";
 
@@ -10,8 +11,9 @@ const store = initStore();
 ReactDOM.render(
   <ReduxStoreProvider store={store}>
     <CurrentLangContext.Provider value="en">
-      <Hello compiler="TypeScript" framework="React" />
+      <Header />
+      <Main />
     </CurrentLangContext.Provider>
   </ReduxStoreProvider>,
-  document.getElementById("example")
+  document.getElementById("app")
 );

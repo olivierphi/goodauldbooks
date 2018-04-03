@@ -22,16 +22,25 @@ export const BooksList = (props: BooksListPropsWithActions) => {
   return (
     <CurrentLangContext.Consumer>
       {(currentLang: string) => (
-        <ul className="books-list">
-          {booksList.map((book: Book) => {
-            return (
-              <li key={book.id}>
-                {book.title[currentLang]}{" "}
-                {book.genres.map((genre: Genre) => genre.name[currentLang])}
-              </li>
-            );
-          })}
-        </ul>
+        <div className="row books-list">
+          <div className="card-deck">
+            {booksList.map((book: Book) => {
+              return (
+                <div className="card mb-4 box-shadow" key={book.id}>
+                  <div className="card-header">Last releases</div>
+                  <div className="card-body">
+                    <h5 className="card-title">{book.title[currentLang]}</h5>
+                    <p className="card-text">
+                      {book.genres.map(
+                        (genre: Genre) => genre.name[currentLang]
+                      )}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
     </CurrentLangContext.Consumer>
   );
