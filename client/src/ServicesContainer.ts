@@ -1,26 +1,34 @@
-import * as repositoriesDomain from "./repositories/api";
+import * as queriesDomain from "./domain/queries";
 import { BooksRepository } from "./repositories/BooksRepository";
 
-enum ServicesIds {
+enum SharedServicesIds {
   BOOKS_REPOSITORY,
 }
 
-interface ServicesRegistry {
+interface SharedServicesRegistry {
   [serviceId: number]: any;
 }
 
+const sharedServicesRegistry: SharedServicesRegistry = {};
+function sharedService(
+  serviceId: SharedServicesIds,
+  serviceFactory: () => any
+) {
+  if (sharedServicesRegistry[serviceId]) {
+    return sharedServicesRegistry[serviceId];
+  }
+  const serviceSharedInstance: any = serviceFactory();
+  sharedServicesRegistry[serviceId] = serviceSharedInstance;
+  return serviceSharedInstance;
+}
+
 class ServicesContainer {
-  private servicesCache: ServicesRegistry = {};
+  get booksRepository(): queriesDomain.BooksRepository {
+    return sharedService(SharedServicesIds.BOOKS_REPOSITORY, () => {
+      const booksRepository = new BooksRepository();
 
-  get booksRepository(): repositoriesDomain.BooksRepository {
-    if (this.servicesCache[ServicesIds.BOOKS_REPOSITORY]) {
-      return this.servicesCache[ServicesIds.BOOKS_REPOSITORY];
-    }
-
-    const booksRepository = new BooksRepository();
-    this.servicesCache[ServicesIds.BOOKS_REPOSITORY] = booksRepository;
-
-    return booksRepository;
+      return booksRepository;
+    });
   }
 }
 

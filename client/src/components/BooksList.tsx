@@ -1,7 +1,7 @@
 import * as React from "react";
 import { CurrentLangContext } from "../contexts/lang";
-import { Book, BooksById, Genre } from "../domain";
-import { PaginationRequestData } from "../repositories/api";
+import { Book, BooksById, Genre } from "../domain/core";
+import { PaginationRequestData } from "../domain/queries";
 
 export interface BooksListProps {
   books: BooksById;

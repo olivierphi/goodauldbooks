@@ -1,8 +1,8 @@
-import { Book, BooksById, Uuid } from "../domain";
+import { Book, BooksById } from "./core";
 
 export interface BooksRepository {
   getBooks(pagination: PaginationRequestData): Promise<BooksById>;
-  getBookByUuid(uuid: Uuid): Promise<Book | null>;
+  getBookById(id: string): Promise<Book | null>;
 }
 
 export interface PaginationRequestData {

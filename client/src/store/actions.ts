@@ -1,4 +1,4 @@
-import { PaginationRequestData } from "../repositories/api";
+import { PaginationRequestData } from "../domain/queries";
 import { container } from "../ServicesContainer";
 import { Action } from "./index";
 

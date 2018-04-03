@@ -1,22 +1,30 @@
 import * as asap from "asap";
-import * as domain from "../domain";
-import * as repositoriesDomain from "./api";
-import { Books as BooksFixtures } from "./fixtures";
+import * as coreDomain from "../domain/core";
+import * as queriesDomain from "../domain/queries";
+import { books as booksFixtures } from "./fixtures";
 
-export class BooksRepository implements repositoriesDomain.BooksRepository {
+export class BooksRepository implements queriesDomain.BooksRepository {
   public getBooks(
-    pagination: repositoriesDomain.PaginationRequestData
-  ): Promise<domain.BooksById> {
+    pagination: queriesDomain.PaginationRequestData
+  ): Promise<coreDomain.BooksById> {
     return new Promise((resolve, reject) => {
-      const booksById: { [uuid: string]: domain.Book } = {};
-      for (const book of BooksFixtures) {
-        booksById[book.id] = book;
-      }
+      const booksById = getBooksByIdFromBooksArray(booksFixtures);
       asap(() => resolve(booksById));
     });
   }
 
-  public getBookByUuid(uuid: string): Promise<domain.Book | null> {
+  public getBookById(id: string): Promise<coreDomain.Book | null> {
     throw new Error("Method not implemented.");
   }
+}
+
+function getBooksByIdFromBooksArray(
+  books: coreDomain.Book[]
+): coreDomain.BooksById {
+  const booksById: { [uuid: string]: coreDomain.Book } = {};
+  for (const book of books) {
+    booksById[book.id] = book;
+  }
+
+  return booksById;
 }

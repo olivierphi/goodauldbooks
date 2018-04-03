@@ -1,6 +1,6 @@
 import { Action } from "redux";
-import { BooksById } from "../domain";
-import { AppState, EMPTY_STATE } from "../store";
+import { BooksById } from "../domain/core";
+import { AppState } from "../store";
 import { Actions } from "./actions";
 
 interface BooksFetchedAction extends Action {
@@ -8,7 +8,7 @@ interface BooksFetchedAction extends Action {
 }
 
 export function booksById(
-  state: BooksById,
+  state: BooksById = {},
   action: BooksFetchedAction
 ): BooksById {
   switch (action.type) {
@@ -18,6 +18,6 @@ export function booksById(
         ...action.payload,
       };
     default:
-      return state || {};
+      return state;
   }
 }

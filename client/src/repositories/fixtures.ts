@@ -1,9 +1,9 @@
-import { Book } from "../domain";
+import { Book } from "../domain/core";
 
-export const Books: Book[] = [
+export const books: Book[] = [
   {
     gutenbergId: 345,
-    id: "4e35570a-4584-4129-a9af-c1347950c626",
+    id: "dracula-bram-stoker",
     author: {
       firstName: "Bram",
       lastName: "Stoker",
@@ -18,7 +18,7 @@ export const Books: Book[] = [
   },
   {
     gutenbergId: 346,
-    id: "60264500-b110-5ad3-b487-5e4602f23095",
+    id: "the-troll-garden-and-selected-stories-willa-catherova",
     author: {
       firstName: "Willa",
       lastName: "Catherová",

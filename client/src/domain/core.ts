@@ -4,13 +4,11 @@ export interface BooksById {
 
 export interface Book {
   gutenbergId: number;
-  id: Uuid;
+  id: string;
   author: Author;
   title: BookTitle;
   genres: Genre[];
 }
-
-export type Uuid = string;
 
 export interface Author {
   firstName: string;
