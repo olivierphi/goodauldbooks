@@ -1,20 +1,33 @@
-import * as asap from "asap";
 import * as coreDomain from "../domain/core";
 import * as queriesDomain from "../domain/queries";
 import { books as booksFixtures } from "./fixtures";
 
+const FAKE_ASYNC_LATENCY = 1500;
+
 export class BooksRepository implements queriesDomain.BooksRepository {
+  private booksById: coreDomain.BooksById = {};
+
   public getBooks(
     pagination: queriesDomain.PaginationRequestData
   ): Promise<coreDomain.BooksById> {
     return new Promise((resolve, reject) => {
       const booksById = getBooksByIdFromBooksArray(booksFixtures);
-      asap(() => resolve(booksById));
+      setTimeout(resolve.bind(null, booksById), FAKE_ASYNC_LATENCY);
     });
   }
 
-  public getBookById(id: string): Promise<coreDomain.Book | null> {
-    throw new Error("Method not implemented.");
+  public getBookById(bookId: string): Promise<coreDomain.Book | null> {
+    if (this.booksById[bookId]) {
+      return Promise.resolve(this.booksById[bookId]);
+    }
+
+    return new Promise((resolve, reject) => {
+      const book = getBookByIdFromBooksArray(booksFixtures, bookId);
+      if (book) {
+        this.booksById[bookId] = book;
+      }
+      setTimeout(resolve.bind(null, book), FAKE_ASYNC_LATENCY);
+    });
   }
 }
 
@@ -27,4 +40,17 @@ function getBooksByIdFromBooksArray(
   }
 
   return booksById;
+}
+
+function getBookByIdFromBooksArray(
+  books: coreDomain.Book[],
+  bookId: string
+): coreDomain.Book | null {
+  for (const book of books) {
+    if (book.id === bookId) {
+      return book;
+    }
+  }
+
+  return null;
 }

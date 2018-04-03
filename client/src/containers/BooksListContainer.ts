@@ -5,7 +5,7 @@ import { CurrentLangContext } from "../contexts/lang";
 import { AppState } from "../store";
 import { fetchBooksList } from "../store/actions";
 
-const mapStateToProps = (state: AppState): BooksListProps => {
+const mapStateToProps = (state: AppState) => {
   return {
     books: state.booksById,
   };

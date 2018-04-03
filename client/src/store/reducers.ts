@@ -1,5 +1,5 @@
 import { Action } from "redux";
-import { BooksById } from "../domain/core";
+import { Book, BooksById } from "../domain/core";
 import { AppState } from "../store";
 import { Actions } from "./actions";
 
@@ -7,15 +7,25 @@ interface BooksFetchedAction extends Action {
   payload: BooksById;
 }
 
-export function booksById(
-  state: BooksById = {},
-  action: BooksFetchedAction
-): BooksById {
+interface BookFetchedAction extends Action {
+  payload: Book;
+}
+
+export function booksById(state: BooksById = {}, action: Action): BooksById {
+  let actionRef;
   switch (action.type) {
     case `${Actions.FETCH_ALL_BOOKS}_FULFILLED`:
+      actionRef = action as BooksFetchedAction;
+      const payload = actionRef.payload;
       return {
         ...state,
-        ...action.payload,
+        ...payload,
+      };
+    case `${Actions.FETCH_BOOK}_FULFILLED`:
+      actionRef = action as BookFetchedAction;
+      return {
+        ...state,
+        ...{ [actionRef.payload.id]: actionRef.payload },
       };
     default:
       return state;

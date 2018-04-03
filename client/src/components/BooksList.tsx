@@ -1,17 +1,15 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { CurrentLangContext } from "../contexts/lang";
 import { Book, BooksById, Genre } from "../domain/core";
 import { PaginationRequestData } from "../domain/queries";
 
 export interface BooksListProps {
   books: BooksById;
-}
-
-export interface BooksListPropsWithActions extends BooksListProps {
   fetchBooksList: (pagination: PaginationRequestData) => void;
 }
 
-export const BooksList = (props: BooksListPropsWithActions) => {
+export const BooksList = (props: BooksListProps) => {
   const booksList: Book[] = Object.values(props.books);
 
   if (!booksList.length) {
@@ -29,7 +27,11 @@ export const BooksList = (props: BooksListPropsWithActions) => {
                 <div className="card mb-4 box-shadow" key={book.id}>
                   <div className="card-header">Last releases</div>
                   <div className="card-body">
-                    <h5 className="card-title">{book.title[currentLang]}</h5>
+                    <h5 className="card-title">
+                      <Link to={`/books/${book.id}`}>
+                        {book.title[currentLang]}
+                      </Link>
+                    </h5>
                     <p className="card-text">
                       {book.genres.map(
                         (genre: Genre) => genre.name[currentLang]

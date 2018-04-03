@@ -15,8 +15,10 @@ module.exports = {
 
   devServer: {
     contentBase: `${__dirname}/dist`,
+    index: "index.html",
     compress: true,
     port: 8000,
+    historyApiFallback: true,
   },
 
   resolve: {

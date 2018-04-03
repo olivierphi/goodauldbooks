@@ -2,7 +2,7 @@ import { Book, BooksById } from "./core";
 
 export interface BooksRepository {
   getBooks(pagination: PaginationRequestData): Promise<BooksById>;
-  getBookById(id: string): Promise<Book | null>;
+  getBookById(bookId: string): Promise<Book | null>;
 }
 
 export interface PaginationRequestData {
