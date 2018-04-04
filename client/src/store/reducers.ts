@@ -11,22 +11,25 @@ interface BookFetchedAction extends Action {
   payload: Book;
 }
 
-export function booksById(state: BooksById = {}, action: Action): BooksById {
+export function booksById(
+  state: BooksById = new Map(),
+  action: Action
+): BooksById {
   let actionRef;
   switch (action.type) {
     case `${Actions.FETCH_ALL_BOOKS}_FULFILLED`:
       actionRef = action as BooksFetchedAction;
       const payload = actionRef.payload;
-      return {
-        ...state,
-        ...payload,
-      };
+      return new Map([
+        ...Array.from(state.entries()),
+        ...Array.from(payload.entries()),
+      ]);
     case `${Actions.FETCH_BOOK}_FULFILLED`:
       actionRef = action as BookFetchedAction;
-      return {
-        ...state,
-        ...{ [actionRef.payload.id]: actionRef.payload },
-      };
+      return new Map([
+        ...Array.from(state.entries()),
+        [actionRef.payload.id, actionRef.payload],
+      ]);
     default:
       return state;
   }

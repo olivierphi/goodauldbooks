@@ -6,23 +6,15 @@ import { PaginationRequestData } from "../domain/queries";
 
 export interface BooksListProps {
   books: BooksById;
-  fetchBooksList: (pagination: PaginationRequestData) => void;
 }
 
 export const BooksList = (props: BooksListProps) => {
-  const booksList: Book[] = Object.values(props.books);
-
-  if (!booksList.length) {
-    props.fetchBooksList({ page: 1, nbPerPage: 10 });
-    return <div className="loading">Loading books...</div>;
-  }
-
   return (
     <CurrentLangContext.Consumer>
       {(currentLang: string) => (
         <div className="row books-list">
           <div className="card-deck">
-            {booksList.map((book: Book) => {
+            {Array.from(props.books.values()).map((book: Book) => {
               return (
                 <div className="card mb-4 box-shadow" key={book.id}>
                   <div className="card-header">Last releases</div>

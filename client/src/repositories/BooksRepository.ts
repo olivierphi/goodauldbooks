@@ -5,7 +5,7 @@ import { books as booksFixtures } from "./fixtures";
 const FAKE_ASYNC_LATENCY = 1500;
 
 export class BooksRepository implements queriesDomain.BooksRepository {
-  private booksById: coreDomain.BooksById = {};
+  private booksByIdCache: coreDomain.BooksById = new Map();
 
   public getBooks(
     pagination: queriesDomain.PaginationRequestData
@@ -17,14 +17,16 @@ export class BooksRepository implements queriesDomain.BooksRepository {
   }
 
   public getBookById(bookId: string): Promise<coreDomain.Book | null> {
-    if (this.booksById[bookId]) {
-      return Promise.resolve(this.booksById[bookId]);
+    if (this.booksByIdCache.has(bookId)) {
+      return Promise.resolve(this.booksByIdCache.get(
+        bookId
+      ) as coreDomain.Book);
     }
 
     return new Promise((resolve, reject) => {
       const book = getBookByIdFromBooksArray(booksFixtures, bookId);
       if (book) {
-        this.booksById[bookId] = book;
+        this.booksByIdCache.set(bookId, book);
       }
       setTimeout(resolve.bind(null, book), FAKE_ASYNC_LATENCY);
     });
@@ -34,9 +36,9 @@ export class BooksRepository implements queriesDomain.BooksRepository {
 function getBooksByIdFromBooksArray(
   books: coreDomain.Book[]
 ): coreDomain.BooksById {
-  const booksById: { [uuid: string]: coreDomain.Book } = {};
+  const booksById: coreDomain.BooksById = new Map();
   for (const book of books) {
-    booksById[book.id] = book;
+    booksById.set(book.id, book);
   }
 
   return booksById;

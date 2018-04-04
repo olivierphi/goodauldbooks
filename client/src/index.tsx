@@ -17,7 +17,7 @@ ReactDOM.render(
       <Header />
       <Router>
         <>
-          <Route exact path="/" component={HomePage} />
+          <Route exact={true} path="/" component={HomePage} />
           <Route path="/books/:bookId" component={BookPage} />
         </>
       </Router>

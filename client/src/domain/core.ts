@@ -1,6 +1,4 @@
-export interface BooksById {
-  [uuid: string]: Book;
-}
+export type BooksById = Map<string, Book>;
 
 export interface Book {
   gutenbergId: number;
