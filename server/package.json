@@ -1,0 +1,18 @@
+{
+  "name": "books-archive-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "^9.6.2",
+    "@types/shelljs": "^0.7.8",
+    "@types/yargs": "^11.0.0",
+    "typescript": "^2.8.1"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "shelljs": "^0.8.1",
+    "yargs": "^11.0.0"
+  }
+}

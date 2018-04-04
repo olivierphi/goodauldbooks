@@ -1,6 +1,7 @@
 NODE_ENV?=development
 
 NODE_BIN?=./node_modules/.bin
+NODE_BIN_ROOT?=../node_modules/.bin
 
 clean:
 	rm -rf dist/
@@ -21,8 +22,8 @@ build_css:
 
 lint:
 # @link https://github.com/prettier/prettier/issues/1358#issuecomment-295669193 :-)
-	${NODE_BIN}/prettier --write "{,!(node_modules|dist)/**/}*.{js,json,md}"
-	${NODE_BIN}/tslint -c tslint.json --fix 'src/**/*.{ts,tsx}'
+	${NODE_BIN_ROOT}/prettier --config ../prettier.config.js --write "{,!(node_modules|dist)/**/}*.{js,json,md}"
+	${NODE_BIN_ROOT}/tslint --fix 'src/**/*.{ts,tsx}'
 
 start_dev: copy_assets
 	${NODE_BIN}/concurrently --names "js,css" \
