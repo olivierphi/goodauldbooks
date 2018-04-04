@@ -1,11 +1,13 @@
+import { Store } from "redux";
 import * as coreDomain from "../domain/core";
 import * as queriesDomain from "../domain/queries";
+import { AppState } from "../store";
 import { books as booksFixtures } from "./fixtures";
 
-const FAKE_ASYNC_LATENCY = 1500;
+const FAKE_ASYNC_LATENCY = 300;
 
 export class BooksRepository implements queriesDomain.BooksRepository {
-  private booksByIdCache: coreDomain.BooksById = new Map();
+  constructor(private appStateStore: Store<AppState>) {}
 
   public getBooks(
     pagination: queriesDomain.PaginationRequestData
@@ -17,8 +19,9 @@ export class BooksRepository implements queriesDomain.BooksRepository {
   }
 
   public getBookById(bookId: string): Promise<coreDomain.Book | null> {
-    if (this.booksByIdCache.has(bookId)) {
-      return Promise.resolve(this.booksByIdCache.get(
+    const appStateStoreBooksById = this.appStateStore.getState().booksById;
+    if (appStateStoreBooksById.has(bookId)) {
+      return Promise.resolve(appStateStoreBooksById.get(
         bookId
       ) as coreDomain.Book);
     }
@@ -26,7 +29,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     return new Promise((resolve, reject) => {
       const book = getBookByIdFromBooksArray(booksFixtures, bookId);
       if (book) {
-        this.booksByIdCache.set(bookId, book);
+        appStateStoreBooksById.set(bookId, book);
       }
       setTimeout(resolve.bind(null, book), FAKE_ASYNC_LATENCY);
     });

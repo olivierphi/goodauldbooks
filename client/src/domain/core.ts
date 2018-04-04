@@ -1,4 +1,6 @@
-export type BooksById = Map<string, Book>;
+export enum Lang {
+  EN = "en",
+}
 
 export interface Book {
   gutenbergId: number;
@@ -15,12 +17,12 @@ export interface Author {
   deathYear: number | null;
 }
 
-export interface BookTitle extends TranslatedContent {}
+export interface BookTitle extends LocalisedContent {}
 
 export interface Genre {
-  name: TranslatedContent;
+  name: LocalisedContent;
 }
 
-export interface TranslatedContent {
-  [lang: string]: string;
-}
+export type LocalisedContent = Map<Lang, string>;
+
+export type BooksById = Map<string, Book>;

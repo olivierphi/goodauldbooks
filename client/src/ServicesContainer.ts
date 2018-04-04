@@ -1,33 +1,39 @@
+import {Store} from "redux";
 import * as queriesDomain from "./domain/queries";
 import { BooksRepository } from "./repositories/BooksRepository";
+import {AppState} from "./store";
+import {initStore} from "./store-init";
 
 enum SharedServicesIds {
+  APP_STATE_STORE,
   BOOKS_REPOSITORY,
 }
 
-interface SharedServicesRegistry {
-  [serviceId: number]: any;
-}
+type SharedServicesRegistry = Map<SharedServicesIds, any>;
 
-const sharedServicesRegistry: SharedServicesRegistry = {};
+const sharedServicesRegistry: SharedServicesRegistry = new Map();
 function sharedService(
   serviceId: SharedServicesIds,
   serviceFactory: () => any
 ) {
-  if (sharedServicesRegistry[serviceId]) {
-    return sharedServicesRegistry[serviceId];
+  if (sharedServicesRegistry.has(serviceId)) {
+    return sharedServicesRegistry.get(serviceId);
   }
   const serviceSharedInstance: any = serviceFactory();
-  sharedServicesRegistry[serviceId] = serviceSharedInstance;
+  sharedServicesRegistry.set(serviceId, serviceSharedInstance);
   return serviceSharedInstance;
 }
 
 class ServicesContainer {
+  get appStateStore(): Store<AppState> {
+    return sharedService(SharedServicesIds.APP_STATE_STORE, () => {
+      return initStore();
+    });
+  }
+
   get booksRepository(): queriesDomain.BooksRepository {
     return sharedService(SharedServicesIds.BOOKS_REPOSITORY, () => {
-      const booksRepository = new BooksRepository();
-
-      return booksRepository;
+      return new BooksRepository(this.appStateStore);
     });
   }
 }

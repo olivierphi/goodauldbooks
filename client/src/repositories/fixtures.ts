@@ -1,4 +1,4 @@
-import { Book } from "../domain/core";
+import {Book, Lang} from "../domain/core";
 
 export const books: Book[] = [
   {
@@ -10,10 +10,10 @@ export const books: Book[] = [
       birthYear: 1847,
       deathYear: 1912,
     },
-    title: { en: "Dracula" },
+    title: new Map([[Lang.EN, "Dracula"]]),
     genres: [
-      { name: { en: "Epistolary fiction" } },
-      { name: { en: "Gothic fiction" } },
+      { name: new Map([[Lang.EN, "Epistolary fiction"]]) },
+      { name: new Map([[Lang.EN, "Gothic fiction"]]) },
     ],
   },
   {
@@ -25,11 +25,11 @@ export const books: Book[] = [
       birthYear: 1873,
       deathYear: 1947,
     },
-    title: { en: "The Troll Garden, and Selected Stories" },
+    title: new Map([[Lang.EN, "The Troll Garden, and Selected Stories"]]),
     genres: [
-      { name: { en: "Man-woman relationships" } },
-      { name: { en: "Social life and customs" } },
-      { name: { en: "Nebraska" } },
+      { name: new Map([[Lang.EN, "Man-woman relationships"]]) },
+      { name: new Map([[Lang.EN, "Social life and customs"]]) },
+      { name: new Map([[Lang.EN, "Nebraska"]]) },
     ],
   },
 ];

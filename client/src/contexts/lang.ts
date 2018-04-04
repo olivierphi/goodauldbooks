@@ -9,4 +9,4 @@ export interface Context {
   Consumer: any;
 }
 
-export const CurrentLangContext: Context = reactRef.createContext("en");
+export const CurrentLangContext: Context = reactRef.createContext();

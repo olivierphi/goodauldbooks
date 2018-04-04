@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Book } from "../domain/core";
+import { CurrentLangContext } from "../contexts/lang";
+import { Book, Lang } from "../domain/core";
 
 export interface BookFullProps {
   bookId: string;
@@ -7,5 +8,9 @@ export interface BookFullProps {
 }
 
 export function BookFull(props: BookFullProps) {
-  return <h3>{props.book.title.en}</h3>;
+  return (
+    <CurrentLangContext.Consumer>
+      {(currentLang: Lang) => <h3>{props.book.title.get(currentLang)}</h3>}
+    </CurrentLangContext.Consumer>
+  );
 }
