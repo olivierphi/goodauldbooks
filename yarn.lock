@@ -85,6 +85,12 @@
   dependencies:
     redux "^3.6.0"
 
+"@types/rsync@^0.4.30":
+  version "0.4.30"
+  resolved "https://registry.yarnpkg.com/@types/rsync/-/rsync-0.4.30.tgz#117ef04cf60cd16da3595bc92650fdfb9b884514"
+  dependencies:
+    "@types/node" "*"
+
 "@types/shelljs@^0.7.8":
   version "0.7.8"
   resolved "https://registry.yarnpkg.com/@types/shelljs/-/shelljs-0.7.8.tgz#4b4d6ee7926e58d7bca448a50ba442fd9f6715bd"
@@ -130,6 +136,10 @@ acorn@^5.0.0, acorn@^5.3.0:
 address@1.0.3, address@^1.0.1:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/address/-/address-1.0.3.tgz#b5f50631f8d6cec8bd20c963963afb55e06cbce9"
+
+adm-zip@^0.4.7:
+  version "0.4.7"
+  resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.4.7.tgz#8606c2cbf1c426ce8c8ec00174447fd49b6eafc1"
 
 ajv-keywords@^3.1.0:
   version "3.1.0"
@@ -6135,6 +6145,10 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
   dependencies:
     hash-base "^2.0.0"
     inherits "^2.0.1"
+
+rsync@^0.6.1:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/rsync/-/rsync-0.6.1.tgz#3681a0098bd8750448f8bf9da1fee09f7763742b"
 
 run-async@^2.0.0, run-async@^2.2.0:
   version "2.3.0"
