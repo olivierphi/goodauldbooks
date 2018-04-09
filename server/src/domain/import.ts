@@ -24,4 +24,6 @@ export interface Genre {
   name: LocalisedContent;
 }
 
-export type LocalisedContent = Map<Lang, string>;
+export interface LocalisedContent {
+  [lang: string]: string;
+}

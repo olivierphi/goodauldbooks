@@ -26,7 +26,7 @@ type BooksListHOCProps = BooksListProps & {
 };
 
 const BooksListHOC = (props: BooksListHOCProps) => {
-  if (!props.books.size) {
+  if (Object.keys(props.books).length === 0) {
     props.fetchBooksList({ page: 1, nbPerPage: 10 });
     return <div className="loading">Loading books...</div>;
   }
@@ -34,6 +34,4 @@ const BooksListHOC = (props: BooksListHOCProps) => {
   return <BooksList {...props} />;
 };
 
-export const BooksListContainer = connect(mapStateToProps, mapDispatchToProps)(
-  BooksListHOC
-);
+export const BooksListContainer = connect(mapStateToProps, mapDispatchToProps)(BooksListHOC);

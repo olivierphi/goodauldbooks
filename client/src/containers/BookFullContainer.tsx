@@ -8,7 +8,7 @@ import { AppState } from "../store/index";
 const mapStateToProps = (props: AppState, ownProps: { bookId: string }) => {
   return {
     bookId: ownProps.bookId,
-    book: props.booksById.get(ownProps.bookId),
+    book: props.booksById[ownProps.bookId],
   };
 };
 
@@ -31,6 +31,4 @@ const BookFullHOC = (props: BookFullHOCProps) => {
   return <BookFull {...props} />;
 };
 
-export const BookFullContainer = connect(mapStateToProps, mapDispatchToProps)(
-  BookFullHOC
-);
+export const BookFullContainer = connect(mapStateToProps, mapDispatchToProps)(BookFullHOC);

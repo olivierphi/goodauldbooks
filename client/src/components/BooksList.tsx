@@ -13,14 +13,8 @@ export const BooksList = (props: BooksListProps) => {
       {(currentLang: Lang) => (
         <div className="row books-list">
           <div className="card-deck">
-            {Array.from(props.books.values()).map((book: Book) => {
-              return (
-                <BookListItem
-                  book={book}
-                  currentLang={currentLang}
-                  key={book.id}
-                />
-              );
+            {Object.values(props.books).map((book: Book) => {
+              return <BookListItem book={book} currentLang={currentLang} key={book.id} />;
             })}
           </div>
         </div>

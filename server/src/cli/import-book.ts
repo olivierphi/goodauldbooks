@@ -78,15 +78,10 @@ async function importBook(input: Args) {
   console.log(importedBookData);
 }
 
-function subscribeToImportEvents(
-  eventEmitter: EventEmitter,
-  bookId: number
-): void {
+function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): void {
   const mainCollectionStepName = "[main collection]";
   eventEmitter.on(
-    bookImport.EmittedEvents[
-      bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_START
-    ],
+    bookImport.EmittedEvents[bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_START],
     reportStepStart.bind(
       null,
       mainCollectionStepName,
@@ -95,18 +90,12 @@ function subscribeToImportEvents(
   );
   eventEmitter.on(
     bookImport.EmittedEvents[bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_END],
-    reportStepEnd.bind(
-      null,
-      mainCollectionStepName,
-      `Content downloaded for book #${bookId}.`
-    )
+    reportStepEnd.bind(null, mainCollectionStepName, `Content downloaded for book #${bookId}.`)
   );
 
   const generatedCollectionStepName = "[generated collection]";
   eventEmitter.on(
-    bookImport.EmittedEvents[
-      bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_START
-    ],
+    bookImport.EmittedEvents[bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_START],
     reportStepStart.bind(
       null,
       generatedCollectionStepName,
@@ -114,29 +103,18 @@ function subscribeToImportEvents(
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents[
-      bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_END
-    ],
-    reportStepEnd.bind(
-      null,
-      generatedCollectionStepName,
-      `Content downloaded for book #${bookId}.`
-    )
+    bookImport.EmittedEvents[bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_END],
+    reportStepEnd.bind(null, generatedCollectionStepName, `Content downloaded for book #${bookId}.`)
   );
 
   eventEmitter.on(
     bookImport.EmittedEvents[bookImport.EmittedEvents.COLLECTIONS_SYNC_SKIPPED],
-    console.log.bind(
-      null,
-      `#${bookId} book content already imported, skip sync.`
-    )
+    console.log.bind(null, `#${bookId} book content already imported, skip sync.`)
   );
 
   const bookFileReadStepName = "[book file read]";
   eventEmitter.on(
-    bookImport.EmittedEvents[
-      bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_START
-    ],
+    bookImport.EmittedEvents[bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_START],
     reportStepStart.bind(
       null,
       bookFileReadStepName,
@@ -144,21 +122,13 @@ function subscribeToImportEvents(
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents[
-      bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_END
-    ],
-    reportStepEnd.bind(
-      null,
-      bookFileReadStepName,
-      `RDF file content read for book #${bookId}.`
-    )
+    bookImport.EmittedEvents[bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_END],
+    reportStepEnd.bind(null, bookFileReadStepName, `RDF file content read for book #${bookId}.`)
   );
 
   const bookRdfDataParsingStepName = "[book RDF data parsing]";
   eventEmitter.on(
-    bookImport.EmittedEvents[
-      bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_START
-    ],
+    bookImport.EmittedEvents[bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_START],
     reportStepStart.bind(
       null,
       bookRdfDataParsingStepName,
@@ -166,14 +136,8 @@ function subscribeToImportEvents(
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents[
-      bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_END
-    ],
-    reportStepEnd.bind(
-      null,
-      bookRdfDataParsingStepName,
-      `RDF content parsed for book #${bookId}.`
-    )
+    bookImport.EmittedEvents[bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_END],
+    reportStepEnd.bind(null, bookRdfDataParsingStepName, `RDF content parsed for book #${bookId}.`)
   );
 }
 
@@ -191,8 +155,6 @@ function reportStepEnd(stepName: string, msg: string): void {
   console.log(
     stepName.padEnd(30),
     msg,
-    `Took ${new Intl.NumberFormat().format(
-      Math.round(Date.now() - stepStartTime)
-    )}ms.`
+    `Took ${new Intl.NumberFormat().format(Math.round(Date.now() - stepStartTime))}ms.`
   );
 }

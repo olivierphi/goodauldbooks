@@ -14,6 +14,20 @@ const parseStringAsync = promisify(parseString) as (xml: string) => Promise<{}>;
 
 type ProjectGutenbergBookId = number;
 
+export interface ProjectGutenbergRelatedConfiguration {
+  // A RSync mirror.
+  // @link http://www.gutenberg.org/wiki/Gutenberg:Mirroring_How-To#Using_Rsync
+  gutenbergMainCollectionRsyncData: ProjectGutenbergMirrorData;
+  // Ditto.
+  gutenbergGeneratedCollectionRsyncData: ProjectGutenbergMirrorData;
+}
+
+export interface ProjectGutenbergMirrorData {
+  url: string;
+  rsyncModule?: string;
+  username?: string;
+}
+
 export enum EmittedEvents {
   MAIN_COLLECTION_SYNC_START,
   MAIN_COLLECTION_SYNC_END,
@@ -57,7 +71,8 @@ export async function syncBookFilesFolder(
     try {
       const targetFolderStats = await promisify(stat)(testFilePath);
       if (targetFolderStats.isFile) {
-        options.eventEmitter && options.eventEmitter.emit(EmittedEvents[EmittedEvents.COLLECTIONS_SYNC_SKIPPED]);
+        options.eventEmitter &&
+          options.eventEmitter.emit(EmittedEvents[EmittedEvents.COLLECTIONS_SYNC_SKIPPED]);
         syncFolder = false;
       }
     } catch {
@@ -97,7 +112,8 @@ export async function extractBookDataFromRdfXmlData(
   rdfDataXmlString: string,
   options: { eventEmitter?: EventEmitter } = {}
 ): Promise<ImportedBook> {
-  options.eventEmitter && options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_PARSING_START]);
+  options.eventEmitter &&
+    options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_PARSING_START]);
 
   const rdfData = await parseStringAsync(rdfDataXmlString);
   const rdfDataTraverser = traverse(rdfData);
@@ -106,10 +122,10 @@ export async function extractBookDataFromRdfXmlData(
   const author = ProjectGutenbergRDFParsing.getAuthor(rdfDataTraverser);
   const lang = ProjectGutenbergRDFParsing.getLanguage(rdfDataTraverser);
   const titleRaw = ProjectGutenbergRDFParsing.getTitle(rdfDataTraverser);
-  const title = new Map([[lang, titleRaw]]);
+  const title = { [lang]: titleRaw };
   const genresRaw = ProjectGutenbergRDFParsing.getGenres(rdfDataTraverser);
   const genres = genresRaw.map((genreRaw: string): Genre => {
-    return { name: new Map([[lang, genreRaw]]) };
+    return { name: { [lang]: genreRaw } };
   });
 
   const importedBook: ImportedBook = {
@@ -119,7 +135,8 @@ export async function extractBookDataFromRdfXmlData(
     genres,
   };
 
-  options.eventEmitter && options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_PARSING_END]);
+  options.eventEmitter &&
+    options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_PARSING_END]);
 
   return Promise.resolve(importedBook);
 }
@@ -129,9 +146,11 @@ export async function extractBookDataFromRdfFile(
   encoding: string = "utf8",
   options: { eventEmitter?: EventEmitter } = {}
 ) {
-  options.eventEmitter && options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_FILE_READ_START]);
+  options.eventEmitter &&
+    options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_FILE_READ_START]);
   const rdfData = await readFileAsync(rdfFilePath, { encoding });
-  options.eventEmitter && options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_FILE_READ_END]);
+  options.eventEmitter &&
+    options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_FILE_READ_END]);
 
   return extractBookDataFromRdfXmlData(rdfData, options);
 }
@@ -144,7 +163,8 @@ export async function downloadEbookMainCollectionContent(
 ) {
   const bookSourcePath = getPathFromBookId(bookId); // "main collection" use path "3/4/345" for book #345
 
-  options.eventEmitter && options.eventEmitter.emit(EmittedEvents[EmittedEvents.MAIN_COLLECTION_SYNC_START]);
+  options.eventEmitter &&
+    options.eventEmitter.emit(EmittedEvents[EmittedEvents.MAIN_COLLECTION_SYNC_START]);
 
   await downloadFolderViaRsync(config.url, bookSourcePath, targetFolderPath, {
     progress: options.echo,
@@ -152,7 +172,8 @@ export async function downloadEbookMainCollectionContent(
     rsyncModule: config.rsyncModule,
   });
 
-  options.eventEmitter && options.eventEmitter.emit(EmittedEvents[EmittedEvents.MAIN_COLLECTION_SYNC_END]);
+  options.eventEmitter &&
+    options.eventEmitter.emit(EmittedEvents[EmittedEvents.MAIN_COLLECTION_SYNC_END]);
 }
 
 export async function downloadEbookGeneratedCollectionContent(
@@ -169,20 +190,6 @@ export async function downloadEbookGeneratedCollectionContent(
   });
 }
 
-export interface ProjectGutenbergRelatedConfiguration {
-  // A RSync mirror.
-  // @link http://www.gutenberg.org/wiki/Gutenberg:Mirroring_How-To#Using_Rsync
-  gutenbergMainCollectionRsyncData: ProjectGutenbergMirrorData;
-  // Ditto.
-  gutenbergGeneratedCollectionRsyncData: ProjectGutenbergMirrorData;
-}
-
-export interface ProjectGutenbergMirrorData {
-  url: string;
-  rsyncModule?: string;
-  username?: string;
-}
-
 namespace ProjectGutenbergRDFParsing {
   /**
    * I could have used XPath and stuff like that, but I really hate XML parsing, so why not
@@ -192,7 +199,13 @@ namespace ProjectGutenbergRDFParsing {
   const BOOK_CATEGORY_RDF_RESOURCE_TYPE = "http://purl.org/dc/terms/LCSH";
 
   export function getProjectGutenbergId(rdfTraverser: traverse.Traverse<{}>): number {
-    const projectGutenbergIdStr = rdfTraverser.get(["rdf:RDF", "pgterms:ebook", "0", "$", "rdf:about"]);
+    const projectGutenbergIdStr = rdfTraverser.get([
+      "rdf:RDF",
+      "pgterms:ebook",
+      "0",
+      "$",
+      "rdf:about",
+    ]);
 
     const gutenbergBookId = parseInt(projectGutenbergIdStr.replace(/^ebooks\/(\d+)$/, "$1"), 10);
 
@@ -239,7 +252,10 @@ namespace ProjectGutenbergRDFParsing {
     const wikipediaUrl: string = authorRaw["pgterms:webpage"]["0"].$["rdf:resource"];
     const nameStr: string = authorRaw["pgterms:name"]["0"];
 
-    const gutenbergAuthorId = parseInt(projectGutenbergAgentStr.replace(/^\d{4}\/agents\/(\d+)$/, "$1"), 10);
+    const gutenbergAuthorId = parseInt(
+      projectGutenbergAgentStr.replace(/^\d{4}\/agents\/(\d+)$/, "$1"),
+      10
+    );
     const [lastName, firstName] = nameStr.split(", ");
 
     return {
@@ -253,11 +269,18 @@ namespace ProjectGutenbergRDFParsing {
   }
 
   export function getGenres(rdfTraverser: traverse.Traverse<{}>): string[] {
-    const categoriesRaw: Array<{}> = rdfTraverser.get(["rdf:RDF", "pgterms:ebook", "0", "dcterms:subject"]);
+    const categoriesRaw: Array<{}> = rdfTraverser.get([
+      "rdf:RDF",
+      "pgterms:ebook",
+      "0",
+      "dcterms:subject",
+    ]);
 
     const categories = categoriesRaw.map((dcTermsSubjectData: any): string => {
       const rdfDescription = dcTermsSubjectData["rdf:Description"][0];
-      if (rdfDescription["dcam:memberOf"][0].$["rdf:resource"] !== BOOK_CATEGORY_RDF_RESOURCE_TYPE) {
+      if (
+        rdfDescription["dcam:memberOf"][0].$["rdf:resource"] !== BOOK_CATEGORY_RDF_RESOURCE_TYPE
+      ) {
         return "";
       }
       return rdfDescription["rdf:value"][0];

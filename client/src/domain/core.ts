@@ -15,7 +15,7 @@ export interface Author {
   lastName: string;
   birthYear: number;
   deathYear: number | null;
-  wikipediaUrl: string | null;
+  wikipediaUrl?: string;
 }
 
 export interface BookTitle extends LocalisedContent {}
@@ -24,6 +24,10 @@ export interface Genre {
   name: LocalisedContent;
 }
 
-export type LocalisedContent = Map<Lang, string>;
+export interface LocalisedContent {
+  [lang: string]: string;
+}
 
-export type BooksById = Map<string, Book>;
+export interface BooksById {
+  [id: string]: Book;
+}
