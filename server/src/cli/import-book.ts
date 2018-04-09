@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
+import { EventEmitter } from "events";
 import * as yargs from "yargs";
-import {
-  downloadEbookGeneratedCollectionContent,
-  downloadEbookMainCollectionContent,
-} from "../import/book-import";
+import * as bookImport from "../import/book-import";
 
 interface Args {
   bookId: number;
   path: string;
+  offline: boolean;
   mcMirrorUrl: string;
   mcMirrorModule?: string;
   gcMirrorUrl: string;
@@ -26,6 +25,12 @@ const argv: any = yargs
     alias: "path",
     describe: "target local folder path",
     demandOption: true,
+  })
+  .option("off", {
+    alias: "offline",
+    describe: "if target local folder path exists, don't sync it",
+    type: "boolean",
+    default: false,
   })
   .option("mcurl", {
     alias: "mcMirrorUrl",
@@ -50,61 +55,139 @@ const argv: any = yargs
 importBook(argv);
 
 async function importBook(input: Args) {
-  return Promise.all([
-    processDownloadEbookMainCollectionContentStep(input),
-    processDownloadEbookGeneratedCollectionContentStep(input),
-  ]);
-}
-
-async function processDownloadEbookMainCollectionContentStep(input: Args) {
-  const stepName = "[main collection]";
-  const stepStartTime = reportStepStart(
-    stepName,
-    `Downloading content for Project Gutenberg book #${input.bookId}...`
-  );
-
-  await downloadEbookMainCollectionContent(
-    input.bookId,
-    {
+  const projectGutenbergConfig: bookImport.ProjectGutenbergRelatedConfiguration = {
+    gutenbergMainCollectionRsyncData: {
       url: input.mcMirrorUrl,
       rsyncModule: input.mcMirrorModule,
     },
-    input.path
-  );
-
-  reportStepEnd(stepName, `Content downloaded.`, stepStartTime);
-}
-
-async function processDownloadEbookGeneratedCollectionContentStep(input: Args) {
-  const stepName = "[generated collection]";
-  const stepStartTime = reportStepStart(
-    stepName,
-    `Downloading content for Project Gutenberg book #${input.bookId}...`
-  );
-
-  await downloadEbookGeneratedCollectionContent(
-    input.bookId,
-    {
-      url: input.gcMirrorUrl,
-      rsyncModule: input.gcMirrorModule,
+    gutenbergGeneratedCollectionRsyncData: {
+      url: input.mcMirrorUrl,
+      rsyncModule: input.mcMirrorModule,
     },
-    input.path
-  );
+  };
 
-  reportStepEnd(stepName, `Content downloaded.`, stepStartTime);
+  const eventEmitter = new EventEmitter();
+  subscribeToImportEvents(eventEmitter, input.bookId);
+
+  const importedBookData = await bookImport.importBookFromProjectGutenberg(
+    input.bookId,
+    projectGutenbergConfig,
+    input.path,
+    { offline: input.offline, eventEmitter }
+  );
+  console.log(importedBookData);
 }
 
-function reportStepStart(stepName: string, msg: string): number {
+function subscribeToImportEvents(
+  eventEmitter: EventEmitter,
+  bookId: number
+): void {
+  const mainCollectionStepName = "[main collection]";
+  eventEmitter.on(
+    bookImport.EmittedEvents[
+      bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_START
+    ],
+    reportStepStart.bind(
+      null,
+      mainCollectionStepName,
+      `Downloading content for Project Gutenberg book #${bookId}...`
+    )
+  );
+  eventEmitter.on(
+    bookImport.EmittedEvents[bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_END],
+    reportStepEnd.bind(
+      null,
+      mainCollectionStepName,
+      `Content downloaded for book #${bookId}.`
+    )
+  );
+
+  const generatedCollectionStepName = "[generated collection]";
+  eventEmitter.on(
+    bookImport.EmittedEvents[
+      bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_START
+    ],
+    reportStepStart.bind(
+      null,
+      generatedCollectionStepName,
+      `Downloading content for Project Gutenberg book #${bookId}...`
+    )
+  );
+  eventEmitter.on(
+    bookImport.EmittedEvents[
+      bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_END
+    ],
+    reportStepEnd.bind(
+      null,
+      generatedCollectionStepName,
+      `Content downloaded for book #${bookId}.`
+    )
+  );
+
+  eventEmitter.on(
+    bookImport.EmittedEvents[bookImport.EmittedEvents.COLLECTIONS_SYNC_SKIPPED],
+    console.log.bind(
+      null,
+      `#${bookId} book content already imported, skip sync.`
+    )
+  );
+
+  const bookFileReadStepName = "[book file read]";
+  eventEmitter.on(
+    bookImport.EmittedEvents[
+      bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_START
+    ],
+    reportStepStart.bind(
+      null,
+      bookFileReadStepName,
+      `Reading RDF file content for book #${bookId}...`
+    )
+  );
+  eventEmitter.on(
+    bookImport.EmittedEvents[
+      bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_END
+    ],
+    reportStepEnd.bind(
+      null,
+      bookFileReadStepName,
+      `RDF file content read for book #${bookId}.`
+    )
+  );
+
+  const bookRdfDataParsingStepName = "[book RDF data parsing]";
+  eventEmitter.on(
+    bookImport.EmittedEvents[
+      bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_START
+    ],
+    reportStepStart.bind(
+      null,
+      bookRdfDataParsingStepName,
+      `Parsing RDF content for book #${bookId}...`
+    )
+  );
+  eventEmitter.on(
+    bookImport.EmittedEvents[
+      bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_END
+    ],
+    reportStepEnd.bind(
+      null,
+      bookRdfDataParsingStepName,
+      `RDF content parsed for book #${bookId}.`
+    )
+  );
+}
+
+const stepsStartTime: { [stepName: string]: number } = {};
+
+function reportStepStart(stepName: string, msg: string): void {
   console.log(stepName.padEnd(30), msg);
 
-  return Date.now();
+  stepsStartTime[stepName] = Date.now();
 }
 
-function reportStepEnd(
-  stepName: string,
-  msg: string,
-  stepStartTime: number
-): void {
+function reportStepEnd(stepName: string, msg: string): void {
+  const stepStartTime: number = stepsStartTime[stepName];
+
   console.log(
     stepName.padEnd(30),
     msg,

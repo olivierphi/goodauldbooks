@@ -18,6 +18,7 @@
     "no-empty-interface": false,
     "no-console": false,
     "no-unused-expression": false,
-    "arrow-parens": false
+    "arrow-parens": false,
+    "no-namespace": false
   }
 }

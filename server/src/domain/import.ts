@@ -2,15 +2,15 @@ export enum Lang {
   EN = "en",
 }
 
-export interface Book {
+export interface ImportedBook {
   gutenbergId: number;
-  id: string;
   author: Author;
   title: BookTitle;
   genres: Genre[];
 }
 
 export interface Author {
+  gutenbergId: number;
   firstName: string;
   lastName: string;
   birthYear: number;
@@ -25,5 +25,3 @@ export interface Genre {
 }
 
 export type LocalisedContent = Map<Lang, string>;
-
-export type BooksById = Map<string, Book>;
