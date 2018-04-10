@@ -81,7 +81,7 @@ async function importBook(input: Args) {
 function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): void {
   const mainCollectionStepName = "[main collection]";
   eventEmitter.on(
-    bookImport.EmittedEvents[bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_START],
+    bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_START,
     reportStepStart.bind(
       null,
       mainCollectionStepName,
@@ -89,13 +89,13 @@ function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): vo
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents[bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_END],
+    bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_END,
     reportStepEnd.bind(null, mainCollectionStepName, `Content downloaded for book #${bookId}.`)
   );
 
   const generatedCollectionStepName = "[generated collection]";
   eventEmitter.on(
-    bookImport.EmittedEvents[bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_START],
+    bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_START,
     reportStepStart.bind(
       null,
       generatedCollectionStepName,
@@ -103,18 +103,18 @@ function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): vo
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents[bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_END],
+    bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_END,
     reportStepEnd.bind(null, generatedCollectionStepName, `Content downloaded for book #${bookId}.`)
   );
 
   eventEmitter.on(
-    bookImport.EmittedEvents[bookImport.EmittedEvents.COLLECTIONS_SYNC_SKIPPED],
+    bookImport.EmittedEvents.COLLECTIONS_SYNC_SKIPPED,
     console.log.bind(null, `#${bookId} book content already imported, skip sync.`)
   );
 
   const bookFileReadStepName = "[book file read]";
   eventEmitter.on(
-    bookImport.EmittedEvents[bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_START],
+    bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_START,
     reportStepStart.bind(
       null,
       bookFileReadStepName,
@@ -122,13 +122,13 @@ function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): vo
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents[bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_END],
+    bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_END,
     reportStepEnd.bind(null, bookFileReadStepName, `RDF file content read for book #${bookId}.`)
   );
 
   const bookRdfDataParsingStepName = "[book RDF data parsing]";
   eventEmitter.on(
-    bookImport.EmittedEvents[bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_START],
+    bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_START,
     reportStepStart.bind(
       null,
       bookRdfDataParsingStepName,
@@ -136,7 +136,7 @@ function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): vo
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents[bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_END],
+    bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_END,
     reportStepEnd.bind(null, bookRdfDataParsingStepName, `RDF content parsed for book #${bookId}.`)
   );
 }

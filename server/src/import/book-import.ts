@@ -29,15 +29,15 @@ export interface ProjectGutenbergMirrorData {
 }
 
 export enum EmittedEvents {
-  MAIN_COLLECTION_SYNC_START,
-  MAIN_COLLECTION_SYNC_END,
-  GENERATED_COLLECTION_SYNC_START,
-  GENERATED_COLLECTION_SYNC_END,
-  COLLECTIONS_SYNC_SKIPPED,
-  BOOK_RDF_DATA_FILE_READ_START,
-  BOOK_RDF_DATA_FILE_READ_END,
-  BOOK_RDF_DATA_PARSING_START,
-  BOOK_RDF_DATA_PARSING_END,
+  MAIN_COLLECTION_SYNC_START = "main_collection:sync:start",
+  MAIN_COLLECTION_SYNC_END = "main_collection:sync:end",
+  GENERATED_COLLECTION_SYNC_START = "generated_collection:sync:start",
+  GENERATED_COLLECTION_SYNC_END = "generated_collection:sync:end",
+  COLLECTIONS_SYNC_SKIPPED = "collection:sync:skipped",
+  BOOK_RDF_DATA_FILE_READ_START = "book_rdf_data:file_read:start",
+  BOOK_RDF_DATA_FILE_READ_END = "book_rdf_data:file_read:end",
+  BOOK_RDF_DATA_PARSING_START = "book_rdf_data:parsing:start",
+  BOOK_RDF_DATA_PARSING_END = "book_rdf_data:parsing:end",
 }
 
 export async function importBookFromProjectGutenberg(
@@ -72,7 +72,7 @@ export async function syncBookFilesFolder(
       const targetFolderStats = await promisify(stat)(testFilePath);
       if (targetFolderStats.isFile) {
         options.eventEmitter &&
-          options.eventEmitter.emit(EmittedEvents[EmittedEvents.COLLECTIONS_SYNC_SKIPPED]);
+          options.eventEmitter.emit(EmittedEvents.COLLECTIONS_SYNC_SKIPPED);
         syncFolder = false;
       }
     } catch {
@@ -113,7 +113,7 @@ export async function extractBookDataFromRdfXmlData(
   options: { eventEmitter?: EventEmitter } = {}
 ): Promise<ImportedBook> {
   options.eventEmitter &&
-    options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_PARSING_START]);
+    options.eventEmitter.emit(EmittedEvents.BOOK_RDF_DATA_PARSING_START);
 
   const rdfData = await parseStringAsync(rdfDataXmlString);
   const rdfDataTraverser = traverse(rdfData);
@@ -136,7 +136,7 @@ export async function extractBookDataFromRdfXmlData(
   };
 
   options.eventEmitter &&
-    options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_PARSING_END]);
+    options.eventEmitter.emit(EmittedEvents.BOOK_RDF_DATA_PARSING_END);
 
   return Promise.resolve(importedBook);
 }
@@ -147,10 +147,10 @@ export async function extractBookDataFromRdfFile(
   options: { eventEmitter?: EventEmitter } = {}
 ) {
   options.eventEmitter &&
-    options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_FILE_READ_START]);
+    options.eventEmitter.emit(EmittedEvents.BOOK_RDF_DATA_FILE_READ_START);
   const rdfData = await readFileAsync(rdfFilePath, { encoding });
   options.eventEmitter &&
-    options.eventEmitter.emit(EmittedEvents[EmittedEvents.BOOK_RDF_DATA_FILE_READ_END]);
+    options.eventEmitter.emit(EmittedEvents.BOOK_RDF_DATA_FILE_READ_END);
 
   return extractBookDataFromRdfXmlData(rdfData, options);
 }
@@ -164,7 +164,7 @@ export async function downloadEbookMainCollectionContent(
   const bookSourcePath = getPathFromBookId(bookId); // "main collection" use path "3/4/345" for book #345
 
   options.eventEmitter &&
-    options.eventEmitter.emit(EmittedEvents[EmittedEvents.MAIN_COLLECTION_SYNC_START]);
+    options.eventEmitter.emit(EmittedEvents.MAIN_COLLECTION_SYNC_START);
 
   await downloadFolderViaRsync(config.url, bookSourcePath, targetFolderPath, {
     progress: options.echo,
@@ -173,7 +173,7 @@ export async function downloadEbookMainCollectionContent(
   });
 
   options.eventEmitter &&
-    options.eventEmitter.emit(EmittedEvents[EmittedEvents.MAIN_COLLECTION_SYNC_END]);
+    options.eventEmitter.emit(EmittedEvents.MAIN_COLLECTION_SYNC_END);
 }
 
 export async function downloadEbookGeneratedCollectionContent(
