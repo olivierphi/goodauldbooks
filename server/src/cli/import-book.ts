@@ -55,7 +55,7 @@ const argv: any = yargs
 importBook(argv);
 
 async function importBook(input: Args) {
-  const projectGutenbergConfig: bookImport.ProjectGutenbergRelatedConfiguration = {
+  const projectGutenbergConfig: bookImport.PGConfiguration = {
     gutenbergMainCollectionRsyncData: {
       url: input.mcMirrorUrl,
       rsyncModule: input.mcMirrorModule,
