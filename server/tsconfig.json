@@ -2,13 +2,15 @@
   "compilerOptions": {
     "outDir": "./dist/",
     "sourceMap": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
+    "strict": true,
+    "strictFunctionTypes": false,
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es2017",
     "lib": ["es2017", "esnext.asynciterable"],
-    "types": ["node"]
+    "types": ["node"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
-  "include": ["./src/**/*"]
+  "include": ["./src/**/*", "./ormconfig.js"]
 }

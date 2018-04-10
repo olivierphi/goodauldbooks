@@ -2,7 +2,9 @@
 
 import { EventEmitter } from "events";
 import * as yargs from "yargs";
-import * as bookImport from "../import/book-import";
+import * as bookImportFromPG from "../import/book-import-from-project-gutenberg";
+import { Book } from "../orm/entities/book";
+import { container } from "../services-container";
 
 interface Args {
   bookId: number;
@@ -55,7 +57,7 @@ const argv: any = yargs
 importBook(argv);
 
 async function importBook(input: Args) {
-  const projectGutenbergConfig: bookImport.PGConfiguration = {
+  const projectGutenbergConfig: bookImportFromPG.PGConfiguration = {
     gutenbergMainCollectionRsyncData: {
       url: input.mcMirrorUrl,
       rsyncModule: input.mcMirrorModule,
@@ -69,19 +71,29 @@ async function importBook(input: Args) {
   const eventEmitter = new EventEmitter();
   subscribeToImportEvents(eventEmitter, input.bookId);
 
-  const importedBookData = await bookImport.importBookFromProjectGutenberg(
+  const importedBookData = await bookImportFromPG.importBookFromProjectGutenberg(
     input.bookId,
     projectGutenbergConfig,
     input.path,
     { offline: input.offline, eventEmitter }
   );
   console.log(importedBookData);
+
+  await container.boot();
+
+  const bookEntity = new Book();
+  bookEntity.title = Object.values(importedBookData.title)[0];
+  bookEntity.slug = bookEntity.title.toLowerCase();
+  await container.dbConnection.manager.save(bookEntity);
+  console.log(`Saved a new Book with id #${bookEntity.id}`);
+
+  console.log(`Nb books in database: ${container.dbConnection.getRepository(Book).count()}`);
 }
 
 function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): void {
   const mainCollectionStepName = "[main collection]";
   eventEmitter.on(
-    bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_START,
+    bookImportFromPG.EmittedEvents.MAIN_COLLECTION_SYNC_START,
     reportStepStart.bind(
       null,
       mainCollectionStepName,
@@ -89,13 +101,13 @@ function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): vo
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents.MAIN_COLLECTION_SYNC_END,
+    bookImportFromPG.EmittedEvents.MAIN_COLLECTION_SYNC_END,
     reportStepEnd.bind(null, mainCollectionStepName, `Content downloaded for book #${bookId}.`)
   );
 
   const generatedCollectionStepName = "[generated collection]";
   eventEmitter.on(
-    bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_START,
+    bookImportFromPG.EmittedEvents.GENERATED_COLLECTION_SYNC_START,
     reportStepStart.bind(
       null,
       generatedCollectionStepName,
@@ -103,18 +115,18 @@ function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): vo
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents.GENERATED_COLLECTION_SYNC_END,
+    bookImportFromPG.EmittedEvents.GENERATED_COLLECTION_SYNC_END,
     reportStepEnd.bind(null, generatedCollectionStepName, `Content downloaded for book #${bookId}.`)
   );
 
   eventEmitter.on(
-    bookImport.EmittedEvents.COLLECTIONS_SYNC_SKIPPED,
+    bookImportFromPG.EmittedEvents.COLLECTIONS_SYNC_SKIPPED,
     console.log.bind(null, `#${bookId} book content already imported, skip sync.`)
   );
 
   const bookFileReadStepName = "[book file read]";
   eventEmitter.on(
-    bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_START,
+    bookImportFromPG.EmittedEvents.BOOK_RDF_DATA_FILE_READ_START,
     reportStepStart.bind(
       null,
       bookFileReadStepName,
@@ -122,13 +134,13 @@ function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): vo
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents.BOOK_RDF_DATA_FILE_READ_END,
+    bookImportFromPG.EmittedEvents.BOOK_RDF_DATA_FILE_READ_END,
     reportStepEnd.bind(null, bookFileReadStepName, `RDF file content read for book #${bookId}.`)
   );
 
   const bookRdfDataParsingStepName = "[book RDF data parsing]";
   eventEmitter.on(
-    bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_START,
+    bookImportFromPG.EmittedEvents.BOOK_RDF_DATA_PARSING_START,
     reportStepStart.bind(
       null,
       bookRdfDataParsingStepName,
@@ -136,7 +148,7 @@ function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): vo
     )
   );
   eventEmitter.on(
-    bookImport.EmittedEvents.BOOK_RDF_DATA_PARSING_END,
+    bookImportFromPG.EmittedEvents.BOOK_RDF_DATA_PARSING_END,
     reportStepEnd.bind(null, bookRdfDataParsingStepName, `RDF content parsed for book #${bookId}.`)
   );
 }

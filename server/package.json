@@ -16,9 +16,12 @@
   "dependencies": {
     "adm-zip": "^0.4.7",
     "axios": "^0.18.0",
+    "reflect-metadata": "^0.1.12",
     "rsync": "^0.6.1",
     "shelljs": "^0.8.1",
+    "sqlite3": "^4.0.0",
     "traverse": "^0.6.6",
+    "typeorm": "^0.1.20",
     "xml2js": "^0.4.19",
     "yargs": "^11.0.0"
   }
