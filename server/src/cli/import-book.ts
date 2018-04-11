@@ -2,7 +2,8 @@
 
 import { EventEmitter } from "events";
 import * as yargs from "yargs";
-import * as bookImportFromPG from "../import/book-import-from-project-gutenberg";
+import * as bookImportFromPG from "../import/project-gutenberg";
+import { storeImportedBookIntoDatabase } from "../import/project-gutenberg-database-storage";
 import { Book } from "../orm/entities/book";
 import { container } from "../services-container";
 
@@ -54,7 +55,12 @@ const argv: any = yargs
   })
   .help().argv;
 
-importBook(argv);
+processCommand(argv);
+
+async function processCommand(input: Args) {
+  await container.boot();
+  importBook(input);
+}
 
 async function importBook(input: Args) {
   const projectGutenbergConfig: bookImportFromPG.PGConfiguration = {
@@ -79,15 +85,7 @@ async function importBook(input: Args) {
   );
   console.log(importedBookData);
 
-  await container.boot();
-
-  const bookEntity = new Book();
-  bookEntity.title = Object.values(importedBookData.title)[0];
-  bookEntity.slug = bookEntity.title.toLowerCase();
-  await container.dbConnection.manager.save(bookEntity);
-  console.log(`Saved a new Book with id #${bookEntity.id}`);
-
-  console.log(`Nb books in database: ${container.dbConnection.getRepository(Book).count()}`);
+  const bookEntity = await storeImportedBookIntoDatabase(importedBookData);
 }
 
 function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): void {

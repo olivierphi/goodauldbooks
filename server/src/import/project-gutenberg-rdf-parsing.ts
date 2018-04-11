@@ -1,6 +1,8 @@
+import { EventEmitter } from "events";
 import * as traverse from "traverse";
-import { Author } from "../domain/import";
-
+import { Author, Genre, ImportedBook } from "../domain/import";
+import * as asyncUtils from "../utils/async-utils";
+import { emitEvent, EmittedEvents } from "./project-gutenberg";
 /**
  * I could have used XPath and stuff like that, but I really dislike XML parsing, so why not
  * converting all the XML data into a big object and then retrive its data via Traverser?
@@ -9,7 +11,50 @@ import { Author } from "../domain/import";
 
 const BOOK_CATEGORY_RDF_RESOURCE_TYPE = "http://purl.org/dc/terms/LCSH";
 
-export function getProjectGutenbergId(rdfTraverser: traverse.Traverse<{}>): number {
+export async function extractBookDataFromRdfXmlData(
+  rdfDataXmlString: string,
+  options: { eventEmitter?: EventEmitter } = {}
+): Promise<ImportedBook> {
+  emitEvent(options, EmittedEvents.BOOK_RDF_DATA_PARSING_START);
+
+  const rdfData = await asyncUtils.xml.parseXmlStringAsync(rdfDataXmlString);
+  const rdfDataTraverser = traverse(rdfData);
+
+  const gutenbergId = getProjectGutenbergId(rdfDataTraverser);
+  const author = getAuthor(rdfDataTraverser);
+  const lang = getLanguage(rdfDataTraverser);
+  const titleRaw = getTitle(rdfDataTraverser);
+  const title = { [lang]: titleRaw };
+  const genresRaw = getGenres(rdfDataTraverser);
+  const genres = genresRaw.map((genreRaw: string): Genre => {
+    return { name: { [lang]: genreRaw } };
+  });
+
+  const importedBook: ImportedBook = {
+    gutenbergId,
+    author,
+    title,
+    genres,
+  };
+
+  emitEvent(options, EmittedEvents.BOOK_RDF_DATA_PARSING_END);
+
+  return Promise.resolve(importedBook);
+}
+
+export async function extractBookDataFromRdfFile(
+  rdfFilePath: string,
+  encoding: string = "utf8",
+  options: { eventEmitter?: EventEmitter } = {}
+) {
+  emitEvent(options, EmittedEvents.BOOK_RDF_DATA_FILE_READ_START);
+  const rdfData = await asyncUtils.fs.readFileAsync(rdfFilePath, { encoding });
+  emitEvent(options, EmittedEvents.BOOK_RDF_DATA_FILE_READ_END);
+
+  return extractBookDataFromRdfXmlData(rdfData, options);
+}
+
+function getProjectGutenbergId(rdfTraverser: traverse.Traverse<{}>): number {
   const projectGutenbergIdStr = rdfTraverser.get([
     "rdf:RDF",
     "pgterms:ebook",
@@ -23,15 +68,15 @@ export function getProjectGutenbergId(rdfTraverser: traverse.Traverse<{}>): numb
   return gutenbergBookId;
 }
 
-export function getPublisher(rdfTraverser: traverse.Traverse<{}>): string {
+function getPublisher(rdfTraverser: traverse.Traverse<{}>): string {
   return rdfTraverser.get(["rdf:RDF", "pgterms:ebook", "0", "dcterms:publisher", "0"]);
 }
 
-export function getTitle(rdfTraverser: traverse.Traverse<{}>): string {
+function getTitle(rdfTraverser: traverse.Traverse<{}>): string {
   return rdfTraverser.get(["rdf:RDF", "pgterms:ebook", "0", "dcterms:title", "0"]);
 }
 
-export function getLanguage(rdfTraverser: traverse.Traverse<{}>): string {
+function getLanguage(rdfTraverser: traverse.Traverse<{}>): string {
   return rdfTraverser.get([
     "rdf:RDF",
     "pgterms:ebook",
@@ -46,7 +91,7 @@ export function getLanguage(rdfTraverser: traverse.Traverse<{}>): string {
   ]);
 }
 
-export function getAuthor(rdfTraverser: traverse.Traverse<{}>): Author {
+function getAuthor(rdfTraverser: traverse.Traverse<{}>): Author {
   const authorRaw: any = rdfTraverser.get([
     "rdf:RDF",
     "pgterms:ebook",
@@ -79,7 +124,7 @@ export function getAuthor(rdfTraverser: traverse.Traverse<{}>): Author {
   };
 }
 
-export function getGenres(rdfTraverser: traverse.Traverse<{}>): string[] {
+function getGenres(rdfTraverser: traverse.Traverse<{}>): string[] {
   const categoriesRaw: Array<{}> = rdfTraverser.get([
     "rdf:RDF",
     "pgterms:ebook",
