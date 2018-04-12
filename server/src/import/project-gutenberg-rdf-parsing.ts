@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as traverse from "traverse";
-import { Author, Genre, ImportedBook } from "../domain/import";
+import { Genre, ImportedAuthor, ImportedBook } from "../domain/import";
 import * as asyncUtils from "../utils/async-utils";
 import { emitEvent, EmittedEvents } from "./project-gutenberg";
 /**
@@ -91,7 +91,7 @@ function getLanguage(rdfTraverser: traverse.Traverse<{}>): string {
   ]);
 }
 
-function getAuthor(rdfTraverser: traverse.Traverse<{}>): Author {
+function getAuthor(rdfTraverser: traverse.Traverse<{}>): ImportedAuthor {
   const authorRaw: any = rdfTraverser.get([
     "rdf:RDF",
     "pgterms:ebook",

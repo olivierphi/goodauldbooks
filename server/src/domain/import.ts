@@ -4,12 +4,12 @@ export enum Lang {
 
 export interface ImportedBook {
   gutenbergId: number;
-  author: Author;
+  author: ImportedAuthor;
   title: BookTitle;
   genres: Genre[];
 }
 
-export interface Author {
+export interface ImportedAuthor {
   gutenbergId: number;
   firstName: string;
   lastName: string;
