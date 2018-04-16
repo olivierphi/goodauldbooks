@@ -1,6 +1,5 @@
-import { join as pathJoin } from "path";
-import "reflect-metadata"; // required by TypeORM
-import { Connection, ConnectionOptionsReader, createConnection } from "typeorm";
+import { Connection } from "typeorm";
+import { initDbConnection } from "./boot/db-connection-init";
 
 enum SharedServicesIds {
   DB_CONNECTION,
@@ -18,7 +17,7 @@ function sharedService(serviceId: SharedServicesIds, serviceFactory: () => any) 
   return serviceSharedInstance;
 }
 
-class ServicesContainer {
+export class ServicesContainer {
   private booted: boolean = false;
 
   public async boot(): Promise<boolean> {
@@ -26,7 +25,8 @@ class ServicesContainer {
       return Promise.resolve(false);
     }
 
-    await this.initDbConnection();
+    // Let's boot our async services!
+    await this.bootAsyncServices();
 
     this.booted = true;
     return Promise.resolve(true);
@@ -39,19 +39,10 @@ class ServicesContainer {
     return sharedServicesRegistry.get(SharedServicesIds.DB_CONNECTION);
   }
 
-  private async initDbConnection(): Promise<Connection> {
-    // We have to build a ConnectionOptionsReader ourselves, as the Yarn workspace is confusing for the default one
-    // (it will look for the "ormconfig" file in the project root rather than in the "server/" folder)
-    const connectionOptionsReader = new ConnectionOptionsReader({
-      root: pathJoin(__dirname, "../"),
-    });
-    const connectionOptions = await connectionOptionsReader.get("default");
-
-    const connection = await createConnection(connectionOptions);
-
-    sharedServicesRegistry.set(SharedServicesIds.DB_CONNECTION, connection);
-
-    return Promise.resolve(connection);
+  private async bootAsyncServices() {
+    // DB connection
+    const dbConnection = await initDbConnection(this);
+    sharedServicesRegistry.set(SharedServicesIds.DB_CONNECTION, dbConnection);
   }
 
   private throwNotBootedError(serviceName: string) {

@@ -20,9 +20,14 @@ lint:
 	${NODE_BIN_ROOT}/prettier --config ../prettier.config.js --write "{,!(node_modules|dist)/**/}*.{js,json,md}"
 	${NODE_BIN_ROOT}/tslint --fix 'src/**/*.ts'
 
-start_dev:
-	${MAKE} clean
+start_dev: clean start_db
 	${NODE_BIN}/tsc --watch
 
 copy_assets:
 	cp index.html dist/index.html
+
+start_db:
+	docker-compose up -d adminer
+
+psql:
+	docker-compose exec db psql -h localhost -U postgres goodauldbooks

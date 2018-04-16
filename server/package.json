@@ -16,11 +16,11 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "pg": "^7.4.1",
     "reflect-metadata": "^0.1.12",
     "rsync": "^0.6.1",
     "shelljs": "^0.8.1",
     "slug": "^0.9.1",
-    "sqlite3": "^4.0.0",
     "traverse": "^0.6.6",
     "typeorm": "^0.1.20",
     "xml2js": "^0.4.19",

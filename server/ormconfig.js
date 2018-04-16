@@ -1,6 +1,12 @@
 module.exports = {
-  type: "sqlite",
-  database: "./db.sqlite3",
+  type: "postgres",
+  // PostgreSQL connection options:
+  host: "localhost",
+  port: "5433",
+  username: "postgres",
+  password: "local",
+  database: "goodauldbooks",
+  // TypeORM options:
   logging: true,
   entities: ["dist/orm/entities/**/*.js"],
   migrations: ["dist/orm/migrations/**/*.js"],

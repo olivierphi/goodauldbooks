@@ -1,9 +1,13 @@
 import { EntityManager, ObjectType, Repository } from "typeorm";
-import { ImportedAuthor, ImportedBook } from "../domain/import";
-import { Author } from "../orm/entities/author";
-import { Book } from "../orm/entities/book";
-import { container } from "../services-container";
-import { generateBookSlug } from "../utils/book-utils";
+import { ImportedAuthor, ImportedBook } from "../../domain/import";
+import { Author } from "../../orm/entities/author";
+import { Book } from "../../orm/entities/book";
+import { container } from "../../services-container";
+import { generateBookSlug } from "../../utils/book-utils";
+
+/**
+ * TODO: remove all those `console.log` once we have proper tests and stuff with these functions :-)
+ */
 
 export async function storeImportedBookIntoDatabase(importedBook: ImportedBook): Promise<Book> {
   const bookTitleStr = Object.values(importedBook.title)[0];
@@ -30,7 +34,9 @@ export async function storeImportedBookIntoDatabase(importedBook: ImportedBook):
   }
 
   let authorEntity: Author;
-  const alreadyExistingAuthor = await getAlreadyExistingAuthorEntity(importedAuthor);
+  const alreadyExistingAuthor = await getAlreadyExistingAuthorEntity(importedAuthor, {
+    fetchBooks: true,
+  });
   if (!alreadyExistingAuthor) {
     authorEntity = new Author();
     authorEntity.firstName = importedAuthor.firstName;
@@ -42,15 +48,19 @@ export async function storeImportedBookIntoDatabase(importedBook: ImportedBook):
     console.log(`Created a new Author with id #${authorEntity.id}`);
   } else {
     authorEntity = alreadyExistingAuthor;
-    authorEntity.books.push(bookEntity);
-    await getDbManager().save(authorEntity);
-    console.log(`Updated an existing Author with id #${authorEntity.id}`);
+    const authorHasThisBook: boolean =
+      authorEntity.books.filter((book: Book) => book.id === bookEntity.id).length > 0;
+    if (!authorHasThisBook) {
+      authorEntity.books.push(bookEntity);
+      await getDbManager().save(authorEntity);
+      console.log(`Added the book to already existing Author with id #${authorEntity.id}`);
+    }
   }
 
   console.log(`Nb books in database: ${await getRepository(Book).count()}`);
   console.log(`Nb authors in database: ${await getRepository(Author).count()}`);
 
-  return bookEntity;
+  return Promise.resolve(bookEntity);
 }
 
 function getDbManager(): EntityManager {
@@ -69,13 +79,18 @@ async function getAlreadyExistingBookEntity(importedBookSlug: string): Promise<B
 }
 
 async function getAlreadyExistingAuthorEntity(
-  importedAuthor: ImportedAuthor
+  importedAuthor: ImportedAuthor,
+  options: { fetchBooks?: boolean } = {}
 ): Promise<Author | undefined> {
-  return getRepository(Author)
+  const queryBuilder = getRepository(Author)
     .createQueryBuilder("author")
     .where("author.firstName = :firstName", { firstName: importedAuthor.firstName })
     .andWhere("author.lastName = :lastName", { lastName: importedAuthor.lastName })
     .andWhere("author.birthYear = :birthYear", { birthYear: importedAuthor.birthYear })
-    .andWhere("author.deathYear = :deathYear", { birthYear: importedAuthor.deathYear })
-    .getOne();
+    .andWhere("author.deathYear = :deathYear", { deathYear: importedAuthor.deathYear });
+  if (options.fetchBooks) {
+    queryBuilder.leftJoinAndSelect("author.books", "book");
+  }
+
+  return queryBuilder.getOne();
 }

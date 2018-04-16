@@ -3,7 +3,7 @@
 import { EventEmitter } from "events";
 import * as yargs from "yargs";
 import * as bookImportFromPG from "../import/project-gutenberg";
-import { storeImportedBookIntoDatabase } from "../import/project-gutenberg-database-storage";
+import { storeImportedBookIntoDatabase } from "../import/project-gutenberg/database-storage";
 import { Book } from "../orm/entities/book";
 import { container } from "../services-container";
 
@@ -55,14 +55,18 @@ const argv: any = yargs
   })
   .help().argv;
 
-processCommand(argv);
+processCommand(argv).then(process.exit.bind(null, 0));
 
 async function processCommand(input: Args) {
-  await container.boot();
-  importBook(input);
+  return new Promise(async resolve => {
+    await container.boot();
+    await importBook(input);
+    await container.dbConnection.close();
+    resolve();
+  });
 }
 
-async function importBook(input: Args) {
+async function importBook(input: Args): Promise<boolean> {
   const projectGutenbergConfig: bookImportFromPG.PGConfiguration = {
     gutenbergMainCollectionRsyncData: {
       url: input.mcMirrorUrl,
@@ -86,6 +90,7 @@ async function importBook(input: Args) {
   console.log(importedBookData);
 
   const bookEntity = await storeImportedBookIntoDatabase(importedBookData);
+  return Promise.resolve(true);
 }
 
 function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): void {

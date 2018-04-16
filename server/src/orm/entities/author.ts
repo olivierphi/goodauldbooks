@@ -12,10 +12,10 @@ export class Author {
   @Column({ type: "varchar", length: 255, nullable: false, ...utf8 })
   public lastName!: string;
 
-  @Column({ type: "int", /* length: 4, */ nullable: false })
+  @Column({ type: "integer", nullable: false })
   public birthYear!: number;
 
-  @Column({ type: "int", /* length: 4, */ nullable: true })
+  @Column({ type: "integer", nullable: true })
   public deathYear!: number | null;
 
   @ManyToMany(type => Book, book => book.authors)

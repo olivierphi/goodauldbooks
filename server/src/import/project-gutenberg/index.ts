@@ -1,8 +1,8 @@
 import { EventEmitter } from "events";
 import { join as pathJoin } from "path";
-import { ImportedBook } from "../domain/import";
-import { syncBookFilesFolder } from "./project-gutenberg-files-sync";
-import { extractBookDataFromRdfFile } from "./project-gutenberg-rdf-parsing";
+import { ImportedBook } from "../../domain/import";
+import { syncBookFilesFolder } from "./files-sync";
+import { extractBookDataFromRdfFile } from "./rdf-parsing";
 
 export type PGBookId = number;
 

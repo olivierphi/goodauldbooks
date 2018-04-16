@@ -1,8 +1,8 @@
 import { EventEmitter } from "events";
 import * as traverse from "traverse";
-import { Genre, ImportedAuthor, ImportedBook } from "../domain/import";
-import * as asyncUtils from "../utils/async-utils";
-import { emitEvent, EmittedEvents } from "./project-gutenberg";
+import { Genre, ImportedAuthor, ImportedBook } from "../../domain/import";
+import * as asyncUtils from "../../utils/async-utils";
+import { emitEvent, EmittedEvents } from "./index";
 /**
  * I could have used XPath and stuff like that, but I really dislike XML parsing, so why not
  * converting all the XML data into a big object and then retrive its data via Traverser?
