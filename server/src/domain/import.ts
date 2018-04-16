@@ -1,11 +1,13 @@
 export enum Lang {
   EN = "en",
+  FR = "fr",
 }
 
 export interface ImportedBook {
   gutenbergId: number;
   author: ImportedAuthor;
   title: BookTitle;
+  lang: Lang;
   genres: Genre[];
 }
 

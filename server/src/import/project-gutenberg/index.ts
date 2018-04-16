@@ -44,7 +44,11 @@ export async function importBookFromProjectGutenberg(
   targetFolderPath: string,
   options: { eventEmitter?: EventEmitter; offline?: boolean } = {}
 ): Promise<ImportedBook> {
-  await syncBookFilesFolder(bookId, config, targetFolderPath, options);
+  try {
+    await syncBookFilesFolder(bookId, config, targetFolderPath, options);
+  } catch (e) {
+    return Promise.reject(e);
+  }
 
   const bookFilesPath = pathJoin(targetFolderPath, `${bookId}`);
 

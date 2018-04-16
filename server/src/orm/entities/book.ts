@@ -1,4 +1,12 @@
-import { Column, Entity, Index, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { Lang } from "../../domain/import";
 import { utf8 } from "./_utf8_collation";
 import { Author } from "./author";
 
@@ -15,4 +23,13 @@ export class Book {
 
   @ManyToMany(type => Author, author => author.books)
   public authors!: Author[];
+
+  @Column({ type: "varchar", length: 2, nullable: false })
+  public lang!: Lang;
+
+  // @Column({ type: "tsvector", nullable: false })
+  @Column({ type: "text", nullable: false })
+  public fullTextContent!: string;
+
+  @CreateDateColumn() public createdAt!: Date;
 }

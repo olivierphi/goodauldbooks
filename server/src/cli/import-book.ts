@@ -55,14 +55,23 @@ const argv: any = yargs
   })
   .help().argv;
 
-processCommand(argv).then(process.exit.bind(null, 0));
+processCommand(argv)
+  .then(process.exit.bind(null, 0))
+  .catch(e => {
+    console.error("Error:", e);
+    process.exit(1);
+  });
 
 async function processCommand(input: Args) {
-  return new Promise(async resolve => {
-    await container.boot();
-    await importBook(input);
-    await container.dbConnection.close();
-    resolve();
+  return new Promise(async (resolve, reject) => {
+    try {
+      await container.boot();
+      await importBook(input);
+      await container.dbConnection.close();
+      resolve();
+    } catch (e) {
+      reject(e);
+    }
   });
 }
 
@@ -73,8 +82,8 @@ async function importBook(input: Args): Promise<boolean> {
       rsyncModule: input.mcMirrorModule,
     },
     gutenbergGeneratedCollectionRsyncData: {
-      url: input.mcMirrorUrl,
-      rsyncModule: input.mcMirrorModule,
+      url: input.gcMirrorUrl,
+      rsyncModule: input.gcMirrorModule,
     },
   };
 
@@ -90,6 +99,7 @@ async function importBook(input: Args): Promise<boolean> {
   console.log(importedBookData);
 
   const bookEntity = await storeImportedBookIntoDatabase(importedBookData);
+
   return Promise.resolve(true);
 }
 

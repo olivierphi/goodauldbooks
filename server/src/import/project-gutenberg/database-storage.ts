@@ -25,9 +25,19 @@ export async function storeImportedBookIntoDatabase(importedBook: ImportedBook):
     bookEntity = new Book();
     bookEntity.title = bookTitleStr;
     bookEntity.slug = bookSlug;
-    console.log(bookEntity);
+    bookEntity.lang = importedBook.lang;
+    bookEntity.fullTextContent = "";
+
     await getDbManager().save(bookEntity);
     console.log(`Created a new Book with id #${bookEntity.id}`);
+    console.log(`Saving full text content...`);
+    await getDbManager().connection.query(
+      `
+    UPDATE book SET "fullTextContent"=tsvector(title) WHERE id = $1
+    `,
+      [bookEntity.id]
+    );
+    console.log(`Full text content saved.`);
   } else {
     bookEntity = alreadyExistingBook;
     console.log(`Retrieved an existing Book with id #${bookEntity.id}`);

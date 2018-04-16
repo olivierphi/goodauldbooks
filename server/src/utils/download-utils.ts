@@ -4,10 +4,7 @@ import * as Rsync from "rsync";
 import * as shell from "shelljs";
 import { Stream } from "stream";
 
-export async function downloadFileViaHttp(
-  fileUrl: string,
-  localFilePath: string
-): Promise<string> {
+export async function downloadFileViaHttp(fileUrl: string, localFilePath: string): Promise<string> {
   const response = await axios.get<Stream>(fileUrl, {
     method: "GET",
     responseType: "stream",
@@ -59,11 +56,11 @@ export async function downloadFolderViaRsync(
   if (options.echo) {
     rsync.flags("v");
   }
-
   return new Promise<string>((resolve, reject) => {
     const rsyncPid = rsync.execute(
       (error, code, cmd) => {
         if (error) {
+          console.error(rsync.command());
           reject(error);
         } else {
           resolve(localFolderPath);

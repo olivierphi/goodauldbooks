@@ -1,4 +1,11 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { utf8 } from "./_utf8_collation";
 import { Book } from "./book";
 
@@ -21,4 +28,6 @@ export class Author {
   @ManyToMany(type => Book, book => book.authors)
   @JoinTable()
   public books!: Book[];
+
+  @CreateDateColumn() public createdAt!: Date;
 }

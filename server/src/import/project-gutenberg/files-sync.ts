@@ -68,11 +68,16 @@ export async function downloadEbookMainCollectionContent(
 
   emitEvent(options, EmittedEvents.MAIN_COLLECTION_SYNC_START);
 
-  await downloadFolderViaRsync(config.url, bookSourcePath, targetFolderPath, {
-    progress: options.echo,
-    echo: options.echo,
-    rsyncModule: config.rsyncModule,
-  });
+  try {
+    await downloadFolderViaRsync(config.url, bookSourcePath, targetFolderPath, {
+      progress: options.echo,
+      echo: options.echo,
+      rsyncModule: config.rsyncModule,
+    });
+  } catch (e) {
+    console.log(`main collection sync failed for book #${bookId}`);
+    return Promise.reject(e);
+  }
 
   emitEvent(options, EmittedEvents.MAIN_COLLECTION_SYNC_END);
 }
@@ -84,9 +89,15 @@ export async function downloadEbookGeneratedCollectionContent(
   options: { eventEmitter?: EventEmitter; echo?: boolean } = {}
 ) {
   const bookSourcePath = bookId.toString(); // "main collection" use path "/345" for book #345
-  await downloadFolderViaRsync(config.url, bookSourcePath, targetFolderPath, {
-    progress: options.echo,
-    echo: options.echo,
-    rsyncModule: config.rsyncModule,
-  });
+
+  try {
+    await downloadFolderViaRsync(config.url, bookSourcePath, targetFolderPath, {
+      progress: options.echo,
+      echo: options.echo,
+      rsyncModule: config.rsyncModule,
+    });
+  } catch (e) {
+    console.log(`generated collection sync failed for book #${bookId}`);
+    return Promise.reject(e);
+  }
 }

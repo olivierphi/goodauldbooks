@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as traverse from "traverse";
-import { Genre, ImportedAuthor, ImportedBook } from "../../domain/import";
+import { Genre, ImportedAuthor, ImportedBook, Lang } from "../../domain/import";
 import * as asyncUtils from "../../utils/async-utils";
 import { emitEvent, EmittedEvents } from "./index";
 /**
@@ -33,6 +33,7 @@ export async function extractBookDataFromRdfXmlData(
   const importedBook: ImportedBook = {
     gutenbergId,
     author,
+    lang,
     title,
     genres,
   };
@@ -76,7 +77,7 @@ function getTitle(rdfTraverser: traverse.Traverse<{}>): string {
   return rdfTraverser.get(["rdf:RDF", "pgterms:ebook", "0", "dcterms:title", "0"]);
 }
 
-function getLanguage(rdfTraverser: traverse.Traverse<{}>): string {
+function getLanguage(rdfTraverser: traverse.Traverse<{}>): Lang {
   return rdfTraverser.get([
     "rdf:RDF",
     "pgterms:ebook",
