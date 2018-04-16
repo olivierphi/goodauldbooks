@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as traverse from "traverse";
-import { Genre, ImportedAuthor, ImportedBook, Lang } from "../../domain/import";
+import { ImportedAuthor, ImportedBook, Lang } from "../../domain/import";
 import * as asyncUtils from "../../utils/async-utils";
 import { emitEvent, EmittedEvents } from "./index";
 /**
@@ -23,12 +23,8 @@ export async function extractBookDataFromRdfXmlData(
   const gutenbergId = getProjectGutenbergId(rdfDataTraverser);
   const author = getAuthor(rdfDataTraverser);
   const lang = getLanguage(rdfDataTraverser);
-  const titleRaw = getTitle(rdfDataTraverser);
-  const title = { [lang]: titleRaw };
-  const genresRaw = getGenres(rdfDataTraverser);
-  const genres = genresRaw.map((genreRaw: string): Genre => {
-    return { name: { [lang]: genreRaw } };
-  });
+  const title = getTitle(rdfDataTraverser);
+  const genres = getGenres(rdfDataTraverser);
 
   const importedBook: ImportedBook = {
     gutenbergId,

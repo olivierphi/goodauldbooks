@@ -1,5 +1,6 @@
 import {
   Column,
+  ColumnOptions,
   CreateDateColumn,
   Entity,
   Index,
@@ -28,8 +29,12 @@ export class Book {
   public lang!: Lang;
 
   // @Column({ type: "tsvector", nullable: false })
-  @Column({ type: "text", nullable: false })
+  @Column({ type: "text", nullable: false, name: "fulltext_content" })
   public fullTextContent!: string;
 
-  @CreateDateColumn() public createdAt!: Date;
+  @Column({ type: "text", nullable: false, array: true })
+  public genres!: string[];
+
+  @CreateDateColumn({ name: "created_at" })
+  public createdAt!: Date;
 }

@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import { readFile, stat } from "fs";
 import { join as pathJoin } from "path";
 import * as traverse from "traverse";
-import { Genre, ImportedBook } from "../../domain/import";
+import { ImportedBook } from "../../domain/import";
 import * as asyncUtils from "../../utils/async-utils";
 import { downloadFolderViaRsync } from "../../utils/download-utils";
 import { getPathFromBookId } from "../../utils/project-gutenberg-utils";

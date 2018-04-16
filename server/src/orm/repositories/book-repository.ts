@@ -16,9 +16,9 @@ export class BookRepository {
     }
 
     const query = `
-      SELECT id, title, similarity("fullTextContent", $1) AS relevance FROM book
-      WHERE similarity("fullTextContent", $1) > ${similarity}
-      ORDER BY "fullTextContent" <-> $1
+      SELECT id, title, similarity(fulltext_content, $1) AS relevance FROM book
+      WHERE similarity(fulltext_content, $1) > ${similarity}
+      ORDER BY fulltext_content <-> $1
       `;
     const matchingBooks = await this.manager.query(query, [pattern]);
     console.log(matchingBooks);

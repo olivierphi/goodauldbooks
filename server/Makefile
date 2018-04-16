@@ -31,3 +31,9 @@ start_db:
 
 psql:
 	docker-compose exec db psql -h localhost -U postgres goodauldbooks
+
+db_drop:
+	${NODE_BIN}/typeorm schema:drop
+
+db_run_migrations:
+	${NODE_BIN}/typeorm migrations:run

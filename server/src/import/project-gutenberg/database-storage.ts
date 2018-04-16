@@ -10,11 +10,12 @@ import { generateBookSlug } from "../../utils/book-utils";
  */
 
 export async function storeImportedBookIntoDatabase(importedBook: ImportedBook): Promise<Book> {
-  const bookTitleStr = Object.values(importedBook.title)[0];
+  // TODO: split all this in proper smaller methods :-)
+
   const importedAuthor = importedBook.author;
 
   const bookSlug = generateBookSlug(
-    bookTitleStr,
+    importedBook.title,
     importedAuthor.firstName,
     importedAuthor.lastName
   );
@@ -23,9 +24,10 @@ export async function storeImportedBookIntoDatabase(importedBook: ImportedBook):
   const alreadyExistingBook = await getAlreadyExistingBookEntity(bookSlug);
   if (!alreadyExistingBook) {
     bookEntity = new Book();
-    bookEntity.title = bookTitleStr;
+    bookEntity.title = importedBook.title;
     bookEntity.slug = bookSlug;
     bookEntity.lang = importedBook.lang;
+    bookEntity.genres = importedBook.genres;
     bookEntity.fullTextContent = "";
 
     await getDbManager().save(bookEntity);
@@ -33,7 +35,7 @@ export async function storeImportedBookIntoDatabase(importedBook: ImportedBook):
     console.log(`Saving full text content...`);
     await getDbManager().connection.query(
       `
-    UPDATE book SET "fullTextContent"=tsvector(title) WHERE id = $1
+    UPDATE book SET "fulltext_content"=tsvector(title) WHERE id = $1
     `,
       [bookEntity.id]
     );

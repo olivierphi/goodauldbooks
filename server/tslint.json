@@ -1,5 +1,8 @@
 {
   "extends": ["tslint:latest"],
+  "linterOptions": {
+    "exclude": ["src/orm/migrations/*"]
+  },
   "rules": {
     "interface-name": [true, "never-prefix"],
     "trailing-comma": [

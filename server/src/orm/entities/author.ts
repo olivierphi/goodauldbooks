@@ -13,21 +13,32 @@ import { Book } from "./book";
 export class Author {
   @PrimaryGeneratedColumn() public id!: number;
 
-  @Column({ type: "varchar", length: 255, nullable: false, ...utf8 })
+  @Column({ type: "varchar", length: 255, nullable: false, name: "first_name", ...utf8 })
   public firstName!: string;
 
-  @Column({ type: "varchar", length: 255, nullable: false, ...utf8 })
+  @Column({ type: "varchar", length: 255, nullable: false, name: "last_name", ...utf8 })
   public lastName!: string;
 
-  @Column({ type: "integer", nullable: false })
+  @Column({ type: "integer", nullable: false, name: "birth_year" })
   public birthYear!: number;
 
-  @Column({ type: "integer", nullable: true })
+  @Column({ type: "integer", nullable: true, name: "death_year" })
   public deathYear!: number | null;
 
   @ManyToMany(type => Book, book => book.authors)
-  @JoinTable()
+  @JoinTable({
+    name: "author_books",
+    joinColumn: {
+      name: "author",
+      referencedColumnName: "id",
+    },
+    inverseJoinColumn: {
+      name: "book",
+      referencedColumnName: "id",
+    },
+  })
   public books!: Book[];
 
-  @CreateDateColumn() public createdAt!: Date;
+  @CreateDateColumn({ name: "created_at" })
+  public createdAt!: Date;
 }

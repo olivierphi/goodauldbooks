@@ -16,6 +16,4 @@ module.exports = {
     migrationsDir: "src/orm/migrations",
     subscribersDir: "src/orm/subscribers",
   },
-  // TODO: use proper migrations :-)
-  synchronize: true,
 };
