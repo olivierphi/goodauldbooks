@@ -1,8 +1,9 @@
-import { readFile, stat } from "fs";
+import { open, readFile, stat } from "fs";
 import { promisify } from "util";
 import { parseString as parseXmlString } from "xml2js";
 
 export const fs = {
+  openAsync: promisify(open),
   readFileAsync: promisify(readFile),
   statAsync: promisify(stat),
 };

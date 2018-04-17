@@ -5,17 +5,18 @@ export enum Lang {
 
 export interface ImportedBook {
   gutenbergId: number;
-  author: ImportedAuthor;
+  author: ImportedAuthor | null;
   title: string;
   lang: Lang;
   genres: string[];
+  coverFilePath: string | null;
 }
 
 export interface ImportedAuthor {
   gutenbergId: number;
   firstName: string;
   lastName: string;
-  birthYear: number;
+  birthYear: number | null;
   deathYear: number | null;
   wikipediaUrl: string | null;
 }

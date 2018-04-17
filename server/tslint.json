@@ -20,6 +20,7 @@
     "object-literal-sort-keys": false,
     "no-empty-interface": false,
     "no-console": false,
+    "no-empty": false,
     "no-unused-expression": false,
     "arrow-parens": false,
     "no-namespace": false

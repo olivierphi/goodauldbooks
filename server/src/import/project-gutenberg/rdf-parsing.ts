@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import * as traverse from "traverse";
 import { ImportedAuthor, ImportedBook, Lang } from "../../domain/import";
 import * as asyncUtils from "../../utils/async-utils";
+import { NotABookError } from "./errors";
 import { emitEvent, EmittedEvents } from "./index";
 /**
  * I could have used XPath and stuff like that, but I really dislike XML parsing, so why not
@@ -21,7 +22,19 @@ export async function extractBookDataFromRdfXmlData(
   const rdfDataTraverser = traverse(rdfData);
 
   const gutenbergId = getProjectGutenbergId(rdfDataTraverser);
-  const author = getAuthor(rdfDataTraverser);
+
+  const type = getType(rdfDataTraverser);
+  if (type !== "Text") {
+    return Promise.reject(new NotABookError(gutenbergId));
+  }
+
+  let author: ImportedAuthor | null;
+  try {
+    author = getAuthor(rdfDataTraverser);
+  } catch (e) {
+    console.log(`Unable to parse author data for book id #${gutenbergId}`);
+    return Promise.reject(e);
+  }
   const lang = getLanguage(rdfDataTraverser);
   const title = getTitle(rdfDataTraverser);
   const genres = getGenres(rdfDataTraverser);
@@ -32,6 +45,7 @@ export async function extractBookDataFromRdfXmlData(
     lang,
     title,
     genres,
+    coverFilePath: null,
   };
 
   emitEvent(options, EmittedEvents.BOOK_RDF_DATA_PARSING_END);
@@ -48,7 +62,15 @@ export async function extractBookDataFromRdfFile(
   const rdfData = await asyncUtils.fs.readFileAsync(rdfFilePath, { encoding });
   emitEvent(options, EmittedEvents.BOOK_RDF_DATA_FILE_READ_END);
 
-  return extractBookDataFromRdfXmlData(rdfData, options);
+  if (!rdfData) {
+    return Promise.reject(new Error(`Empty RDF file "${rdfFilePath}"`));
+  }
+
+  try {
+    return await extractBookDataFromRdfXmlData(rdfData, options);
+  } catch (e) {
+    return Promise.reject(e);
+  }
 }
 
 function getProjectGutenbergId(rdfTraverser: traverse.Traverse<{}>): number {
@@ -63,6 +85,20 @@ function getProjectGutenbergId(rdfTraverser: traverse.Traverse<{}>): number {
   const gutenbergBookId = parseInt(projectGutenbergIdStr.replace(/^ebooks\/(\d+)$/, "$1"), 10);
 
   return gutenbergBookId;
+}
+
+function getType(rdfTraverser: traverse.Traverse<{}>): string {
+  return rdfTraverser.get([
+    "rdf:RDF",
+    "pgterms:ebook",
+    "0",
+    "dcterms:type",
+    "0",
+    "rdf:Description",
+    "0",
+    "rdf:value",
+    "0",
+  ]);
 }
 
 function getPublisher(rdfTraverser: traverse.Traverse<{}>): string {
@@ -88,7 +124,7 @@ function getLanguage(rdfTraverser: traverse.Traverse<{}>): Lang {
   ]);
 }
 
-function getAuthor(rdfTraverser: traverse.Traverse<{}>): ImportedAuthor {
+function getAuthor(rdfTraverser: traverse.Traverse<{}>): ImportedAuthor | null {
   const authorRaw: any = rdfTraverser.get([
     "rdf:RDF",
     "pgterms:ebook",
@@ -99,10 +135,20 @@ function getAuthor(rdfTraverser: traverse.Traverse<{}>): ImportedAuthor {
     "0",
   ]);
 
+  if (!authorRaw) {
+    return null;
+  }
+
   const projectGutenbergAgentStr: string = authorRaw.$["rdf:about"];
-  const birthYearStr: string = authorRaw["pgterms:birthdate"]["0"]._;
-  const deathYearStr: string = authorRaw["pgterms:deathdate"]["0"]._;
-  const wikipediaUrl: string = authorRaw["pgterms:webpage"]["0"].$["rdf:resource"];
+  const birthYearStr: string | null = authorRaw["pgterms:birthdate"]
+    ? authorRaw["pgterms:birthdate"]["0"]._
+    : null;
+  const deathYearStr: string | null = authorRaw["pgterms:deathdate"]
+    ? authorRaw["pgterms:deathdate"]["0"]._
+    : null;
+  const wikipediaUrl: string | null = authorRaw["pgterms:webpage"]
+    ? authorRaw["pgterms:webpage"]["0"].$["rdf:resource"]
+    : null;
   const nameStr: string = authorRaw["pgterms:name"]["0"];
 
   const gutenbergAuthorId = parseInt(
@@ -116,7 +162,7 @@ function getAuthor(rdfTraverser: traverse.Traverse<{}>): ImportedAuthor {
     firstName,
     lastName,
     wikipediaUrl,
-    birthYear: parseInt(birthYearStr, 10),
+    birthYear: birthYearStr ? parseInt(birthYearStr, 10) : null,
     deathYear: deathYearStr ? parseInt(deathYearStr, 10) : null,
   };
 }
@@ -128,6 +174,10 @@ function getGenres(rdfTraverser: traverse.Traverse<{}>): string[] {
     "0",
     "dcterms:subject",
   ]);
+
+  if (!categoriesRaw) {
+    return [];
+  }
 
   const categories = categoriesRaw.map((dcTermsSubjectData: any): string => {
     const rdfDescription = dcTermsSubjectData["rdf:Description"][0];

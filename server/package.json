@@ -5,6 +5,7 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "@types/adm-zip": "^0.4.31",
     "@types/node": "^9.6.2",
     "@types/rsync": "^0.4.30",
     "@types/shelljs": "^0.7.8",
@@ -15,7 +16,9 @@
     "typescript": "^2.8.1"
   },
   "dependencies": {
+    "adm-zip": "^0.4.7",
     "axios": "^0.18.0",
+    "fast-glob": "^2.2.0",
     "pg": "^7.4.1",
     "reflect-metadata": "^0.1.12",
     "rsync": "^0.6.1",

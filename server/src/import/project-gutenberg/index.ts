@@ -36,6 +36,7 @@ export enum EmittedEvents {
   BOOK_RDF_DATA_FILE_READ_END = "book_rdf_data:file_read:end",
   BOOK_RDF_DATA_PARSING_START = "book_rdf_data:parsing:start",
   BOOK_RDF_DATA_PARSING_END = "book_rdf_data:parsing:end",
+  IMPORT_ERROR = "book_import:error",
 }
 
 export async function importBookFromProjectGutenberg(

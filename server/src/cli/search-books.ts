@@ -30,7 +30,6 @@ processCommand(argv)
   });
 
 async function processCommand(input: Args) {
-  console.log(input);
   return new Promise(async (resolve, reject) => {
     try {
       await container.boot();

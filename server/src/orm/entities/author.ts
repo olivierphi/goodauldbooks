@@ -19,8 +19,11 @@ export class Author {
   @Column({ type: "varchar", length: 255, nullable: false, name: "last_name", ...utf8 })
   public lastName!: string;
 
-  @Column({ type: "integer", nullable: false, name: "birth_year" })
-  public birthYear!: number;
+  @Column({ type: "integer", nullable: true, unique: true, name: "project_gutenberg_id" })
+  public projetGutenbergId!: number | null;
+
+  @Column({ type: "integer", nullable: true, name: "birth_year" })
+  public birthYear!: number | null;
 
   @Column({ type: "integer", nullable: true, name: "death_year" })
   public deathYear!: number | null;
