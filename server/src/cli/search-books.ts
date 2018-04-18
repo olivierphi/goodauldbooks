@@ -11,7 +11,7 @@ interface Args {
 }
 
 const argv: any = yargs
-  .command("$0 <pattern>", "the default command", defaultArgv => {
+  .command("$0 <pattern>", "search for a book", defaultArgv => {
     return defaultArgv
       .positional("pattern", {
         type: "string",

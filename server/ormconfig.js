@@ -7,7 +7,7 @@ module.exports = {
   password: "local",
   database: "goodauldbooks",
   // TypeORM options:
-  logging: true,
+  logger: "debug",
   entities: ["dist/orm/entities/**/*.js"],
   migrations: ["dist/orm/migrations/**/*.js"],
   subscribers: ["dist/orm/subscribers/**/*.js"],

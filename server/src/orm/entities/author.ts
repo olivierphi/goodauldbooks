@@ -32,11 +32,11 @@ export class Author {
   @JoinTable({
     name: "author_books",
     joinColumn: {
-      name: "author",
+      name: "author_id",
       referencedColumnName: "id",
     },
     inverseJoinColumn: {
-      name: "book",
+      name: "book_id",
       referencedColumnName: "id",
     },
   })

@@ -13,10 +13,10 @@ interface Args {
 }
 
 const argv: any = yargs
-  .option("p", {
-    alias: "path",
-    describe: "generated collection local folder path",
-    demandOption: true,
+  .command("$0 <path>", "parse and save PG generated collections into database", defaultArgv => {
+    return defaultArgv.positional("path", {
+      type: "string",
+    });
   })
   .help().argv;
 

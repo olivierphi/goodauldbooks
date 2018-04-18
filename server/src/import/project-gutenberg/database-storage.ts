@@ -1,3 +1,4 @@
+import * as debugUtil from "debug";
 import * as slug from "slug";
 import { EntityManager, ObjectType, Repository, SelectQueryBuilder } from "typeorm";
 import { ImportedAuthor, ImportedBook } from "../../domain/import";
@@ -8,28 +9,25 @@ import { BookRepository } from "../../orm/repositories/book-repository";
 import { container } from "../../services-container";
 import { formatStringForBookFullTextContent, generateBookSlug } from "../../utils/book-utils";
 
-/**
- * TODO: remove all those `console.log` once we have proper tests and stuff with these functions :-)
- */
+const debug = debugUtil("import:db_storage");
 
 export async function storeImportedBookIntoDatabase(importedBook: ImportedBook): Promise<Book> {
-  // TODO: split all this in proper smaller methods :-)
+  const bookEntity = await saveBookInDatabase(importedBook);
 
   const importedAuthor = importedBook.author;
+  if (importedAuthor && importedAuthor.firstName && importedAuthor.lastName) {
+    await saveAuthorInDatabase(importedAuthor, bookEntity);
+  }
 
-  const bookSlug = generateBookSlug(
-    importedBook.title,
-    importedAuthor ? importedAuthor.firstName : null,
-    importedAuthor ? importedAuthor.lastName : null
-  );
+  return Promise.resolve(bookEntity);
+}
 
-  let bookEntity: Book;
-  const alreadyExistingBook = await getAlreadyExistingBookEntity(bookSlug);
-  if (!alreadyExistingBook) {
+async function saveBookInDatabase(importedBook: ImportedBook): Promise<Book> {
+  const saveNewBook = async (newBookSlug: string) => {
     bookEntity = new Book();
     bookEntity.title = importedBook.title;
     bookEntity.projetGutenbergId = importedBook.gutenbergId;
-    bookEntity.slug = bookSlug;
+    bookEntity.slug = newBookSlug;
     bookEntity.lang = importedBook.lang;
     bookEntity.genres = importedBook.genres;
     bookEntity.fullTextContent = formatStringForBookFullTextContent(importedBook.title);
@@ -41,55 +39,79 @@ export async function storeImportedBookIntoDatabase(importedBook: ImportedBook):
         new DbWrappedError(`Couldn't save new book #${bookEntity.projetGutenbergId} in db`, e)
       );
     }
-    console.log(`Created a new Book with id #${bookEntity.id}`);
+
+    return Promise.resolve(bookEntity);
+  };
+
+  const bookSlug = generateBookSlug(
+    importedBook.title,
+    importedBook.author ? importedBook.author.firstName : null,
+    importedBook.author ? importedBook.author.lastName : null
+  );
+
+  let bookEntity: Book;
+  const alreadyExistingBook = await getAlreadyExistingBookEntity(bookSlug);
+  if (!alreadyExistingBook) {
+    bookEntity = await saveNewBook(bookSlug);
+    debug(`Created a new Book with id #${bookEntity.id}`);
   } else {
     bookEntity = alreadyExistingBook;
-    console.log(`Retrieved an existing Book with id #${bookEntity.id}`);
-  }
-
-  if (importedAuthor && importedAuthor.firstName && importedAuthor.lastName) {
-    let authorEntity: Author;
-    const alreadyExistingAuthor = await getAlreadyExistingAuthorEntity(importedAuthor, {
-      fetchBooks: true,
-    });
-    if (!alreadyExistingAuthor) {
-      authorEntity = new Author();
-      authorEntity.firstName = importedAuthor.firstName;
-      authorEntity.lastName = importedAuthor.lastName;
-      authorEntity.projetGutenbergId = importedAuthor.gutenbergId;
-      authorEntity.birthYear = importedAuthor.birthYear;
-      authorEntity.deathYear = importedAuthor.deathYear;
-      authorEntity.books = [bookEntity];
-      try {
-        await getDbManager().save(authorEntity);
-      } catch (e) {
-        return Promise.reject(
-          new DbWrappedError(`Couldn't save new author #${importedAuthor.gutenbergId} in db`, e)
-        );
-      }
-      console.log(`Created a new Author with id #${authorEntity.id}`);
-    } else {
-      authorEntity = alreadyExistingAuthor;
-      const authorHasThisBook: boolean =
-        authorEntity.books.filter((book: Book) => book.id === bookEntity.id).length > 0;
-      if (!authorHasThisBook) {
-        authorEntity.books.push(bookEntity);
-        try {
-          await getDbManager().save(authorEntity);
-        } catch (e) {
-          return Promise.reject(
-            new DbWrappedError(
-              `Couldn't save existing author #${authorEntity.projetGutenbergId} in db`,
-              e
-            )
-          );
-        }
-        console.log(`Added the book to already existing Author with id #${authorEntity.id}`);
-      }
-    }
+    debug(`Retrieved an existing Book with id #${bookEntity.id}`);
   }
 
   return Promise.resolve(bookEntity);
+}
+
+async function saveAuthorInDatabase(importedAuthor: ImportedAuthor, book: Book): Promise<Author> {
+  const saveNewAuthor = async (author: ImportedAuthor, bookEntity: Book): Promise<Author> => {
+    const authorEntity = new Author();
+    authorEntity.firstName = author.firstName;
+    authorEntity.lastName = author.lastName;
+    authorEntity.projetGutenbergId = author.gutenbergId;
+    authorEntity.birthYear = author.birthYear;
+    authorEntity.deathYear = author.deathYear;
+    authorEntity.books = [bookEntity];
+    try {
+      await getDbManager().save(authorEntity);
+    } catch (e) {
+      return Promise.reject(
+        new DbWrappedError(`Couldn't save new author #${author.gutenbergId} in db`, e)
+      );
+    }
+    debug(`Created a new Author with id #${authorEntity.id}`);
+
+    return Promise.resolve(authorEntity);
+  };
+
+  const saveExistingAuthorWithThatBook = async (
+    author: Author,
+    bookEntity: Book
+  ): Promise<Author> => {
+    const authorHasThisBook: boolean =
+      author.books.filter((b: Book) => b.id === bookEntity.id).length > 0;
+
+    if (!authorHasThisBook) {
+      author.books.push(bookEntity);
+      try {
+        await getDbManager().save(author);
+      } catch (e) {
+        return Promise.reject(
+          new DbWrappedError(`Couldn't save existing author #${author.projetGutenbergId} in db`, e)
+        );
+      }
+      debug(`Added the book to already existing Author with id #${author.id}`);
+    }
+    return Promise.resolve(author);
+  };
+
+  const alreadyExistingAuthor = await getAlreadyExistingAuthorEntity(importedAuthor, {
+    fetchBooks: true,
+  });
+  if (!alreadyExistingAuthor) {
+    return saveNewAuthor(importedAuthor, book);
+  }
+
+  return saveExistingAuthorWithThatBook(alreadyExistingAuthor, book);
 }
 
 function getDbManager(): EntityManager {
