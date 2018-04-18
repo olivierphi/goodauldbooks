@@ -5,17 +5,19 @@ import {
   Entity,
   Index,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Lang } from "../../domain/import";
 import { utf8 } from "./_utf8_collation";
 import { Author } from "./author";
+import { BookAsset } from "./book-asset";
 
 /**
  * TODO: add a many-to-one from Book to Books, named "isTranslationOf".
  */
 
-@Entity()
+@Entity("book")
 export class Book {
   @PrimaryGeneratedColumn() public id!: number;
 
@@ -41,6 +43,9 @@ export class Book {
 
   @Column({ type: "text", nullable: false, array: true })
   public genres!: string[];
+
+  @OneToMany(type => BookAsset, asset => asset.book)
+  public assets!: BookAsset[];
 
   @CreateDateColumn({ name: "created_at" })
   public createdAt!: Date;

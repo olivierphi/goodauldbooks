@@ -2,6 +2,12 @@ export enum Lang {
   EN = "en",
   FR = "fr",
 }
+export enum BookAssetType {
+  COVER = "cover",
+  EPUB = "epub",
+  MOBI = "mobi",
+  TXT = "txt",
+}
 
 export interface ImportedBook {
   gutenbergId: number;
@@ -9,7 +15,7 @@ export interface ImportedBook {
   title: string;
   lang: Lang;
   genres: string[];
-  coverFilePath: string | null;
+  assets: ImportedBookAsset[];
 }
 
 export interface ImportedAuthor {
@@ -19,4 +25,10 @@ export interface ImportedAuthor {
   birthYear: number | null;
   deathYear: number | null;
   wikipediaUrl: string | null;
+}
+
+export interface ImportedBookAsset {
+  type: BookAssetType;
+  path: string;
+  size: number;
 }

@@ -9,7 +9,7 @@ import {
 import { utf8 } from "./_utf8_collation";
 import { Book } from "./book";
 
-@Entity()
+@Entity("author")
 export class Author {
   @PrimaryGeneratedColumn() public id!: number;
 

@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
-import { join as pathJoin } from "path";
+import { dirname, join as pathJoin } from "path";
 import { ImportedBook } from "../../domain/import";
+import { getImportedBookAssets } from "./assets";
 import { syncBookFilesFolder } from "./files-sync";
 import { extractBookDataFromRdfFile } from "./rdf-parsing";
 
@@ -58,7 +59,9 @@ export async function importBookFromProjectGutenberg(
     eventEmitter: options.eventEmitter,
   });
 
-  return Promise.resolve(importedBookData);
+  importedBookData.assets = await getImportedBookAssets(bookFilesPath, dirname(bookFilesPath));
+
+  return importedBookData;
 }
 
 export function emitEvent(

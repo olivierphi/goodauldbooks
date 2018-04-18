@@ -4,6 +4,7 @@ import { dirname } from "path";
 import { EmittedEvents } from ".";
 import { ImportedBook } from "../../domain/import";
 import * as asyncUtils from "../../utils/async-utils";
+import { getImportedBookAssets } from "./assets";
 import { storeImportedBookIntoDatabase } from "./database-storage";
 import { NotABookError } from "./errors";
 import { extractBookDataFromRdfFile } from "./rdf-parsing";
@@ -69,9 +70,10 @@ export async function importBookFromGeneratedCollectionFiles(
   let bookData: ImportedBook;
   try {
     bookData = await extractBookDataFromRdfFile(rdfFilePath);
+    bookData.assets = await getImportedBookAssets(bookFolderPath, dirname(bookFolderPath));
   } catch (e) {
     if (e instanceof NotABookError) {
-      return Promise.resolve(true); // Not a book? Not a problem, just move on :-)
+      return true; // Not a book? Not a problem, just move on :-)
     }
     return Promise.reject(e);
   }
@@ -80,12 +82,8 @@ export async function importBookFromGeneratedCollectionFiles(
     return Promise.reject(new Error(`Book #${bookData.gutenbergId} has no title`));
   }
 
-  const coverFilePath = await getBookCoverFilePath(bookFolderPath, bookId);
-  if (coverFilePath) {
-    bookData.coverFilePath = coverFilePath;
-  }
   const bookEntity = await storeImportedBookIntoDatabase(bookData);
-  return Promise.resolve(true);
+  return true;
 }
 
 async function getBookRdfFilePath(bookFolderPath: string, bookId: number): Promise<string | null> {
@@ -94,21 +92,6 @@ async function getBookRdfFilePath(bookFolderPath: string, bookId: number): Promi
     const coverFileStats = await asyncUtils.fs.statAsync(rdfFilePath);
     if (coverFileStats.isFile) {
       return Promise.resolve(rdfFilePath);
-    }
-  } catch (e) {}
-
-  return Promise.resolve(null);
-}
-
-async function getBookCoverFilePath(
-  bookFolderPath: string,
-  bookId: number
-): Promise<string | null> {
-  const coverFilePath = `${bookFolderPath}/pg${bookId}.cover.medium.jpg`;
-  try {
-    const coverFileStats = await asyncUtils.fs.statAsync(coverFilePath);
-    if (coverFileStats.isFile) {
-      return Promise.resolve(coverFilePath);
     }
   } catch (e) {}
 

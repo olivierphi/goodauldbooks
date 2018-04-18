@@ -45,7 +45,7 @@ export async function extractBookDataFromRdfXmlData(
     lang,
     title,
     genres,
-    coverFilePath: null,
+    assets: [],
   };
 
   emitEvent(options, EmittedEvents.BOOK_RDF_DATA_PARSING_END);
@@ -57,7 +57,7 @@ export async function extractBookDataFromRdfFile(
   rdfFilePath: string,
   encoding: string = "utf8",
   options: { eventEmitter?: EventEmitter } = {}
-) {
+): Promise<ImportedBook> {
   emitEvent(options, EmittedEvents.BOOK_RDF_DATA_FILE_READ_START);
   const rdfData = await asyncUtils.fs.readFileAsync(rdfFilePath, { encoding });
   emitEvent(options, EmittedEvents.BOOK_RDF_DATA_FILE_READ_END);
@@ -67,7 +67,7 @@ export async function extractBookDataFromRdfFile(
   }
 
   try {
-    return await extractBookDataFromRdfXmlData(rdfData, options);
+    return extractBookDataFromRdfXmlData(rdfData, options);
   } catch (e) {
     return Promise.reject(e);
   }

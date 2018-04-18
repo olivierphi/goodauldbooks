@@ -37,3 +37,7 @@ db_drop:
 
 db_run_migrations:
 	${NODE_BIN}/typeorm migrations:run
+
+db_reset:
+	${MAKE} db_drop
+	DEBUG=* ${MAKE} db_run_migrations 

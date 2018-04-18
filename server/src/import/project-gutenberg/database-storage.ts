@@ -1,10 +1,11 @@
 import * as debugUtil from "debug";
 import * as slug from "slug";
 import { EntityManager, ObjectType, Repository, SelectQueryBuilder } from "typeorm";
-import { ImportedAuthor, ImportedBook } from "../../domain/import";
+import { ImportedAuthor, ImportedBook, ImportedBookAsset } from "../../domain/import";
 import { DbWrappedError } from "../../errors/db-wrapped-error";
 import { Author } from "../../orm/entities/author";
 import { Book } from "../../orm/entities/book";
+import { BookAsset } from "../../orm/entities/book-asset";
 import { BookRepository } from "../../orm/repositories/book-repository";
 import { container } from "../../services-container";
 import { formatStringForBookFullTextContent, generateBookSlug } from "../../utils/book-utils";
@@ -34,6 +35,7 @@ async function saveBookInDatabase(importedBook: ImportedBook): Promise<Book> {
 
     try {
       await getDbManager().save(bookEntity);
+      await saveBookAssetsInDatabase(bookEntity, importedBook.assets);
     } catch (e) {
       return Promise.reject(
         new DbWrappedError(`Couldn't save new book #${bookEntity.projetGutenbergId} in db`, e)
@@ -60,6 +62,29 @@ async function saveBookInDatabase(importedBook: ImportedBook): Promise<Book> {
   }
 
   return Promise.resolve(bookEntity);
+}
+
+async function saveBookAssetsInDatabase(
+  bookEntity: Book,
+  importedBookAssets: ImportedBookAsset[]
+): Promise<BookAsset[]> {
+  const bookAssets = importedBookAssets.map((asset: ImportedBookAsset): BookAsset => {
+    const bookAsset = new BookAsset();
+    bookAsset.book = bookEntity;
+    bookAsset.path = asset.path;
+    bookAsset.type = asset.type;
+    bookAsset.size = asset.size;
+    return bookAsset;
+  });
+
+  const dbManager = getDbManager();
+  await Promise.all(
+    bookAssets.map(bookAsset => {
+      dbManager.save(bookAsset);
+    })
+  );
+
+  return bookAssets;
 }
 
 async function saveAuthorInDatabase(importedAuthor: ImportedAuthor, book: Book): Promise<Author> {
