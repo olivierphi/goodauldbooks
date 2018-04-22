@@ -30,7 +30,7 @@ start_db:
 	docker-compose up -d adminer
 
 psql:
-	docker-compose exec db psql -h localhost -U postgres goodauldbooks
+	docker-compose run --rm psql
 
 db_drop:
 	${NODE_BIN}/typeorm schema:drop

@@ -18,6 +18,7 @@ services:
     environment:
       PGHOST: db
       PGUSER: postgres
+      PGDATABASE: goodauldbooks
       PGPASSWORD: local
     depends_on: 
       - db
