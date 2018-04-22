@@ -11,6 +11,19 @@ services:
     ports:
       - 5433:5432
 
+  psql:
+    # Usage: `dc run --rm psql`
+    image: postgres
+    entrypoint: psql
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: local
+    depends_on: 
+      - db
+    volumes:
+      - .:/host # Vagrant style! :-)
+
   adminer:
     image: adminer
     restart: always
@@ -18,3 +31,14 @@ services:
       - db
     ports:
       - 8083:8080
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment: 
+      PGADMIN_DEFAULT_EMAIL: test@local
+      PGADMIN_DEFAULT_PASSWORD: password
+    depends_on: 
+      - db
+    ports:
+      - 8084:80
