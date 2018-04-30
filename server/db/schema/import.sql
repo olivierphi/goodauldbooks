@@ -3,8 +3,6 @@ begin;
 drop schema if exists import cascade;
 create schema import;
 
-create extension if not exists unaccent;
-
 /**
  * I would have liked to prefix all this "Project Gutenberg" stuff with "pg_", but it's generally
  * not a good idea to do so in a PosgreSQL context, which already uses this very same prefix for its own internal stuff :-)
@@ -16,11 +14,18 @@ create extension if not exists unaccent;
  * Tables
  */
 
+create table import.gutenberg_raw_rdf_files (
+  gutenberg_id integer unique not null primary key,
+  rdf_content xml not null,
+  assets jsonb not null,
+  created_at timestamp not null default now()
+);
+
 create table import.gutenberg_author (
   author_id serial primary key,
   gutenberg_id integer unique null,
-  first_name varchar(300) null,
-  last_name varchar(300) null
+  first_name text null,
+  last_name text null
   --   slug varchar(300) unique not null
 );
 
@@ -28,8 +33,9 @@ create table import.gutenberg_book (
   book_id serial primary key,
   gutenberg_id integer unique null,
   lang varchar(3) not null,
-  title varchar(300) not null,
-  slug varchar(300) unique not null,
+  title text not null,
+  subtitle text null,
+  slug text unique not null,
   author_id int references import.gutenberg_author(author_id) not null
 );
 
@@ -50,9 +56,9 @@ create table import.gutenberg_book_genres (
 
 create type import.gutenberg_imported_author as (
   gutenberg_id integer,
-  full_name varchar(300),
-  first_name varchar(300),
-  last_name varchar(300),
+  full_name text,
+  first_name text,
+  last_name text,
   alias varchar(100),
   birth_year integer,
   death_year integer
@@ -61,9 +67,10 @@ create type import.gutenberg_imported_author as (
 create type import.gutenberg_imported_book as (
   gutenberg_id integer,
   lang varchar(3),
-  title varchar(300),
-  slug varchar(300),
-  genres varchar(300)[],
+  title text,
+  subtitle text,
+  slug text,
+  genres text[],
   author import.gutenberg_imported_author
 );
 
@@ -73,35 +80,6 @@ create type import.gutenberg_book_import_result as (
   genre_ids integer[]
 );
 
-create or replace function import.slugify(
-  base_string text
-) returns text
-language sql
-as $function_slugify$
-  -- @link http://schinckel.net/2015/12/16/slugify%28%29-for-postgres-%28almost%29/ :-)
-  with
-  normalized as (
-    select unaccent(base_string) as value
-  ),
-  remove_chars as (
-    select regexp_replace(value, e'[^\\w\\s-]', '', 'gi') as value
-    from normalized
-  ),
-  lowercase as (
-    select lower(value) as value
-    from remove_chars
-  ),
-  trimmed as (
-    select trim(value) as value
-    from lowercase
-  ),
-  hyphenated as (
-    select regexp_replace(value, e'[-\\s]+', '-', 'gi') as value
-    from trimmed
-  )
-  select value from hyphenated;
-$function_slugify$;
-
 create or replace function import.gutenberg_get_book_from_rdf(
   rdf_data xml
 ) returns import.gutenberg_imported_book
@@ -109,34 +87,41 @@ language sql
 immutable
 as $function_get_book_from_rdf$
   with
+  xml_namespaces as (
+    select array[
+      array['rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'],
+      array['dcterms', 'http://purl.org/dc/terms/'],
+      array['pgterms', 'http://www.gutenberg.org/2009/pgterms/']
+    ] as xmlns
+  ),
   rdf_raw_parsing as (
     select
     -- book data
     regexp_replace( trim( unnest( xpath(
       '/rdf:RDF/pgterms:ebook/@rdf:about',
       rdf_data,
-      array[ array['rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'], array['pgterms', 'http://www.gutenberg.org/2009/pgterms/'] ]
+      xmlns
     ) )::text ), '^ebooks/(\d+)$', '\1' )
     as book_id,
 
     trim( unnest( xpath(
       '//dcterms:language/rdf:Description/rdf:value/text()',
       rdf_data,
-      array[ array['rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'], array['dcterms', 'http://purl.org/dc/terms/'] ]
+      xmlns
     ) )::text )
     as book_lang,
 
     trim( unnest( xpath(
       '//dcterms:title/text()',
       rdf_data,
-      array[ array['dcterms', 'http://purl.org/dc/terms/'] ]
+      xmlns
     ) )::text )
     as book_title,
 
     xpath(
       '//dcterms:subject/rdf:Description/rdf:value/text()',
       rdf_data,
-      array[ array['rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'], array['dcterms', 'http://purl.org/dc/terms/'] ]
+      xmlns
     )::text[]
     as book_genres,
 
@@ -144,52 +129,62 @@ as $function_get_book_from_rdf$
     regexp_replace( trim( unnest( xpath(
       '//dcterms:creator/pgterms:agent/@rdf:about',
       rdf_data,
-      array[ array['rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'], array['dcterms', 'http://purl.org/dc/terms/'], array['pgterms', 'http://www.gutenberg.org/2009/pgterms/'] ]
+      xmlns
     ) )::text ), '^\d+/agents/(\d+)$', '\1' )
     as author_id,
 
     trim( unnest( xpath(
       '//dcterms:creator/pgterms:agent/pgterms:name/text()',
       rdf_data,
-      array[ array['dcterms', 'http://purl.org/dc/terms/'], array['pgterms', 'http://www.gutenberg.org/2009/pgterms/'] ]
+      xmlns
     ) )::text )
     as author_name,
 
     trim( unnest( xpath(
       '//dcterms:creator/pgterms:agent/pgterms:alias/text()',
       rdf_data,
-      array[ array['dcterms', 'http://purl.org/dc/terms/'], array['pgterms', 'http://www.gutenberg.org/2009/pgterms/'] ]
+      xmlns
     ) )::text )
     as author_alias,
 
     trim( unnest( xpath(
       '//dcterms:creator/pgterms:agent/pgterms:birthdate/text()',
       rdf_data,
-      array[ array['dcterms', 'http://purl.org/dc/terms/'], array['pgterms', 'http://www.gutenberg.org/2009/pgterms/'] ]
+      xmlns
     ) )::text )
     as author_birth_year,
 
     trim( unnest( xpath(
       '//dcterms:creator/pgterms:agent/pgterms:deathdate/text()',
       rdf_data,
-      array[ array['dcterms', 'http://purl.org/dc/terms/'], array['pgterms', 'http://www.gutenberg.org/2009/pgterms/'] ]
+      xmlns
     ) )::text )
     as author_death_year
+    from
+      xml_namespaces
+  ),
+  sanitisation as (
+    select
+      regexp_replace(book_title, '&#x0d;\W+', ' ', 'g') as sanitised_title
+    from
+      rdf_raw_parsing
   ),
   regexp_parsing as (
     select
-      rdf_raw_parsing.*,
-      regexp_split_to_array(author_name, e'\\s*,\\s*') as author_name_array
+      regexp_split_to_array(author_name, '\s*,\s*') as author_name_array,
+      regexp_split_to_array(sanitised_title, e'\\n+|\\s*;\\s*') as title_array
     from
-      rdf_raw_parsing
+      rdf_raw_parsing,
+      sanitisation
   )
   select
     (
       -- book fields (see the definition of the "import.gutenberg_imported_book" composite type)
       book_id::integer,
       book_lang,
-      book_title,
-      import.slugify(format('%s-%s-%s', book_lang, book_title, author_name)),
+      title_array[1],
+      title_array[2],
+      utils.slugify(format('%s-%s-%s', book_lang, book_title, author_name)),
       book_genres,
       (
         -- author fields (see the definition of the "import.gutenberg_imported_author" composite type)
@@ -203,7 +198,9 @@ as $function_get_book_from_rdf$
       )::import.gutenberg_imported_author
     )::import.gutenberg_imported_book
   from
-      regexp_parsing
+    rdf_raw_parsing,
+    sanitisation,
+    regexp_parsing
   ;
 $function_get_book_from_rdf$;
 
@@ -234,8 +231,8 @@ as $function_create_book$
     -- ditto: only create the book if it doesn't exists already:
     select book_id into returned_book_id from import.gutenberg_book where gutenberg_id = imported_book.gutenberg_id;
     if returned_book_id is null then
-      insert into import.gutenberg_book (gutenberg_id, lang, title, slug, author_id)
-        values (imported_book.gutenberg_id, imported_book.lang, imported_book.title, imported_book.slug, returned_author_id)
+      insert into import.gutenberg_book (gutenberg_id, lang, title, subtitle, slug, author_id)
+        values (imported_book.gutenberg_id, imported_book.lang, imported_book.title, imported_book.subtitle, imported_book.slug, returned_author_id)
       returning book_id into returned_book_id;
     end if;
 

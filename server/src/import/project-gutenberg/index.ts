@@ -1,9 +1,7 @@
 import { EventEmitter } from "events";
-import { dirname, join as pathJoin } from "path";
+import { join as pathJoin } from "path";
 import { ImportedBook } from "../../domain/import";
-import { getImportedBookAssets } from "./assets";
 import { syncBookFilesFolder } from "./files-sync";
-import { extractBookDataFromRdfFile } from "./rdf-parsing";
 
 export type PGBookId = number;
 
@@ -55,13 +53,11 @@ export async function importBookFromProjectGutenberg(
   const bookFilesPath = pathJoin(targetFolderPath, `${bookId}`);
 
   const bookRdfFilePath = pathJoin(bookFilesPath, `pg${bookId}.rdf`);
-  const importedBookData = await extractBookDataFromRdfFile(bookRdfFilePath, "utf8", {
-    eventEmitter: options.eventEmitter,
-  });
 
-  importedBookData.assets = await getImportedBookAssets(bookFilesPath, dirname(bookFilesPath));
-
-  return importedBookData;
+  return {
+    folder: bookFilesPath,
+    rdfFilePath: bookRdfFilePath,
+  };
 }
 
 export function emitEvent(

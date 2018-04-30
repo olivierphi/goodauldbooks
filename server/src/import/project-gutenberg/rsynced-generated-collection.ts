@@ -2,12 +2,11 @@ import { EventEmitter } from "events";
 import * as fastGlob from "fast-glob";
 import { dirname } from "path";
 import { EmittedEvents } from ".";
-import { ImportedBook } from "../../domain/import";
+import { ImportedBookAsset } from "../../domain/import";
+import { container } from "../../services-container";
 import * as asyncUtils from "../../utils/async-utils";
 import { getImportedBookAssets } from "./assets";
-import { storeImportedBookIntoDatabase } from "./database-storage";
-import { NotABookError } from "./errors";
-import { extractBookDataFromRdfFile } from "./rdf-parsing";
+import { emitEvent } from "./index";
 
 export async function traverseDirectoryAndIndexBooks(
   localFolderPath: string,
@@ -33,7 +32,11 @@ export async function traverseDirectoryAndIndexBooks(
         const bookFolderPath = dirname(rdfFilePath);
         nbBooksImportsStarted++;
         try {
-          await importBookFromGeneratedCollectionFiles(bookFolderPath, bookId);
+          await storeBookInDatabaseRawImportsFromGeneratedCollectionFiles(
+            bookFolderPath,
+            rdfFilePath,
+            bookId
+          );
         } catch (e) {
           options.eventEmitter && options.eventEmitter.emit(EmittedEvents.IMPORT_ERROR, e);
         }
@@ -56,44 +59,42 @@ export async function traverseDirectoryAndIndexBooks(
   });
 }
 
-export async function importBookFromGeneratedCollectionFiles(
+export async function storeBookInDatabaseRawImportsFromGeneratedCollectionFiles(
   bookFolderPath: string,
-  bookId: number
-): Promise<boolean> {
-  const rdfFilePath = await getBookRdfFilePath(bookFolderPath, bookId);
-  if (!rdfFilePath) {
-    return Promise.reject(
-      new Error(`No RDF file path found for book ${bookId} in path ${bookFolderPath}`)
-    );
-  }
+  rdfFilePath: string,
+  bookId: number,
+  options: { eventEmitter?: EventEmitter } = {}
+): Promise<void> {
+  const rdfFileContent = await getBookRdfFileContent(rdfFilePath, "utf8", options);
 
-  let bookData: ImportedBook;
-  try {
-    bookData = await extractBookDataFromRdfFile(rdfFilePath);
-    bookData.assets = await getImportedBookAssets(bookFolderPath, dirname(bookFolderPath));
-  } catch (e) {
-    if (e instanceof NotABookError) {
-      return true; // Not a book? Not a problem, just move on :-)
-    }
-    return Promise.reject(e);
+  const bookAssets = await getImportedBookAssets(bookFolderPath, dirname(bookFolderPath));
+  const bookAssetsAsHash: {[type: string]: any} = {};
+  for (const asset of bookAssets) {
+    bookAssetsAsHash[asset.type] = {path: asset.path, size: asset.size};
   }
+  const bookAssetsAsJson = JSON.stringify(bookAssetsAsHash);
 
-  if (!bookData.title) {
-    return Promise.reject(new Error(`Book #${bookData.gutenbergId} has no title`));
-  }
-
-  const bookEntity = await storeImportedBookIntoDatabase(bookData);
-  return true;
+  await container.dbConnection.query(
+    `
+    insert into import.gutenberg_raw_rdf_files (gutenberg_id, rdf_content, assets)
+      values ($1, $2, $3);
+  `,
+    [bookId, rdfFileContent, bookAssetsAsJson]
+  );
 }
 
-async function getBookRdfFilePath(bookFolderPath: string, bookId: number): Promise<string | null> {
-  const rdfFilePath = `${bookFolderPath}/pg${bookId}.rdf`;
-  try {
-    const coverFileStats = await asyncUtils.fs.statAsync(rdfFilePath);
-    if (coverFileStats.isFile) {
-      return Promise.resolve(rdfFilePath);
-    }
-  } catch (e) {}
+export async function getBookRdfFileContent(
+  rdfFilePath: string,
+  encoding: string = "utf8",
+  options: { eventEmitter?: EventEmitter } = {}
+): Promise<string> {
+  emitEvent(options, EmittedEvents.BOOK_RDF_DATA_FILE_READ_START);
+  const rdfData = await asyncUtils.fs.readFileAsync(rdfFilePath, { encoding });
+  emitEvent(options, EmittedEvents.BOOK_RDF_DATA_FILE_READ_END);
 
-  return Promise.resolve(null);
+  if (!rdfData) {
+    return Promise.reject(new Error(`Empty RDF file "${rdfFilePath}"`));
+  }
+
+  return rdfData;
 }

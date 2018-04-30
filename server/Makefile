@@ -27,17 +27,11 @@ copy_assets:
 	cp index.html dist/index.html
 
 start_db:
+	${MAKE} db_update_schema
 	docker-compose up -d adminer
 
 psql:
 	docker-compose run --rm psql
 
-db_drop:
-	${NODE_BIN}/typeorm schema:drop
-
-db_run_migrations:
-	${NODE_BIN}/typeorm migrations:run
-
-db_reset:
-	${MAKE} db_drop
-	DEBUG=* ${MAKE} db_run_migrations 
+db_update_schema:
+	docker-compose run --rm psql -f /host/db/schema/utils.sql -f /host/db/schema/import.sql

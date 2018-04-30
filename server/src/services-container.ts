@@ -1,8 +1,13 @@
-import { Connection } from "typeorm";
+import * as debugFunc from "debug";
+import { Pool } from "pg";
 import { initDbConnection } from "./boot/db-connection-init";
+import { ConnectionWrapper } from "./db/connection-wrapper";
+
+const debug = debugFunc("app:container");
 
 enum SharedServicesIds {
-  DB_CONNECTION,
+  DB_POOL,
+  DB_CONNECTION_WRAPPER,
 }
 
 type SharedServicesRegistry = Map<SharedServicesIds, any>;
@@ -22,27 +27,37 @@ export class ServicesContainer {
 
   public async boot(): Promise<boolean> {
     if (this.booted) {
-      return Promise.resolve(false);
+      return false;
     }
 
     // Let's boot our async services!
+    debug("Booting services container...");
     await this.bootAsyncServices();
+    debug("Services container booted.");
 
     this.booted = true;
-    return Promise.resolve(true);
+    return true;
   }
 
-  get dbConnection(): Connection {
-    if (!sharedServicesRegistry.has(SharedServicesIds.DB_CONNECTION)) {
-      this.throwNotBootedError("dbConnection");
+  get dbPool(): Pool {
+    if (!sharedServicesRegistry.has(SharedServicesIds.DB_POOL)) {
+      this.throwNotBootedError("dbPool");
     }
-    return sharedServicesRegistry.get(SharedServicesIds.DB_CONNECTION);
+    return sharedServicesRegistry.get(SharedServicesIds.DB_POOL);
+  }
+
+  get dbConnection(): ConnectionWrapper {
+    if (!sharedServicesRegistry.has(SharedServicesIds.DB_POOL)) {
+      const dbConnectionWrapper = new ConnectionWrapper(this.dbPool);
+      sharedServicesRegistry.set(SharedServicesIds.DB_POOL, dbConnectionWrapper);
+    }
+    return sharedServicesRegistry.get(SharedServicesIds.DB_POOL);
   }
 
   private async bootAsyncServices() {
     // DB connection
-    const dbConnection = await initDbConnection(this);
-    sharedServicesRegistry.set(SharedServicesIds.DB_CONNECTION, dbConnection);
+    const dbPool = await initDbConnection(this);
+    sharedServicesRegistry.set(SharedServicesIds.DB_POOL, dbPool);
   }
 
   private throwNotBootedError(serviceName: string) {

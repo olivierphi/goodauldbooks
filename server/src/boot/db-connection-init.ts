@@ -1,17 +1,25 @@
-import { join as pathJoin } from "path";
-import "reflect-metadata"; // required by TypeORM
-import { Connection, ConnectionOptionsReader, createConnection } from "typeorm";
+import { Pool } from "pg";
 import { ServicesContainer } from "./../services-container";
 
-export async function initDbConnection(container: ServicesContainer): Promise<Connection> {
-  // We have to build a ConnectionOptionsReader ourselves, as the Yarn workspace is confusing for the default one
-  // (it will look for the "ormconfig" file in the project root rather than in the "server/" folder)
-  const connectionOptionsReader = new ConnectionOptionsReader({
-    root: pathJoin(__dirname, "../../"),
+import * as debugFunc from "debug";
+
+const debug = debugFunc("app:boot");
+
+export async function initDbConnection(container: ServicesContainer): Promise<Pool> {
+  debug(`Connection to db ${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}...`);
+
+  const pool = new Pool();
+  pool.on("error", (err) => {
+    console.error("Unexpected error on idle client", err);
+    process.exit(-1);
   });
-  const connectionOptions = await connectionOptionsReader.get("default");
 
-  const connection = await createConnection(connectionOptions);
+  // Checking the connection :-)
+  const client = await pool.connect();
+  await client.query("select current_user");
+  client.release();
 
-  return Promise.resolve(connection);
+  debug(`Connection successful.`);
+
+  return pool;
 }

@@ -1,13 +1,9 @@
 import { EventEmitter } from "events";
-import { readFile, stat } from "fs";
 import { join as pathJoin } from "path";
-import * as traverse from "traverse";
-import { ImportedBook } from "../../domain/import";
 import * as asyncUtils from "../../utils/async-utils";
 import { downloadFolderViaRsync } from "../../utils/download-utils";
 import { getPathFromBookId } from "../../utils/project-gutenberg-utils";
 import { emitEvent, EmittedEvents, PGBookId, PGConfiguration, PGMirrorData } from "./index";
-import * as rdfParsing from "./rdf-parsing";
 
 export async function syncBookFilesFolder(
   bookId: PGBookId,

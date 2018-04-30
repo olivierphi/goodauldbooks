@@ -1,14 +1,21 @@
 -- nb books by lang:
 with
-grouped_books as(
+nb_books as (
+  select count(*) as nb_books_total from import.gutenberg_book
+),
+grouped_books as (
   select
-    lang, count(*) as nb
+    lang,
+    count(*) as nb,
+    (count(*) * 100::real / nb_books_total)::numeric(5, 2) as percent
   from
-    import.gutenberg_book
+    import.gutenberg_book,
+    nb_books
   group by
+    nb_books_total,
     lang
 )
-select format('Nb books for this lang: %s', nb), lang from grouped_books order by nb desc;
+select lang, nb as nb_books_for_this_lang, percent from grouped_books order by nb desc;
 
 -- literary genres with more than one book:
 with
@@ -21,4 +28,19 @@ grouped_genres as (
   group by
     title
 )
-select format('Nb books for this genre: %s', nb), title from grouped_genres where nb > 1 order by nb desc;
+select title, nb as nb_books_for_this_genre from grouped_genres where nb > 1 order by nb desc;
+
+-- books for a given genre
+-- (AP is "Periodicals" for instance)
+-- @link https://www.loc.gov/aba/cataloging/classification/lcco/lcco_a.pdf
+-- @link https://www.loc.gov/aba/cataloging/classification/lcco/lcco_p.pdf
+select
+  book.gutenberg_id,
+  book.title
+from
+  import.gutenberg_book as book
+  join import.gutenberg_book_genres as book_genres using(book_id)
+  join import.gutenberg_genre as genre using (genre_id)
+where
+  genre.title = 'AP';
+

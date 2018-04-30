@@ -19,7 +19,6 @@ export async function getImportedBookAssets(
   const assetsTypesFilesRegexpsEntries = Object.entries(ASSETS_TYPES_FILES_REGEXPS);
 
   for (const filePath of filesPathsInThatFolder) {
-    console.log(filePath);
     for (const [assetType, fileRegexp] of assetsTypesFilesRegexpsEntries) {
       if (filePath.match(fileRegexp)) {
         assets.push(

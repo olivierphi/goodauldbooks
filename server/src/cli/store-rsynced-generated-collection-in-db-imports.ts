@@ -6,7 +6,6 @@ import * as yargs from "yargs";
 import * as bookImportFromPG from "../import/project-gutenberg";
 import { traverseDirectoryAndIndexBooks } from "../import/project-gutenberg/rsynced-generated-collection";
 import { container } from "../services-container";
-import * as asyncUtils from "../utils/async-utils";
 
 interface Args {
   path: string;
@@ -33,7 +32,7 @@ async function processCommand(input: Args) {
       await container.boot();
       const nbBookImported = await importRsyncedGeneratedCollection(input.path);
       console.log(`Nb books imported: ${nbBookImported}`);
-      await container.dbConnection.close();
+      await container.dbPool.end();
       resolve();
     } catch (e) {
       reject(e);

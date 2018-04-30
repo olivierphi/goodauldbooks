@@ -15,12 +15,12 @@ services:
     # Usage: `dc run --rm psql`
     image: postgres
     entrypoint: psql
+    env_file:
+      - .env
     environment:
       PGHOST: db
-      PGUSER: postgres
-      PGDATABASE: goodauldbooks
-      PGPASSWORD: local
-    depends_on: 
+      PGPORT: 5432
+    depends_on:
       - db
     volumes:
       - .:/host # Vagrant style! :-)

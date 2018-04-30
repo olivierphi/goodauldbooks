@@ -3,8 +3,7 @@
 import { EventEmitter } from "events";
 import * as yargs from "yargs";
 import * as bookImportFromPG from "../import/project-gutenberg";
-import { storeImportedBookIntoDatabase } from "../import/project-gutenberg/database-storage";
-import { Book } from "../orm/entities/book";
+import {storeBookInDatabaseRawImportsFromGeneratedCollectionFiles} from "../import/project-gutenberg/rsynced-generated-collection";
 import { container } from "../services-container";
 
 interface Args {
@@ -67,7 +66,7 @@ async function processCommand(input: Args) {
     try {
       await container.boot();
       await importBook(input);
-      await container.dbConnection.close();
+      await container.dbPool.end();
       resolve();
     } catch (e) {
       reject(e);
@@ -96,11 +95,15 @@ async function importBook(input: Args): Promise<boolean> {
     input.path,
     { offline: input.offline, eventEmitter }
   );
-  console.log(importedBookData);
 
-  const bookEntity = await storeImportedBookIntoDatabase(importedBookData);
+  await storeBookInDatabaseRawImportsFromGeneratedCollectionFiles(
+    importedBookData.folder,
+    importedBookData.rdfFilePath,
+    input.bookId,
+    { eventEmitter }
+  );
 
-  return Promise.resolve(true);
+  return true;
 }
 
 function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): void {
