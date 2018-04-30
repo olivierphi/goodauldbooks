@@ -18,7 +18,7 @@ create table import.gutenberg_raw_rdf_files (
   gutenberg_id integer unique not null primary key,
   rdf_content xml not null,
   assets jsonb not null,
-  created_at timestamp not null default now()
+  imported_at timestamp not null default now()
 );
 
 create table import.gutenberg_author (
@@ -38,11 +38,21 @@ create table import.gutenberg_book (
   slug text unique not null,
   author_id int references import.gutenberg_author(author_id) not null
 );
+create index on import.gutenberg_book(author_id);
+
+create table import.gutenberg_book_asset (
+  book_id integer references import.gutenberg_book(book_id) not null,
+  type varchar(10) not null,
+  path text not null,
+  size integer not null,
+  primary key (book_id, type)
+);
 
 create table import.gutenberg_genre (
   genre_id serial primary key,
   title varchar(300) unique not null
 );
+create index on import.gutenberg_genre using hash(title);
 
 create table import.gutenberg_book_genres (
   book_id integer references import.gutenberg_book(book_id) not null,

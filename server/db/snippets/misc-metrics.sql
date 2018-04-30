@@ -44,3 +44,23 @@ from
 where
   genre.title = 'AP';
 
+-- books assets size:
+with raw_sums as (
+  select
+    sum(size) as total,
+    sum(size) filter (where type = 'cover') as covers,
+    sum(size) filter (where type = 'epub') as epubs,
+    sum(size) filter (where type = 'mobi') as mobis
+  from
+    import.gutenberg_book_asset
+)
+select
+  pg_size_pretty(total) as total,
+  pg_size_pretty(covers) as covers,
+  format('%s%%', (covers * 100::real / total)::numeric(5, 2)) as covers_percent,
+  pg_size_pretty(epubs) as epubs,
+  format('%s%%', (epubs * 100::real / total)::numeric(5, 2)) as epubs_percent,
+  pg_size_pretty(mobis) as mobis,
+  format('%s%%', (mobis * 100::real / total)::numeric(5, 2)) as mobis_percent
+from
+  raw_sums;
