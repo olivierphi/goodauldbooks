@@ -26,4 +26,8 @@ db_update_schema:
 	docker-compose run --rm psql \
 		-f /host/db/schema/utils.sql \
 		-f /host/db/schema/library.sql \
-		-f /host/db/schema/import.sql
+		-f /host/db/schema/import.sql \
+		-f /host/db/schema/api_public.sql
+
+start_api_public:
+	docker-compose up -d postgrest

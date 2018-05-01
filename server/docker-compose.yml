@@ -43,3 +43,10 @@ services:
       - db
     ports:
       - 8084:80
+
+  postgrest:
+    build: docker/postgrest
+    volumes:
+      - ./postgrest-api-public.conf:/etc/postgrest.conf
+    ports:
+      - 8085:3000

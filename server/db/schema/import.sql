@@ -5,7 +5,7 @@ create schema import;
 
 /**
  * I would have liked to prefix all this "Project Gutenberg" stuff with "pg_", but it's generally
- * not a good idea to do so in a PosgreSQL context, which already uses this very same prefix for its own internal stuff :-)
+ * not a good idea to do so in a PostgreSQL context, which already uses this very same prefix for its own internal stuff :-)
  * This is why I ended up choosing the longer "gutenberg_" prefix.
  */
 
@@ -21,8 +21,9 @@ create table import.gutenberg_raw_rdf_files (
   imported_at timestamp not null default now()
 );
 
+
 /**
- * Functions
+ * Composite types
  */
 
 create type import.gutenberg_imported_author as (
@@ -50,6 +51,11 @@ create type import.book_import_result as (
   author_id integer,
   genre_ids integer[]
 );
+
+
+/**
+ * Functions
+ */
 
 create or replace function import.gutenberg_get_book_from_rdf(
   rdf_data xml
@@ -238,54 +244,54 @@ create or replace function import.create_books_from_raw_rdfs(
 language plpgsql
 volatile
 as $function_create_books_from_raw_rdfs$
-declare
-  nb_books_created integer = 0;
-  current_raw_book_data record;
-  current_created_book import.book_import_result;
-  current_raw_book_asset_data record;
-  current_book_nb_assets_created integer;
-  imported_book_data import.gutenberg_imported_book;
-begin
-  if wipe_previsous_books then
-    truncate library.book, library.author, library.genre, library.book_genres, library.book_asset;
-  end if;
-
-  for current_raw_book_data in
-  select
-    gutenberg_id,
-    rdf_content,
-    assets
-  from
-    import.gutenberg_raw_rdf_files
-  where
-    -- We only import books matching the following criteria:
-    -- 1) it must have a epub file
-    assets ? 'epub'
-    -- 2) it must not be a periodical (category "AP")
-    and rdf_content::text not like '%<rdf:value>AP</rdf:value>%'
-  loop
-    -- A) Create books, theirs authors and their literary genres
-    imported_book_data = import.gutenberg_get_book_from_rdf(current_raw_book_data.rdf_content);
-    select * into current_created_book from import.gutenberg_create_book(imported_book_data);
-
-    -- B) Create the books assets
-    current_book_nb_assets_created = 0;
-    for current_raw_book_asset_data in select * from jsonb_each(current_raw_book_data.assets)
-    loop
-      insert into library.book_asset (book_id, type, path, size)
-      values (current_created_book.book_id, current_raw_book_asset_data.key, current_raw_book_asset_data.value->>'path', (current_raw_book_asset_data.value->>'size')::integer);
-      current_book_nb_assets_created = current_book_nb_assets_created + 1;
-    end loop;
-
-    nb_books_created = nb_books_created + 1;
-    if verbose_mode then
-      raise notice 'book % title: % (% assets)', current_raw_book_data.gutenberg_id, imported_book_data.title, current_book_nb_assets_created;
+  declare
+    nb_books_created integer = 0;
+    current_raw_book_data record;
+    current_created_book import.book_import_result;
+    current_raw_book_asset_data record;
+    current_book_nb_assets_created integer;
+    imported_book_data import.gutenberg_imported_book;
+  begin
+    if wipe_previsous_books then
+      truncate library.book, library.author, library.genre, library.book_genres, library.book_asset;
     end if;
 
-  end loop;
+    for current_raw_book_data in
+    select
+      gutenberg_id,
+      rdf_content,
+      assets
+    from
+      import.gutenberg_raw_rdf_files
+    where
+      -- We only import books matching the following criteria:
+      -- 1) it must have a epub file
+      assets ? 'epub'
+      -- 2) it must not be a periodical (category "AP")
+      and rdf_content::text not like '%<rdf:value>AP</rdf:value>%'
+    loop
+      -- A) Create books, theirs authors and their literary genres
+      imported_book_data = import.gutenberg_get_book_from_rdf(current_raw_book_data.rdf_content);
+      select * into current_created_book from import.gutenberg_create_book(imported_book_data);
 
-  return nb_books_created;
-end;
+      -- B) Create the books assets
+      current_book_nb_assets_created = 0;
+      for current_raw_book_asset_data in select * from jsonb_each(current_raw_book_data.assets)
+      loop
+        insert into library.book_asset (book_id, type, path, size)
+        values (current_created_book.book_id, current_raw_book_asset_data.key, current_raw_book_asset_data.value->>'path', (current_raw_book_asset_data.value->>'size')::integer);
+        current_book_nb_assets_created = current_book_nb_assets_created + 1;
+      end loop;
+
+      nb_books_created = nb_books_created + 1;
+      if verbose_mode then
+        raise notice 'book % title: % (% assets)', current_raw_book_data.gutenberg_id, imported_book_data.title, current_book_nb_assets_created;
+      end if;
+
+    end loop;
+
+    return nb_books_created;
+  end;
 $function_create_books_from_raw_rdfs$;
 
 commit;
