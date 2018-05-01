@@ -1,3 +1,4 @@
+begin;
 
 drop schema if exists utils cascade;
 create schema utils;
@@ -34,3 +35,5 @@ with
   )
 select value from hyphenated;
 $function_slugify$;
+
+commit;

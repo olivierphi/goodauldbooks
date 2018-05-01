@@ -21,45 +21,6 @@ create table import.gutenberg_raw_rdf_files (
   imported_at timestamp not null default now()
 );
 
-create table import.gutenberg_author (
-  author_id serial primary key,
-  gutenberg_id integer unique null,
-  first_name text null,
-  last_name text null
-  --   slug varchar(300) unique not null
-);
-
-create table import.gutenberg_book (
-  book_id serial primary key,
-  gutenberg_id integer unique null,
-  lang varchar(3) not null,
-  title text not null,
-  subtitle text null,
-  slug text unique not null,
-  author_id int references import.gutenberg_author(author_id) not null
-);
-create index on import.gutenberg_book(author_id);
-
-create table import.gutenberg_book_asset (
-  book_id integer references import.gutenberg_book(book_id) not null,
-  type varchar(10) not null,
-  path text not null,
-  size integer not null,
-  primary key (book_id, type)
-);
-
-create table import.gutenberg_genre (
-  genre_id serial primary key,
-  title varchar(300) unique not null
-);
-create index on import.gutenberg_genre using hash(title);
-
-create table import.gutenberg_book_genres (
-  book_id integer references import.gutenberg_book(book_id) not null,
-  genre_id integer references import.gutenberg_genre(genre_id) not null,
-  primary key (book_id, genre_id)
-);
-
 /**
  * Functions
  */
@@ -84,7 +45,7 @@ create type import.gutenberg_imported_book as (
   author import.gutenberg_imported_author
 );
 
-create type import.gutenberg_book_import_result as (
+create type import.book_import_result as (
   book_id integer,
   author_id integer,
   genre_ids integer[]
@@ -217,31 +178,31 @@ $function_get_book_from_rdf$;
 
 create or replace function import.gutenberg_create_book(
   imported_book import.gutenberg_imported_book
-) returns import.gutenberg_book_import_result
+) returns import.book_import_result
 language plpgsql
 as $function_create_book$
   declare
     imported_author import.gutenberg_imported_author;
-    returned_author_id import.gutenberg_author.author_id%type;
-    returned_book_id import.gutenberg_book.book_id%type;
-    genre_title import.gutenberg_genre.title%type;
-    created_genre_id import.gutenberg_genre.genre_id%type;
+    returned_author_id library.author.author_id%type;
+    returned_book_id library.book.book_id%type;
+    genre_title library.genre.title%type;
+    created_genre_id library.genre.genre_id%type;
     returned_genres_ids integer[] = array[]::integer[];
   begin
     imported_author = imported_book.author;
 
     -- only create the author if it doesn't exists already:
-    select author_id into returned_author_id from import.gutenberg_author where gutenberg_id = imported_author.gutenberg_id;
+    select author_id into returned_author_id from library.author where gutenberg_id = imported_author.gutenberg_id;
     if returned_author_id is null then
-      insert into import.gutenberg_author(gutenberg_id, first_name, last_name)
+      insert into library.author(gutenberg_id, first_name, last_name)
         values (imported_author.gutenberg_id, imported_author.first_name, imported_author.last_name)
       returning author_id into returned_author_id;
     end if;
 
     -- ditto: only create the book if it doesn't exists already:
-    select book_id into returned_book_id from import.gutenberg_book where gutenberg_id = imported_book.gutenberg_id;
+    select book_id into returned_book_id from library.book where gutenberg_id = imported_book.gutenberg_id;
     if returned_book_id is null then
-      insert into import.gutenberg_book (gutenberg_id, lang, title, subtitle, slug, author_id)
+      insert into library.book (gutenberg_id, lang, title, subtitle, slug, author_id)
         values (imported_book.gutenberg_id, imported_book.lang, imported_book.title, imported_book.subtitle, imported_book.slug, returned_author_id)
       returning book_id into returned_book_id;
     end if;
@@ -249,9 +210,9 @@ as $function_create_book$
     -- create genres:
     foreach genre_title in array imported_book.genres
     loop
-      select genre_id into created_genre_id from import.gutenberg_genre where title = genre_title;
+      select genre_id into created_genre_id from library.genre where title = genre_title;
       if created_genre_id is null then
-        insert into import.gutenberg_genre (title)
+        insert into library.genre (title)
           values (genre_title) on conflict do nothing
         returning genre_id into created_genre_id;
       end if;
@@ -261,17 +222,18 @@ as $function_create_book$
     -- create relations with those genres:
     foreach created_genre_id in array returned_genres_ids
     loop
-      insert into import.gutenberg_book_genres (book_id, genre_id)
+      insert into library.book_genres (book_id, genre_id)
         values (returned_book_id, created_genre_id) on conflict do nothing;
     end loop;
 
-    return (returned_book_id, returned_author_id, returned_genres_ids)::import.gutenberg_book_import_result;
+    return (returned_book_id, returned_author_id, returned_genres_ids)::import.book_import_result;
   end;
 $function_create_book$;
 
 
 create or replace function import.create_books_from_raw_rdfs(
-  wipe_previsous_books bool
+  wipe_previsous_books bool,
+  verbose_mode bool = true
 ) returns integer
 language plpgsql
 volatile
@@ -279,13 +241,13 @@ as $function_create_books_from_raw_rdfs$
 declare
   nb_books_created integer = 0;
   current_raw_book_data record;
-  current_created_book import.gutenberg_book_import_result;
+  current_created_book import.book_import_result;
   current_raw_book_asset_data record;
   current_book_nb_assets_created integer;
   imported_book_data import.gutenberg_imported_book;
 begin
   if wipe_previsous_books then
-    truncate import.gutenberg_book, import.gutenberg_author, import.gutenberg_genre, import.gutenberg_book_genres, import.gutenberg_book_asset;
+    truncate library.book, library.author, library.genre, library.book_genres, library.book_asset;
   end if;
 
   for current_raw_book_data in
@@ -310,21 +272,20 @@ begin
     current_book_nb_assets_created = 0;
     for current_raw_book_asset_data in select * from jsonb_each(current_raw_book_data.assets)
     loop
-      insert into import.gutenberg_book_asset (book_id, type, path, size)
+      insert into library.book_asset (book_id, type, path, size)
       values (current_created_book.book_id, current_raw_book_asset_data.key, current_raw_book_asset_data.value->>'path', (current_raw_book_asset_data.value->>'size')::integer);
       current_book_nb_assets_created = current_book_nb_assets_created + 1;
     end loop;
 
     nb_books_created = nb_books_created + 1;
-    raise notice 'book % title: % (% assets)', current_raw_book_data.gutenberg_id, imported_book_data.title, current_book_nb_assets_created;
-
+    if verbose_mode then
+      raise notice 'book % title: % (% assets)', current_raw_book_data.gutenberg_id, imported_book_data.title, current_book_nb_assets_created;
+    end if;
 
   end loop;
-
-
 
   return nb_books_created;
 end;
 $function_create_books_from_raw_rdfs$;
 
-commit
+commit;

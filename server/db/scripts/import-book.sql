@@ -13,7 +13,3 @@ from
 ;
 
 commit;
-
-table import.gutenberg_book;
-table import.gutenberg_author;
-table import.gutenberg_genre;

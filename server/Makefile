@@ -1,37 +1,29 @@
-NODE_ENV?=development
+GUTENBERG_GENERATED_COLLECTION_PATH?=~/gutenberg-mirror/generated-collection
+PSQL?=docker-compose run --rm psql
 
-NODE_BIN?=./node_modules/.bin
-NODE_BIN_ROOT?=../node_modules/.bin
-
-clean:
-	rm -rf dist/ || true
-	mkdir -p dist/
-
-build:
-	${MAKE} clean
-	${MAKE} build_js
-
-build_js:
-	${NODE_BIN}/tsc
-	chmod +x ./dist/cli/*.js
-
-lint:
-# @link https://github.com/prettier/prettier/issues/1358#issuecomment-295669193 :-)
-	${NODE_BIN_ROOT}/prettier --config ../prettier.config.js --write "{,!(node_modules|dist)/**/}*.{js,json,md}"
-	${NODE_BIN_ROOT}/tslint --fix 'src/**/*.ts'
-
-start_dev: clean start_db
-	${NODE_BIN}/tsc --watch
-
-copy_assets:
-	cp index.html dist/index.html
-
-start_db:
+reset_db_and_import_gutenberg_books:
+	docker-compose up -d db
 	${MAKE} db_update_schema
-	docker-compose up -d adminer
+	${MAKE} build_api_admin
+	${MAKE} import_gutenberg_books
+
+import_gutenberg_books:
+	time ${PSQL} -c 'select * from import.create_books_from_raw_rdfs(false);'
+
+build_api_admin:
+	cd api-admin/ && \
+		make install && \
+		make build && \
+		time ./dist/cli/store-rsynced-generated-collection-in-db-imports.js ${GUTENBERG_GENERATED_COLLECTION_PATH}
+
+start_dev_api_admin:
+	cd api-admin && make start_dev
 
 psql:
-	docker-compose run --rm psql
+	${PSQL}
 
 db_update_schema:
-	docker-compose run --rm psql -f /host/db/schema/utils.sql -f /host/db/schema/import.sql
+	docker-compose run --rm psql \
+		-f /host/db/schema/utils.sql \
+		-f /host/db/schema/library.sql \
+		-f /host/db/schema/import.sql

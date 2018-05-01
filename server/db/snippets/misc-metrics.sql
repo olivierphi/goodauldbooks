@@ -1,7 +1,7 @@
 -- nb books by lang:
 with
 nb_books as (
-  select count(*) as nb_books_total from import.gutenberg_book
+  select count(*) as nb_books_total from library.book
 ),
 grouped_books as (
   select
@@ -9,13 +9,19 @@ grouped_books as (
     count(*) as nb,
     (count(*) * 100::real / nb_books_total)::numeric(5, 2) as percent
   from
-    import.gutenberg_book,
+    library.book,
     nb_books
   group by
     nb_books_total,
     lang
 )
-select lang, nb as nb_books_for_this_lang, percent from grouped_books order by nb desc;
+select
+  lang, nb as nb_books_for_this_lang, percent
+from
+  grouped_books
+order by
+  nb desc
+;
 
 -- literary genres with more than one book:
 with
@@ -23,12 +29,20 @@ grouped_genres as (
   select
     title, count(*) as nb
   from
-    import.gutenberg_book_genres
-      join import.gutenberg_genre using(genre_id)
+    library.book_genres
+      join library.genre using(genre_id)
   group by
     title
 )
-select title, nb as nb_books_for_this_genre from grouped_genres where nb > 1 order by nb desc;
+select
+  title, nb as nb_books_for_this_genre
+from
+  grouped_genres
+where
+  nb > 1
+order by
+  nb desc
+;
 
 -- books for a given genre
 -- (AP is "Periodicals" for instance)
@@ -38,30 +52,26 @@ select
   book.gutenberg_id,
   book.title
 from
-  import.gutenberg_book as book
-  join import.gutenberg_book_genres as book_genres using(book_id)
-  join import.gutenberg_genre as genre using (genre_id)
+  library.book as book
+  join library.book_genres as book_genres using(book_id)
+  join library.genre as genre using (genre_id)
 where
-  genre.title = 'AP';
+  genre.title = 'Horror tales';
 
 -- books assets sizes:
-create schema if not exists exts;
-
-create extension if not exists tablefunc schema exts;
-
 with
 total as (
   select
     count(*) as nb,
     sum(size) as size
   from
-    import.gutenberg_book_asset
+    library.book_asset
 ),
 asset_type as (
   select
     distinct(type) as type
   from
-    import.gutenberg_book_asset
+    library.book_asset
 ),
 metrics_by_asset_type as (
   select
@@ -69,7 +79,7 @@ metrics_by_asset_type as (
     count(*) as nb,
     sum(size) as sum
   from
-    import.gutenberg_book_asset
+    library.book_asset
   group by
     type
 ),
@@ -120,3 +130,29 @@ select
 from
   all_raw
 ;
+
+
+-- Author with multiple books:
+with
+author_with_nb_books as (
+  select
+    author_id,
+    format('%s %s', author.first_name, author.last_name) as author_name,
+    count(author_id) as nb_books
+  from
+    library.author as author
+    join
+      library.book using (author_id)
+  group by
+    author_id
+)
+select
+  author_id,
+  author_name,
+  nb_books
+from
+  author_with_nb_books
+where
+  nb_books > 1
+order by
+  nb_books desc;
