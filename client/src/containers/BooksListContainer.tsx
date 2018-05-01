@@ -5,7 +5,7 @@ import { BooksList, BooksListProps } from "../components/BooksList";
 import { CurrentLangContext } from "../contexts/lang";
 import { PaginationRequestData } from "../domain/queries";
 import { AppState } from "../store";
-import { fetchBooksList } from "../store/actions";
+import { fetchPinnedBooksList } from "../store/actions";
 
 const mapStateToProps = (state: AppState) => {
   return {
@@ -16,7 +16,7 @@ const mapStateToProps = (state: AppState) => {
 const mapDispatchToProps = (dispatch: (action: Action) => void) => {
   return {
     fetchBooksList: () => {
-      dispatch(fetchBooksList({ page: 1, nbPerPage: 10 }));
+      dispatch(fetchPinnedBooksList({ page: 1, nbPerPage: 10 }));
     },
   };
 };

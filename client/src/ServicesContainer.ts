@@ -1,8 +1,8 @@
-import {Store} from "redux";
+import { Store } from "redux";
 import * as queriesDomain from "./domain/queries";
 import { BooksRepository } from "./repositories/BooksRepository";
-import {AppState} from "./store";
-import {initStore} from "./store-init";
+import { AppState } from "./store";
+import { initStore } from "./store-init";
 
 enum SharedServicesIds {
   APP_STATE_STORE,
@@ -12,10 +12,7 @@ enum SharedServicesIds {
 type SharedServicesRegistry = Map<SharedServicesIds, any>;
 
 const sharedServicesRegistry: SharedServicesRegistry = new Map();
-function sharedService(
-  serviceId: SharedServicesIds,
-  serviceFactory: () => any
-) {
+function sharedService(serviceId: SharedServicesIds, serviceFactory: () => any) {
   if (sharedServicesRegistry.has(serviceId)) {
     return sharedServicesRegistry.get(serviceId);
   }

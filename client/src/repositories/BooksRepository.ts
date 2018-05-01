@@ -1,34 +1,59 @@
+import axios from "axios";
 import { Store } from "redux";
 import * as coreDomain from "../domain/core";
 import * as queriesDomain from "../domain/queries";
 import { AppState } from "../store";
-import { books as booksFixtures } from "./fixtures";
-
-const FAKE_ASYNC_LATENCY = 300;
 
 export class BooksRepository implements queriesDomain.BooksRepository {
   constructor(private appStateStore: Store<AppState>) {}
 
-  public getBooks(pagination: queriesDomain.PaginationRequestData): Promise<coreDomain.BooksById> {
-    return new Promise((resolve, reject) => {
-      const booksById = getBooksByIdFromBooksArray(booksFixtures);
-      setTimeout(resolve.bind(null, booksById), FAKE_ASYNC_LATENCY);
-    });
+  public async getPinnedBooks(
+    pagination: queriesDomain.PaginationRequestData
+  ): Promise<coreDomain.BooksById> {
+    const response = await axios.get("/rpc/pinned_books");
+    const pinnedBooks: coreDomain.Book[] = response.data.map(
+      (pinnedBook: ServerResponse.PinnedBook): coreDomain.Book => {
+        return {
+          id: pinnedBook.book_id,
+          title: pinnedBook.book_title,
+          subtitle: pinnedBook.book_subtitle,
+          author: {
+            firstName: pinnedBook.author_firstname,
+            lastName: pinnedBook.author_lastname,
+          },
+          genres: pinnedBook.genres,
+        };
+      }
+    );
+
+    return Promise.resolve(getBooksByIdFromBooksArray(pinnedBooks));
   }
 
-  public getBookById(bookId: string): Promise<coreDomain.Book | null> {
+  public async getBookById(bookId: string): Promise<coreDomain.Book | null> {
     const appStateStoreBooksById = this.appStateStore.getState().booksById;
     if (appStateStoreBooksById[bookId]) {
       return Promise.resolve(appStateStoreBooksById[bookId]);
     }
 
-    return new Promise((resolve, reject) => {
-      const book = getBookByIdFromBooksArray(booksFixtures, bookId);
-      if (book) {
-        appStateStoreBooksById[bookId] = book;
-      }
-      setTimeout(resolve.bind(null, book), FAKE_ASYNC_LATENCY);
+    const response = await axios.get("/rpc/get_book_by_id", {
+      params: {
+        id: bookId,
+      },
     });
+
+    const bookDataFromServer: ServerResponse.Book = response.data[0];
+    const book = {
+      id: bookDataFromServer.book_id,
+      title: bookDataFromServer.book_title,
+      subtitle: bookDataFromServer.book_subtitle,
+      author: {
+        firstName: bookDataFromServer.author_firstname,
+        lastName: bookDataFromServer.author_lastname,
+      },
+      genres: bookDataFromServer.genres,
+    };
+
+    return Promise.resolve(book);
   }
 }
 
@@ -52,4 +77,18 @@ function getBookByIdFromBooksArray(
   }
 
   return null;
+}
+
+namespace ServerResponse {
+  export interface Book {
+    book_id: string;
+    book_title: string;
+    book_subtitle: string | null;
+    lang: string;
+    author_firstname: string | null;
+    author_lastname: string | null;
+    genres: string[];
+  }
+
+  export interface PinnedBook extends Book {}
 }

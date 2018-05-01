@@ -16,6 +16,7 @@
     ],
     "object-literal-sort-keys": false,
     "no-empty-interface": false,
-    "jsx-no-multiline-js": false
+    "jsx-no-multiline-js": false,
+    "no-namespace": false
   }
 }

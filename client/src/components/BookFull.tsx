@@ -10,7 +10,7 @@ export interface BookFullProps {
 export function BookFull(props: BookFullProps) {
   return (
     <CurrentLangContext.Consumer>
-      {(currentLang: Lang) => <h3>{props.book.title[currentLang]}</h3>}
+      {(currentLang: Lang) => <h3>{props.book.title}</h3>}
     </CurrentLangContext.Consumer>
   );
 }

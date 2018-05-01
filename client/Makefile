@@ -22,7 +22,7 @@ build_css:
 
 lint:
 # @link https://github.com/prettier/prettier/issues/1358#issuecomment-295669193 :-)
-	${NODE_BIN_ROOT}/prettier --config ../prettier.config.js --write "{,!(node_modules|dist)/**/}*.{js,json,md}"
+	${NODE_BIN_ROOT}/prettier --config ../prettier.config.js --write "{,!(node_modules|dist)/**/}*.{js,ts,tsx,json,md}"
 	${NODE_BIN_ROOT}/tslint --fix 'src/**/*.{ts,tsx}'
 
 start_dev: copy_assets

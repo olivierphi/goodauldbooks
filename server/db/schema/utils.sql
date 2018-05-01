@@ -10,6 +10,7 @@ create extension if not exists unaccent schema exts;
 create or replace function utils.slugify(
   base_string text
 ) returns text
+immutable
 language sql
 as $function_slugify$
 -- @link http://schinckel.net/2015/12/16/slugify%28%29-for-postgres-%28almost%29/ :-)
@@ -35,5 +36,22 @@ with
   )
 select value from hyphenated;
 $function_slugify$;
+
+create or replace function utils.author_name(
+  author_firstname text,
+  author_lastname text
+) returns text
+immutable
+language sql
+as $function_author_name$
+  select
+    case
+      when author_firstname is null and author_lastname is null then ''
+      when author_firstname is null then author_lastname
+      when author_lastname is null then author_firstname
+      else concat(author_firstname, ' ', author_lastname)
+    end
+  ;
+$function_author_name$;
 
 commit;

@@ -2,7 +2,6 @@ import { EventEmitter } from "events";
 import * as fastGlob from "fast-glob";
 import { dirname } from "path";
 import { EmittedEvents } from ".";
-import { ImportedBookAsset } from "../../domain/import";
 import { container } from "../../services-container";
 import * as asyncUtils from "../../utils/async-utils";
 import { getImportedBookAssets } from "./assets";

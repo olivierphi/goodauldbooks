@@ -12,14 +12,12 @@ export function ListItem(props: ListItemProps) {
 
   return (
     <div className="card mb-4 box-shadow">
-      <div className="card-header">{book.title[props.currentLang]}</div>
+      <div className="card-header">{book.title}</div>
       <div className="card-body">
         <h5 className="card-title">
-          <Link to={`/books/${book.id}`}>{book.title[props.currentLang]}</Link>
+          <Link to={`/books/${book.id}`}>{book.title}</Link>
         </h5>
-        <p className="card-text">
-          {book.genres.map((genre: Genre) => genre.name[props.currentLang])}
-        </p>
+        <p className="card-text">{book.genres.join(", ")}</p>
       </div>
     </div>
   );

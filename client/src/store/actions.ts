@@ -7,8 +7,8 @@ export enum Actions {
   FETCH_BOOK = "FETCH_BOOK",
 }
 
-export function fetchBooksList(pagination: PaginationRequestData): Action {
-  const fetchBooksPromise = container.booksRepository.getBooks(pagination);
+export function fetchPinnedBooksList(pagination: PaginationRequestData): Action {
+  const fetchBooksPromise = container.booksRepository.getPinnedBooks(pagination);
   return { type: Actions.FETCH_ALL_BOOKS, payload: fetchBooksPromise };
 }
 

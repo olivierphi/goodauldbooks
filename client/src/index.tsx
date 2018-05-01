@@ -1,3 +1,4 @@
+import axios from "axios";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { Provider as ReduxStoreProvider } from "react-redux";
@@ -8,6 +9,8 @@ import { Lang } from "./domain/core";
 import { BookPage } from "./pages/BookPage";
 import { HomePage } from "./pages/HomePage";
 import { container } from "./ServicesContainer";
+
+axios.defaults.baseURL = "http://localhost:8085"; // TODO: handle this in a cleaner way, of course :-)
 
 ReactDOM.render(
   <ReduxStoreProvider store={container.appStateStore}>
