@@ -44,23 +44,79 @@ from
 where
   genre.title = 'AP';
 
--- books assets size:
-with raw_sums as (
+-- books assets sizes:
+create schema if not exists exts;
+
+create extension if not exists tablefunc schema exts;
+
+with
+total as (
   select
-    sum(size) as total,
-    sum(size) filter (where type = 'cover') as covers,
-    sum(size) filter (where type = 'epub') as epubs,
-    sum(size) filter (where type = 'mobi') as mobis
+    count(*) as nb,
+    sum(size) as size
   from
     import.gutenberg_book_asset
+),
+asset_type as (
+  select
+    distinct(type) as type
+  from
+    import.gutenberg_book_asset
+),
+metrics_by_asset_type as (
+  select
+    type,
+    count(*) as nb,
+    sum(size) as sum
+  from
+    import.gutenberg_book_asset
+  group by
+    type
+),
+percentages as (
+  select
+    type,
+    (metrics.nb * 100::real / total.nb) as nb,
+    (metrics.sum * 100::real / total.size) as size
+  from
+    total,
+    metrics_by_asset_type as metrics
+),
+all_raw as (
+  (
+    select
+      'Total' as type,
+      nb,
+      100 as nb_percent,
+      size,
+      100 as size_percent
+    from
+      total
+  )
+  union all
+  (
+    select
+      asset_type.type,
+      metrics.nb,
+      percentages.nb as nb_percent,
+      metrics.sum as size,
+      percentages.size as size_percent
+    from
+      asset_type
+      join
+      metrics_by_asset_type as metrics using (type)
+      join
+        percentages using (type)
+    order by
+      size desc
+  )
 )
 select
-  pg_size_pretty(total) as total,
-  pg_size_pretty(covers) as covers,
-  format('%s%%', (covers * 100::real / total)::numeric(5, 2)) as covers_percent,
-  pg_size_pretty(epubs) as epubs,
-  format('%s%%', (epubs * 100::real / total)::numeric(5, 2)) as epubs_percent,
-  pg_size_pretty(mobis) as mobis,
-  format('%s%%', (mobis * 100::real / total)::numeric(5, 2)) as mobis_percent
+  type,
+  nb,
+  format('%s %%', nb_percent::numeric(5,2)) as nb_percent,
+  pg_size_pretty(size) as size,
+  format('%s %%', size_percent::numeric(5,2)) as size_percent
 from
-  raw_sums;
+  all_raw
+;
