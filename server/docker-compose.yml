@@ -4,15 +4,14 @@ services:
 
   db:
     image: postgres
-    restart: always
     environment:
       POSTGRES_PASSWORD: local
       POSTGRES_DB: goodauldbooks
     ports:
       - 5433:5432
 
-  psql:
-    # Usage: `dc run --rm psql`
+  db-cli:
+    # Usage: `dc run --rm db-cli`
     image: postgres
     entrypoint: psql
     env_file:
@@ -20,6 +19,7 @@ services:
     environment:
       PGHOST: db
       PGPORT: 5432
+      PGDATABASE: goodauldbooks
     depends_on:
       - db
     volumes:
@@ -27,18 +27,16 @@ services:
 
   adminer:
     image: adminer
-    restart: always
-    depends_on: 
+    depends_on:
       - db
     ports:
       - 8083:8080
 
   pgadmin:
     image: dpage/pgadmin4
-    restart: always
-    environment: 
-      PGADMIN_DEFAULT_EMAIL: test@local
-      PGADMIN_DEFAULT_PASSWORD: password
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local
+      PGADMIN_DEFAULT_PASSWORD: 4yLuDlsWYzvX
     depends_on: 
       - db
     ports:

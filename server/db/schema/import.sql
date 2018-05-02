@@ -14,7 +14,7 @@ create schema import;
  * Tables
  */
 
-create table import.gutenberg_raw_rdf_files (
+create table import.gutenberg_raw_data (
   gutenberg_id integer unique not null primary key,
   rdf_content xml not null,
   assets jsonb not null,
@@ -95,11 +95,13 @@ as $function_get_book_from_rdf$
     ) )::text )
     as book_title,
 
-    xpath(
-      '//dcterms:subject/rdf:Description/rdf:value/text()',
-      rdf_data,
-      xmlns
-    )::text[]
+    utils.array_remove_nulls(
+      xpath(
+        '//dcterms:subject/rdf:Description/rdf:value/text()',
+        rdf_data,
+        xmlns
+      ) :: text []
+    )
     as book_genres,
 
     -- author data
@@ -214,23 +216,25 @@ as $function_create_book$
     end if;
 
     -- create genres:
-    foreach genre_title in array imported_book.genres
-    loop
-      select genre_id into created_genre_id from library.genre where title = genre_title;
-      if created_genre_id is null then
-        insert into library.genre (title)
-          values (genre_title) on conflict do nothing
-        returning genre_id into created_genre_id;
-      end if;
-      select array_append(returned_genres_ids, created_genre_id) into returned_genres_ids;
-    end loop;
+    if imported_book.genres is not null then
+      foreach genre_title in array imported_book.genres
+      loop
+        select genre_id into created_genre_id from library.genre where title = genre_title;
+        if created_genre_id is null then
+          insert into library.genre (title)
+            values (genre_title) on conflict do nothing
+          returning genre_id into created_genre_id;
+        end if;
+        select array_append(returned_genres_ids, created_genre_id) into returned_genres_ids;
+      end loop;
 
-    -- create relations with those genres:
-    foreach created_genre_id in array returned_genres_ids
-    loop
-      insert into library.book_genres (book_id, genre_id)
-        values (returned_book_id, created_genre_id) on conflict do nothing;
-    end loop;
+      -- create relations with those genres:
+      foreach created_genre_id in array returned_genres_ids
+      loop
+        insert into library.book_genres (book_id, genre_id)
+          values (returned_book_id, created_genre_id) on conflict do nothing;
+      end loop;
+    end if;
 
     return (returned_book_id, returned_author_id, returned_genres_ids)::import.book_import_result;
   end;
@@ -239,7 +243,7 @@ $function_create_book$;
 
 create or replace function import.create_books_from_raw_rdfs(
   wipe_previsous_books bool,
-  verbose_mode bool = true
+  verbosity integer = 0
 ) returns integer
 language plpgsql
 volatile
@@ -262,7 +266,7 @@ as $function_create_books_from_raw_rdfs$
       rdf_content,
       assets
     from
-      import.gutenberg_raw_rdf_files
+      import.gutenberg_raw_data
     where
       -- We only import books matching the following criteria:
       -- 1) it must have a epub file
@@ -284,11 +288,13 @@ as $function_create_books_from_raw_rdfs$
       end loop;
 
       nb_books_created = nb_books_created + 1;
-      if verbose_mode then
-        raise notice 'book % title: % (% assets)', current_raw_book_data.gutenberg_id, imported_book_data.title, current_book_nb_assets_created;
+      if (verbosity > 1 or (verbosity = 1 and nb_books_created % 100 = 0)) then
+        raise notice 'book % - g%: % (% assets)', nb_books_created, current_raw_book_data.gutenberg_id, imported_book_data.title, current_book_nb_assets_created;
       end if;
 
     end loop;
+
+    refresh materialized view concurrently library.book_with_related_data;
 
     return nb_books_created;
   end;

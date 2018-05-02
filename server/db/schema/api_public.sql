@@ -20,9 +20,9 @@ create type api_public.book_search_result as (
 create type api_public.quick_autocompletion_result as (
   book_id text,
   book_title text,
-  author_name text,
   lang varchar(3),
-  url text
+  author_first_name text,
+  author_last_name text
 );
 
 /**
@@ -40,27 +40,18 @@ as $function_search_book$
   -- but that will be enough for a first test :-)
   select
     (
-      book.slug, -- todo: choose a books ids strategy
-      book.title,
-      book.subtitle,
-      book.lang,
-      author.first_name,
-      author.last_name,
-      array_agg(genre.title)
+      id,
+      title,
+      subtitle,
+      lang,
+      author_first_name,
+      author_last_name,
+      genres
     )::api_public.book_search_result
   from
-    library.book
-    join
-      library.author using (author_id)
-    left join
-      library.book_genres using (book_id)
-    left join
-      library.genre using (genre_id)
+    library.book_with_related_data
   where
-    book.title ilike concat('%', pattern, '%')
-  group by
-    book.book_id,
-    author.author_id
+    title ilike concat('%', pattern, '%')
   ;
 $function_search_book$;
 
@@ -74,16 +65,14 @@ as $function_quick_autocompletion$
   -- first (very) naive version, to improve later :-)
   select
     (
-      book.slug, -- todo: choose a books ids strategy
-      book.title,
-      utils.author_name(author.first_name, author.last_name),
-      book.lang,
-      book.slug -- todo: build a real URLs strategy
+      id,
+      title,
+      lang,
+      author_first_name,
+      author_last_name
     )::api_public.quick_autocompletion_result
   from
-    library.book
-    join
-      library.author using (author_id)
+    library.book_with_related_data
   where
     title ilike concat(pattern, '%')
   ;
@@ -96,63 +85,55 @@ language sql
 stable
 as $function_pinned_books$
   -- first (very) naive version, to improve later :-)
+  with
+  pinned_books_ids as (
+    select
+      value::text[] as books_ids
+    from
+      webapp.settings
+    where
+      name = 'pinned_books_ids'
+  )
   select
     (
-      book.slug, -- todo: choose a books ids strategy
-      book.title,
-      book.subtitle,
-      book.lang,
-      author.first_name,
-      author.last_name,
-      array_agg(genre.title)
+      id,
+      title,
+      subtitle,
+      lang,
+      author_first_name,
+      author_last_name,
+      genres
     )::api_public.book_search_result
   from
-    library.book
-    join
-    library.author using (author_id)
-    left join
-    library.book_genres using (book_id)
-    left join
-    library.genre using (genre_id)
+    library.book_with_related_data
   where
-    book.gutenberg_id in (345, 84, 174)
-  group by
-    book.book_id,
-    author.author_id
+    id in (select unnest(books_ids) from pinned_books_ids);
   ;
 $function_pinned_books$;
 
--- `curl -sS localhost:8085/rpc/get_book_by_id?id=en-stickeen-muir-john | jq`
+-- `curl -sS localhost:8085/rpc/get_book_by_id?book_id=g345 | jq`
 create or replace function api_public.get_book_by_id(
-  id text
-) returns setof api_public.book_search_result
+  book_id text
+) returns api_public.book_search_result
 language sql
 stable
 as $function_get_book_by_id$
   -- first (very) naive version, to improve later :-)
   select
     (
-      book.slug, -- todo: choose a books ids strategy
-      book.title,
-      book.subtitle,
-      book.lang,
-      author.first_name,
-      author.last_name,
-      array_agg(genre.title)
+      id,
+      title,
+      subtitle,
+      lang,
+      author_first_name,
+      author_last_name,
+      genres
     )::api_public.book_search_result
   from
-    library.book
-    join
-    library.author using (author_id)
-    left join
-    library.book_genres using (book_id)
-    left join
-    library.genre using (genre_id)
+    library.book_with_related_data
   where
-    book.slug = id
-  group by
-    book.book_id,
-    author.author_id
+    id = book_id
+  limit 1
   ;
 $function_get_book_by_id$;
 
@@ -160,38 +141,56 @@ $function_get_book_by_id$;
  * Postgrest users configuration
  * @link https://postgrest.com/en/v4.4/auth.html
  */
-revoke usage on schema
-  api_public, library, utils
-from
-  api_public_authenticator, api_public_anon
-cascade;
-revoke all privileges on all tables in schema
-  api_public, library
-from
-  api_public_authenticator, api_public_anon
-cascade;
-revoke all privileges on all functions in schema
-  api_public, library, utils
-from
-  api_public_authenticator, api_public_anon
-cascade;
+do
+$do_revoke$
+begin
+  if (
+   select
+     count(*)
+    from
+      pg_catalog.pg_roles
+    where
+      rolname in ('api_public_authenticator', 'api_public_anon')
+  ) > 1 then
+    revoke usage on schema
+      api_public, library, utils, webapp
+    from
+      api_public_authenticator, api_public_anon
+    cascade;
+
+    revoke all privileges on all tables in schema
+      api_public, library, webapp
+    from
+      api_public_authenticator, api_public_anon
+    cascade;
+
+    revoke all privileges on all functions in schema
+      api_public, library, utils, webapp
+    from
+      api_public_authenticator, api_public_anon
+    cascade;
+  end if;
+end;
+$do_revoke$;
 
 drop role if exists api_public_authenticator;
 drop role if exists api_public_anon;
 
 create role api_public_anon nologin;
 
-create role api_public_authenticator noinherit password 'devpassword' login; -- change that hard-coded password later of course ^_^
+create role api_public_authenticator noinherit login password 'devpassword'; -- change that hard-coded password later of course ^_^
 grant api_public_anon to api_public_authenticator;
 
 -- "Anonymous" role permissions. We have to be very careful with that! :-)
 grant usage on schema
-  api_public, library, utils
+  api_public, library, utils, webapp
 to
   api_public_anon;
 grant select on table
   library.book, library.author,
-  library.book_genres, library.genre
+  library.book_genres, library.genre,
+  library.book_with_related_data,
+  webapp.settings
 to
   api_public_anon;
 
@@ -199,8 +198,7 @@ grant execute on function
   api_public.search_book(pattern text),
   api_public.quick_autocompletion(pattern text),
   api_public.pinned_books(),
-  api_public.get_book_by_id(id text),
-  utils.author_name
+  api_public.get_book_by_id(id text)
 to
   api_public_anon;
 

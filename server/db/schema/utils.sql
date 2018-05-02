@@ -4,8 +4,11 @@ drop schema if exists utils cascade;
 create schema utils;
 
 create schema if not exists exts;
-
 create extension if not exists unaccent schema exts;
+
+/**
+ * Functions
+ */
 
 create or replace function utils.slugify(
   base_string text
@@ -37,21 +40,18 @@ with
 select value from hyphenated;
 $function_slugify$;
 
-create or replace function utils.author_name(
-  author_firstname text,
-  author_lastname text
-) returns text
+create or replace function utils.array_remove_nulls(
+  arr text[]
+) returns text[]
+strict
 immutable
 language sql
-as $function_author_name$
+as $function_array_remove_nulls$
   select
-    case
-      when author_firstname is null and author_lastname is null then ''
-      when author_firstname is null then author_lastname
-      when author_lastname is null then author_firstname
-      else concat(author_firstname, ' ', author_lastname)
-    end
-  ;
-$function_author_name$;
+    array_agg(value) filter (where value is not null)
+  from
+    unnest(arr) t(value)
+;
+$function_array_remove_nulls$;
 
 commit;

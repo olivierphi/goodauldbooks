@@ -75,7 +75,7 @@ export async function storeBookInDatabaseRawImportsFromGeneratedCollectionFiles(
 
   await container.dbConnection.query(
     `
-    insert into import.gutenberg_raw_rdf_files (gutenberg_id, rdf_content, assets)
+    insert into import.gutenberg_raw_data(gutenberg_id, rdf_content, assets)
       values ($1, $2, $3);
   `,
     [bookId, rdfFileContent, bookAssetsAsJson]
