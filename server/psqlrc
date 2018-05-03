@@ -1,0 +1,32 @@
+-- thanks https://masteringpostgresql.com/ :-)
+
+\set ECHO none
+\set PROMPT1 '%n@%/%R%# %x '
+\x auto
+\set ON_ERROR_STOP on
+\set ON_ERROR_ROLLBACK interactive
+
+\pset null '¤'
+\pset linestyle 'unicode'
+
+\pset unicode_border_linestyle single
+\pset unicode_column_linestyle single
+\pset unicode_header_linestyle double
+
+set intervalstyle to 'postgres_verbose';
+
+\setenv LESS '-iMFXSx4R'
+
+-- custom stuff grabbed here and there:
+\set version 'select version();'
+\set extensions 'select * from pg_available_extensions;'
+
+\set HISTFILE /root/.psql-history
+\set HISTSIZE 2000
+
+-- custom for this project:
+load 'auto_explain';
+\set auto_explain 'set auto_explain.log_min_duration = 0; set auto_explain.log_nested_statements = on;'
+\echo '`:auto_explain` in psql, then `dc logs -f --tail=0 db` in the terminal to view the explanations of what happen in our functions :-)'
+
+set search_path to 'exts', 'library', 'api_public';

@@ -20,7 +20,7 @@ build_js:
 
 lint:
 # @link https://github.com/prettier/prettier/issues/1358#issuecomment-295669193 :-)
-	${NODE_BIN_ROOT}/prettier --config ../../prettier.config.js --write "{,!(node_modules|dist)/**/}*.{js,json,md}"
+	${NODE_BIN_ROOT}/prettier --config ../../prettier.config.js --write "{,!(node_modules|dist)/**/}*.{js,ts,json,md}"
 	${NODE_BIN_ROOT}/tslint --fix 'src/**/*.ts'
 
 start_dev: clean start_db

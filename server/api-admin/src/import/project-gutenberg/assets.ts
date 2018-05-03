@@ -5,7 +5,7 @@ const ASSETS_TYPES_FILES_REGEXPS: { [type: /*BookAssetType*/ string]: RegExp } =
   [BookAssetType.COVER]: /^pg\d+\.cover\.medium\.jpg$/,
   [BookAssetType.EPUB]: /^pg\d+-images\.epub$/,
   [BookAssetType.MOBI]: /^pg\d+-images\.mobi$/,
-  [BookAssetType.TXT]: /^pg\d+-\.txt\.utf8$/,
+  [BookAssetType.TXT]: /^pg\d+\.txt\.utf8$/,
 };
 
 export async function getImportedBookAssets(

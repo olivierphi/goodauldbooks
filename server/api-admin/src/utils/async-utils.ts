@@ -1,9 +1,11 @@
-import { open, readdir, readFile, stat } from "fs";
+import * as fsBase from "fs";
 import { promisify } from "util";
 
 export const fs = {
-  openAsync: promisify(open),
-  readFileAsync: promisify(readFile),
-  statAsync: promisify(stat),
-  readdirAsync: promisify(readdir),
+  openAsync: promisify(fsBase.open),
+  readAsync: promisify(fsBase.read),
+  closeAsync: promisify(fsBase.close),
+  readFileAsync: promisify(fsBase.readFile),
+  statAsync: promisify(fsBase.stat),
+  readdirAsync: promisify(fsBase.readdir),
 };

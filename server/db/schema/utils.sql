@@ -54,4 +54,22 @@ as $function_array_remove_nulls$
 ;
 $function_array_remove_nulls$;
 
+
+create or replace function utils.get_book_real_id(
+  book_public_id text
+) returns integer
+strict
+immutable
+language sql
+as $function_get_book_real_id$
+  select
+    case
+      -- Books imported from Project Gutenberg have an "public id" that starts with a "g":
+      when substring(book_public_id from 1 for 1) = 'g' then substring(book_public_id from 2)::integer
+      -- While other books expose their real id:
+      else book_public_id::integer
+    end
+  ;
+$function_get_book_real_id$;
+
 commit;

@@ -1,3 +1,17 @@
+/*
+Want to profile SQL queries embedded in functions? Here we go:
+goodauldbooks=# load 'auto_explain';
+goodauldbooks=# set auto_explain.log_min_duration = 1;
+goodauldbooks=# set auto_explain.log_nested_statements = on;
+
+$ dc logs -f --tail=0 db
+
+@link https://www.postgresql.org/docs/current/static/auto-explain.html
+@link https://dba.stackexchange.com/questions/23355/postgres-query-plan-of-a-udf-invocation-written-in-pgpsql#answer-23357
+
+Easier psql session:
+set search_path to 'exts', 'library', 'api_public';
+*/
 -- nb books by lang:
 with
 nb_books as (

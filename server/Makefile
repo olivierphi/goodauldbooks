@@ -1,17 +1,28 @@
 GUTENBERG_GENERATED_COLLECTION_PATH?=~/gutenberg-mirror/generated-collection
 PSQL?=docker-compose run --rm db-cli
 
+.phony: reset_db_and_import_gutenberg_books import_gutenberg_books build_api_admin dump_data_to_import_db start_dev_api_admin psql
+.phony: db_update_schema start_api_public pg_dump_raw_gutenberg_data pg_restore_raw_gutenberg_data
+
 reset_db_and_import_gutenberg_books:
 	docker-compose up -d db && sleep 2
-	${MAKE} db_update_schema
-	${MAKE} build_api_admin
-	${MAKE} dump_data_to_import_db
-	${MAKE} import_gutenberg_books
+	@echo "\033[36mWiping and re-setting the database...\033[0m"
+	@${MAKE} db_update_schema
+	@[ -f ./gutenberg_raw_data.sql ] && (\
+		echo "\033[36mFound a SQL dump for table 'gutenberg_raw_data.sql'. Using that data instead of re-scanning everything...\033[0m" && \
+		${MAKE} pg_restore_raw_gutenberg_data \
+	) || (\
+		echo "\033[36mScanning rsynced PG collection and copy the raw data in in the 'gutenberg_raw_data' table...\033[0m" && \
+		${MAKE} build_api_admin && \
+		${MAKE} dump_data_to_import_db \
+	)
+	@echo "\033[36mNow converting this raw data from Project Gutenberg into normalised data...\033[0m"
+	@${MAKE} import_gutenberg_books
 
 import_gutenberg_books: VERBOSITY?=1
 import_gutenberg_books:
-	time ${PSQL} -c \
-		"select * from import.create_books_from_raw_rdfs(wipe_previsous_books => true, verbosity => ${VERBOSITY}::integer);"
+	${PSQL} --no-psqlrc \
+		-c  "select * from import.create_books_from_raw_rdfs(wipe_previsous_books => true, verbosity => ${VERBOSITY}::integer);"
 
 build_api_admin:
 	cd api-admin/ && \
@@ -24,11 +35,11 @@ dump_data_to_import_db:
 start_dev_api_admin:
 	cd api-admin && make start_dev
 
-psql:
+psql: .psql-history
 	${PSQL}
 
-db_update_schema:
-	docker-compose run --rm db-cli \
+db_update_schema: .psql-history
+	${PSQL} --no-psqlrc \
 		-f /host/db/schema/utils.sql \
 		-f /host/db/schema/library.sql \
 		-f /host/db/schema/import.sql \
@@ -46,4 +57,8 @@ pg_dump_raw_gutenberg_data:
 		--file=/host/gutenberg_raw_data.sql
 
 pg_restore_raw_gutenberg_data:
-	${PSQL} -f /host/gutenberg_raw_data.sql
+	${PSQL} --no-psqlrc \
+		-f /host/gutenberg_raw_data.sql
+
+.psql-history:
+	touch .psql-history && chmod 777 .psql-history

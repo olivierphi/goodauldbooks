@@ -33,8 +33,9 @@ export enum EmittedEvents {
   COLLECTIONS_SYNC_SKIPPED = "collection:sync:skipped",
   BOOK_RDF_DATA_FILE_READ_START = "book_rdf_data:file_read:start",
   BOOK_RDF_DATA_FILE_READ_END = "book_rdf_data:file_read:end",
-  BOOK_RDF_DATA_PARSING_START = "book_rdf_data:parsing:start",
-  BOOK_RDF_DATA_PARSING_END = "book_rdf_data:parsing:end",
+  BOOK_INTRO_DATA_FILE_READ_START = "book_intro:file_read:start",
+  BOOK_INTRO_DATA_FILE_READ_END = "book_intro:file_read:end",
+  BOOK_IMPORT_END = "book_import:end",
   IMPORT_ERROR = "book_import:error",
 }
 

@@ -1,5 +1,5 @@
 import * as debugFunc from "debug";
-import {Pool, QueryResult} from "pg";
+import { Pool, QueryResult } from "pg";
 
 const debug = debugFunc("app:db");
 

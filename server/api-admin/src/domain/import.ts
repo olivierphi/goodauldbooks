@@ -1,4 +1,3 @@
-
 export enum BookAssetType {
   COVER = "cover",
   EPUB = "epub",

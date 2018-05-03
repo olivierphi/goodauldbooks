@@ -6,10 +6,12 @@ import * as debugFunc from "debug";
 const debug = debugFunc("app:boot");
 
 export async function initDbConnection(container: ServicesContainer): Promise<Pool> {
-  debug(`Connection to db ${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}...`);
+  debug(
+    `Connection to db ${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}...`
+  );
 
   const pool = new Pool();
-  pool.on("error", (err) => {
+  pool.on("error", err => {
     console.error("Unexpected error on idle client", err);
     process.exit(-1);
   });

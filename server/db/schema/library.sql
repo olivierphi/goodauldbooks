@@ -21,18 +21,18 @@ create table library.author (
 create table library.book (
   book_id serial primary key,
   gutenberg_id integer unique null,
-  lang varchar(3) not null,
+  lang varchar(3) collate "C" not null,
   title text not null,
   subtitle text null,
-  slug text unique not null,
+  slug text collate "C" unique not null,
   author_id int references library.author(author_id) not null
 );
 create index on library.book(author_id);
 
 create table library.book_asset (
   book_id integer references library.book(book_id) not null,
-  type varchar(10) not null,
-  path text not null,
+  type varchar(10) collate "C" not null,
+  path text collate "C" not null,
   size integer not null,
   primary key (book_id, type)
 );
@@ -49,6 +49,10 @@ create table library.book_genres (
   primary key (book_id, genre_id)
 );
 
+create table library.book_additional_data (
+  book_id integer references library.book(book_id) not null primary key,
+  intro text
+);
 
 /**
  * Views
@@ -78,8 +82,8 @@ create materialized view library.book_with_related_data as
     book.book_id,
     author.author_id
 ;
-create unique index on library.book_with_related_data(id);
-create index on library.book_with_related_data(lang);
+create unique index on library.book_with_related_data(id collate "C");
+create index on library.book_with_related_data(lang collate "C");
 create index on library.book_with_related_data using gin(title exts.gin_trgm_ops);
 
 commit;

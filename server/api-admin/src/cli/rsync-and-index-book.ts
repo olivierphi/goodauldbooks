@@ -3,7 +3,7 @@
 import { EventEmitter } from "events";
 import * as yargs from "yargs";
 import * as bookImportFromPG from "../import/project-gutenberg";
-import {storeBookInDatabaseRawImportsFromGeneratedCollectionFiles} from "../import/project-gutenberg/rsynced-generated-collection";
+import { storeBookInDatabaseRawImportsFromGeneratedCollectionFiles } from "../import/project-gutenberg/rsynced-generated-collection";
 import { container } from "../services-container";
 
 interface Args {
@@ -152,20 +152,6 @@ function subscribeToImportEvents(eventEmitter: EventEmitter, bookId: number): vo
   eventEmitter.on(
     bookImportFromPG.EmittedEvents.BOOK_RDF_DATA_FILE_READ_END,
     reportStepEnd.bind(null, bookFileReadStepName, `RDF file content read for book #${bookId}.`)
-  );
-
-  const bookRdfDataParsingStepName = "[book RDF data parsing]";
-  eventEmitter.on(
-    bookImportFromPG.EmittedEvents.BOOK_RDF_DATA_PARSING_START,
-    reportStepStart.bind(
-      null,
-      bookRdfDataParsingStepName,
-      `Parsing RDF content for book #${bookId}...`
-    )
-  );
-  eventEmitter.on(
-    bookImportFromPG.EmittedEvents.BOOK_RDF_DATA_PARSING_END,
-    reportStepEnd.bind(null, bookRdfDataParsingStepName, `RDF content parsed for book #${bookId}.`)
   );
 }
 

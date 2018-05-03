@@ -24,6 +24,8 @@ services:
       - db
     volumes:
       - .:/host # Vagrant style! :-)
+      - ./psqlrc:/root/.psqlrc:ro
+      - ./.psql-history:/root/.psql-history
 
   adminer:
     image: adminer

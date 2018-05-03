@@ -66,4 +66,12 @@ async function subscribeToImportEvents(
   eventEmitter.on(bookImportFromPG.EmittedEvents.IMPORT_ERROR, err => {
     logFileStream.write(`${err}\n`);
   });
+
+  let nbBooksImported = 0;
+  eventEmitter.on(bookImportFromPG.EmittedEvents.BOOK_IMPORT_END, err => {
+    nbBooksImported++;
+    if (0 === nbBooksImported % 100) {
+      console.log(`${nbBooksImported.toString(10).padStart(6)} books imported.`);
+    }
+  });
 }
