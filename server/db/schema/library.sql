@@ -15,7 +15,6 @@ create table library.author (
   gutenberg_id integer unique null,
   first_name text null,
   last_name text null
-  --   slug varchar(300) unique not null
 );
 
 create table library.book (
@@ -24,7 +23,6 @@ create table library.book (
   lang varchar(3) collate "C" not null,
   title text not null,
   subtitle text null,
-  slug text collate "C" unique not null,
   author_id int references library.author(author_id) not null
 );
 create index on library.book(author_id);
@@ -43,7 +41,7 @@ create table library.genre (
 );
 create index on library.genre(title);
 
-create table library.book_genres (
+create table library.book_genre (
   book_id integer references library.book(book_id) not null,
   genre_id integer references library.genre(genre_id) not null,
   primary key (book_id, genre_id)
@@ -67,20 +65,25 @@ create materialized view library.book_with_related_data as
      book.title as title,
      book.subtitle as subtitle,
      book.lang as lang,
+     book_cover.path as cover,
      author.first_name as author_first_name,
      author.last_name as author_last_name,
      array_agg(genre.title) as genres
   from
     library.book
     join
-    library.author using (author_id)
+      library.author using (author_id)
     left join
-    library.book_genres using (book_id)
+      library.book_genre using (book_id)
     left join
-    library.genre using (genre_id)
+      library.genre using (genre_id)
+    left join
+      library.book_asset as book_cover
+        on (book.book_id = book_cover.book_id and book_cover.type = 'cover')
   group by
     book.book_id,
-    author.author_id
+    author.author_id,
+    book_cover.path
 ;
 create unique index on library.book_with_related_data(id collate "C");
 create index on library.book_with_related_data(lang collate "C");

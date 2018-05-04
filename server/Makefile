@@ -7,7 +7,7 @@ PSQL?=docker-compose run --rm db-cli
 reset_db_and_import_gutenberg_books:
 	docker-compose up -d db && sleep 2
 	@echo "\033[36mWiping and re-setting the database...\033[0m"
-	@${MAKE} db_update_schema
+	@${MAKE} db_update_schema || exit 1
 	@[ -f ./gutenberg_raw_data.sql ] && (\
 		echo "\033[36mFound a SQL dump for table 'gutenberg_raw_data.sql'. Using that data instead of re-scanning everything...\033[0m" && \
 		${MAKE} pg_restore_raw_gutenberg_data \
@@ -15,7 +15,7 @@ reset_db_and_import_gutenberg_books:
 		echo "\033[36mScanning rsynced PG collection and copy the raw data in in the 'gutenberg_raw_data' table...\033[0m" && \
 		${MAKE} build_api_admin && \
 		${MAKE} dump_data_to_import_db \
-	)
+	) || exit 1
 	@echo "\033[36mNow converting this raw data from Project Gutenberg into normalised data...\033[0m"
 	@${MAKE} import_gutenberg_books
 
@@ -38,13 +38,14 @@ start_dev_api_admin:
 psql: .psql-history
 	${PSQL}
 
+db_update_schema: SQL_FILES=schema/utils.sql schema/library.sql schema/import.sql schema/webapp.sql schema/api_public.sql
 db_update_schema: .psql-history
-	${PSQL} --no-psqlrc \
-		-f /host/db/schema/utils.sql \
-		-f /host/db/schema/library.sql \
-		-f /host/db/schema/import.sql \
-		-f /host/db/schema/webapp.sql \
-		-f /host/db/schema/api_public.sql
+# We could have launched all those SQL files in a single pass via multiple "-f" args to psql,
+# but we want to stop as soon as one of the file fails for any reason.
+	@$(foreach sql_file,$(SQL_FILES),\
+		(echo "\033[36mRunning SQL file '$(sql_file)'...\033[0m" && \
+		${PSQL} --no-psqlrc -q -b -f /host/db/$(sql_file)) || exit 1; \
+	)
 
 start_api_public:
 	docker-compose up -d postgrest
@@ -57,7 +58,7 @@ pg_dump_raw_gutenberg_data:
 		--file=/host/gutenberg_raw_data.sql
 
 pg_restore_raw_gutenberg_data:
-	${PSQL} --no-psqlrc \
+	${PSQL} --no-psqlrc -q -b \
 		-f /host/gutenberg_raw_data.sql
 
 .psql-history:

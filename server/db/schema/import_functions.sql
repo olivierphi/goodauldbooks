@@ -23,10 +23,8 @@ create type import.gutenberg_imported_book as (
   lang varchar(3),
   title text,
   subtitle text,
-  slug text,
   genres text[],
-  author import.gutenberg_imported_author,
-  additional_data import.gutenberg_imported_book_additional_data
+  author import.gutenberg_imported_author
 );
 
 create type import.book_import_result as (
@@ -47,102 +45,102 @@ language sql
 immutable
 as $function_get_book_from_rdf$
 with
-    xml_namespaces as (
-      select
-        array[
-           array['rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'],
-           array['dcterms', 'http://purl.org/dc/terms/'],
-           array['pgterms', 'http://www.gutenberg.org/2009/pgterms/']
-         ] as xmlns
+  xml_namespaces as (
+    select
+      array[
+         array['rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'],
+         array['dcterms', 'http://purl.org/dc/terms/'],
+         array['pgterms', 'http://www.gutenberg.org/2009/pgterms/']
+       ] as xmlns
   ),
-    rdf_raw_parsing as (
-      select
-        -- book data
-        regexp_replace(
-          trim( unnest( xpath(
-            '/rdf:RDF/pgterms:ebook/@rdf:about',
-            rdf_data,
-            xmlns
-          ) )::text ),
-        '^ebooks/(\d+)$', '\1' )
-        as book_id,
-
+  rdf_raw_parsing as (
+    select
+      -- book data
+      regexp_replace(
         trim( unnest( xpath(
-          '//dcterms:language/rdf:Description/rdf:value/text()',
+          '/rdf:RDF/pgterms:ebook/@rdf:about',
           rdf_data,
           xmlns
-        ) )::text )
-        as book_lang,
+        ) )::text ),
+      '^ebooks/(\d+)$', '\1' )
+      as book_id,
 
-        trim( unnest( xpath(
-          '//dcterms:title/text()',
+      trim( unnest( xpath(
+        '//dcterms:language/rdf:Description/rdf:value/text()',
+        rdf_data,
+        xmlns
+      ) )::text )
+      as book_lang,
+
+      trim( unnest( xpath(
+        '//dcterms:title/text()',
+        rdf_data,
+        xmlns
+      ) )::text )
+      as book_title,
+
+      utils.array_remove_nulls(
+        xpath(
+          '//dcterms:subject/rdf:Description/rdf:value/text()',
           rdf_data,
           xmlns
-        ) )::text )
-        as book_title,
+        ) :: text []
+      )
+      as book_genre,
 
-        utils.array_remove_nulls(
-          xpath(
-            '//dcterms:subject/rdf:Description/rdf:value/text()',
-            rdf_data,
-            xmlns
-          ) :: text []
-        )
-        as book_genres,
-
-        -- author data
-        regexp_replace(
-          trim( unnest( xpath(
-            '//dcterms:creator/pgterms:agent/@rdf:about',
-            rdf_data,
-            xmlns
-          ) )::text ),
-        '^\d+/agents/(\d+)$', '\1' )
-        as author_id,
-
+      -- author data
+      regexp_replace(
         trim( unnest( xpath(
-          '//dcterms:creator/pgterms:agent/pgterms:name/text()',
+          '//dcterms:creator/pgterms:agent/@rdf:about',
           rdf_data,
           xmlns
-        ) )::text )
-        as author_name,
+        ) )::text ),
+      '^\d+/agents/(\d+)$', '\1' )
+      as author_id,
 
-        trim( unnest( xpath(
-          '//dcterms:creator/pgterms:agent/pgterms:alias/text()',
-          rdf_data,
-          xmlns
-        ) )::text )
-        as author_alias,
+      trim( unnest( xpath(
+        '//dcterms:creator/pgterms:agent/pgterms:name/text()',
+        rdf_data,
+        xmlns
+      ) )::text )
+      as author_name,
 
-        trim( unnest( xpath(
-          '//dcterms:creator/pgterms:agent/pgterms:birthdate/text()',
-          rdf_data,
-          xmlns
-        ) )::text )
-        as author_birth_year,
+      trim( unnest( xpath(
+        '//dcterms:creator/pgterms:agent/pgterms:alias/text()',
+        rdf_data,
+        xmlns
+      ) )::text )
+      as author_alias,
 
-        trim( unnest( xpath(
-          '//dcterms:creator/pgterms:agent/pgterms:deathdate/text()',
-          rdf_data,
-          xmlns
-        ) )::text )
-        as author_death_year
-      from
-        xml_namespaces
+      trim( unnest( xpath(
+        '//dcterms:creator/pgterms:agent/pgterms:birthdate/text()',
+        rdf_data,
+        xmlns
+      ) )::text )
+      as author_birth_year,
+
+      trim( unnest( xpath(
+        '//dcterms:creator/pgterms:agent/pgterms:deathdate/text()',
+        rdf_data,
+        xmlns
+      ) )::text )
+      as author_death_year
+    from
+      xml_namespaces
   ),
-    sanitisation as (
-      select
-        regexp_replace(book_title, '&#x0d;\W+', ' ', 'g') as sanitised_title
-      from
-        rdf_raw_parsing
+  sanitisation as (
+    select
+      regexp_replace(book_title, '&#x0d;\W+', ' ', 'g') as sanitised_title
+    from
+      rdf_raw_parsing
   ),
-    regexp_parsing as (
-      select
-        regexp_split_to_array(author_name, '\s*,\s*') as author_name_array,
-        regexp_split_to_array(sanitised_title, e'\\n+|\\s*;\\s*') as title_array
-      from
-        rdf_raw_parsing,
-        sanitisation
+  regexp_parsing as (
+    select
+      regexp_split_to_array(author_name, '\s*,\s*') as author_name_array,
+      regexp_split_to_array(sanitised_title, e'\\n+|\\s*;\\s*') as title_array
+    from
+      rdf_raw_parsing,
+      sanitisation
   )
 select
   (
@@ -151,9 +149,7 @@ select
     book_lang,
     title_array[1],
     title_array[2],
-    -- TODO: investigate duplicates (we probably shouldn't have to add the book_id into that slug)
-    utils.slugify(format('%s/%s/%s/%s', book_lang, book_title, author_name, book_id)),
-    book_genres,
+    book_genre,
     (
       -- author fields (see the definition of the "import.gutenberg_imported_author" composite type)
       author_id::integer,
@@ -163,8 +159,7 @@ select
       author_alias,
       author_birth_year::integer,
       author_death_year::integer
-    )::import.gutenberg_imported_author,
-    null::import.gutenberg_imported_book_additional_data -- we will populate the book intro later :-)
+    )::import.gutenberg_imported_author
   )::import.gutenberg_imported_book
 from
   rdf_raw_parsing,
@@ -200,8 +195,8 @@ begin
   -- ditto: only create the book if it doesn't exists already:
   select book_id into returned_book_id from library.book where gutenberg_id = imported_book.gutenberg_id;
   if returned_book_id is null then
-    insert into library.book (gutenberg_id, lang, title, subtitle, slug, author_id)
-    values (imported_book.gutenberg_id, imported_book.lang, imported_book.title, imported_book.subtitle, imported_book.slug, returned_author_id)
+    insert into library.book (gutenberg_id, lang, title, subtitle, author_id)
+    values (imported_book.gutenberg_id, imported_book.lang, imported_book.title, imported_book.subtitle, returned_author_id)
     returning book_id into returned_book_id;
   end if;
 
@@ -212,7 +207,7 @@ begin
       select genre_id into created_genre_id from library.genre where title = genre_title;
       if created_genre_id is null then
         insert into library.genre (title)
-        values (genre_title) on conflict do nothing
+          values (genre_title)
         returning genre_id into created_genre_id;
       end if;
       select array_append(returned_genres_ids, created_genre_id) into returned_genres_ids;
@@ -221,8 +216,8 @@ begin
     -- create relations with those genres:
     foreach created_genre_id in array returned_genres_ids
     loop
-      insert into library.book_genres (book_id, genre_id)
-      values (returned_book_id, created_genre_id) on conflict do nothing;
+      insert into library.book_genre (book_id, genre_id)
+      values (returned_book_id, created_genre_id);
     end loop;
   end if;
 
@@ -247,7 +242,7 @@ declare
   imported_book_data import.gutenberg_imported_book;
 begin
   if wipe_previsous_books then
-    truncate library.book_additional_data, library.book, library.author, library.genre, library.book_genres, library.book_asset cascade;
+    truncate library.book_additional_data, library.book, library.author, library.genre, library.book_genre, library.book_asset cascade;
   end if;
 
   for current_raw_book_data in
@@ -274,7 +269,12 @@ begin
     for current_raw_book_asset_data in select * from jsonb_each(current_raw_book_data.assets)
     loop
       insert into library.book_asset (book_id, type, path, size)
-      values (current_created_book.book_id, current_raw_book_asset_data.key, current_raw_book_asset_data.value->>'path', (current_raw_book_asset_data.value->>'size')::integer);
+        values (
+          current_created_book.book_id,
+          current_raw_book_asset_data.key,
+          current_raw_book_asset_data.value->>'path',
+          (current_raw_book_asset_data.value->>'size')::integer
+        );
       current_book_nb_assets_created = current_book_nb_assets_created + 1;
     end loop;
 

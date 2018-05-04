@@ -17,22 +17,43 @@ with
 nb_books as (
   select count(*) as nb_books_total from library.book
 ),
-grouped_books as (
+books_by_lang as (
   select
     lang,
-    count(*) as nb,
-    (count(*) * 100::real / nb_books_total)::numeric(5, 2) as percent
+    count(*) as nb
   from
-    library.book,
-    nb_books
+    library.book
   group by
-    nb_books_total,
     lang
 )
 select
-  lang, nb as nb_books_for_this_lang, percent
+  lang, nb as nb_books_for_this_lang,
+  format('%s %%', (nb * 100::real / nb_books_total)::numeric(5, 2)) as percent
 from
-  grouped_books
+  books_by_lang,
+  nb_books
+order by
+  nb desc
+;
+
+-- books with same titles (potential duplicates) :
+with
+books_by_title as (
+  select
+    array_agg(book_id) as ids,
+    title,
+    count(*) as nb
+  from
+    library.book
+  group by
+    title
+)
+select
+  title, nb, ids
+from
+  books_by_title
+where
+  nb > 1
 order by
   nb desc
 ;
@@ -43,7 +64,7 @@ grouped_genres as (
   select
     title, count(*) as nb
   from
-    library.book_genres
+    library.book_genre
       join library.genre using(genre_id)
   group by
     title
@@ -67,7 +88,7 @@ select
   book.title
 from
   library.book as book
-  join library.book_genres as book_genres using(book_id)
+  join library.book_genre as book_genre using(book_id)
   join library.genre as genre using (genre_id)
 where
   genre.title = 'Horror tales';

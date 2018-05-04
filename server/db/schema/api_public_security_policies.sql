@@ -50,7 +50,7 @@ to
   api_public_anon;
 grant select on table
   library.book, library.author,
-  library.book_genres, library.genre,
+  library.book_genre, library.genre,
   library.book_with_related_data,
   library.book_additional_data,
   webapp.settings

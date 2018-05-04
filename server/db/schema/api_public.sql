@@ -4,13 +4,14 @@ drop schema if exists api_public cascade;
 create schema api_public;
 
 /**
- * Composite types
+ * Functions composite types
  */
 
 create type api_public.book_search_result as (
   book_id text,
   book_title text,
   book_subtitle text,
+  cover_path text,
   lang varchar(3),
   author_first_name text,
   author_last_name text,
@@ -23,6 +24,10 @@ create type api_public.quick_autocompletion_result as (
   lang varchar(3),
   author_first_name text,
   author_last_name text
+);
+
+create type api_public.book_intro as (
+  intro text
 );
 
 /**
@@ -43,6 +48,7 @@ as $function_search_book$
       id,
       title,
       subtitle,
+      cover,
       lang,
       author_first_name,
       author_last_name,
@@ -101,6 +107,7 @@ as $function_pinned_books$
       id,
       title,
       subtitle,
+      cover,
       lang,
       author_first_name,
       author_last_name,
@@ -126,6 +133,7 @@ as $function_get_book_by_id$
       id,
       title,
       subtitle,
+      cover,
       lang,
       author_first_name,
       author_last_name,
@@ -142,7 +150,7 @@ $function_get_book_by_id$;
 -- `curl -sS localhost:8085/rpc/get_book_intro?book_id=g345 | jq`
 create or replace function api_public.get_book_intro(
   book_id text
-) returns text
+) returns api_public.book_intro
 language sql
 stable
 as $function_get_book_intro$
@@ -156,6 +164,7 @@ as $function_get_book_intro$
   limit 1
   ;
 $function_get_book_intro$;
+
 
 \ir 'api_public_security_policies.sql'
 

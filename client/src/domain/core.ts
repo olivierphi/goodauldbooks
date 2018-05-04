@@ -10,6 +10,7 @@ export interface Book {
   title: string;
   subtitle: string | null;
   genres: Genre[];
+  cover: string | null;
 }
 
 export interface Author {
@@ -17,7 +18,6 @@ export interface Author {
   lastName: string | null;
   birthYear?: number | null;
   deathYear?: number | null;
-  wikipediaUrl?: string;
 }
 
 export interface BooksById {

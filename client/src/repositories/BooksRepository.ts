@@ -22,6 +22,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
             lastName: pinnedBook.author_lastname,
           },
           genres: pinnedBook.genres,
+          cover: pinnedBook.cover_path,
         };
       }
     );
@@ -42,7 +43,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     });
 
     const bookDataFromServer: ServerResponse.Book = response.data[0];
-    const book = {
+    const book: coreDomain.Book = {
       id: bookDataFromServer.book_id,
       title: bookDataFromServer.book_title,
       subtitle: bookDataFromServer.book_subtitle,
@@ -51,6 +52,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
         lastName: bookDataFromServer.author_lastname,
       },
       genres: bookDataFromServer.genres,
+      cover: bookDataFromServer.cover_path,
     };
 
     return Promise.resolve(book);
@@ -84,6 +86,7 @@ namespace ServerResponse {
     book_id: string;
     book_title: string;
     book_subtitle: string | null;
+    cover_path: string | null;
     lang: string;
     author_firstname: string | null;
     author_lastname: string | null;
