@@ -48,7 +48,7 @@ db_update_schema: .psql-history
 	)
 
 start_api_public:
-	docker-compose up -d postgrest
+	docker-compose up -d nginx
 
 pg_dump_raw_gutenberg_data:
 	docker-compose run --rm --entrypoint pg_dump db-cli \

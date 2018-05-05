@@ -1,16 +1,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { Provider as ReduxStoreProvider } from "react-redux";
-import { BrowserRouter as Router, Route } from "react-router-dom";
 import { bootApp } from "./app-bootstrap";
-import { AppConfig } from "./app-config";
-import { Header } from "./components/Header";
-import { AssetsConfigContext } from "./contexts/assets-config";
-import { CurrentLangContext } from "./contexts/lang";
-import { Lang } from "./domain/core";
-import { BookPage } from "./pages/BookPage";
-import { HomePage } from "./pages/HomePage";
-import { container } from "./ServicesContainer";
+import { Layout } from "./components/Layout";
+import { AppEnvelope } from "./hoc/AppEnvelope";
 
 async function startApp(): Promise<boolean> {
   await bootApp();
@@ -24,25 +16,11 @@ async function startApp(): Promise<boolean> {
 
 startApp();
 
-function renderApp(appContainer: HTMLElement) {
+function renderApp(appContainer: HTMLElement): void {
   ReactDOM.render(
-    <ReduxStoreProvider store={container.appStateStore}>
-      <CurrentLangContext.Provider value={Lang.EN}>
-        <AssetsConfigContext.Provider
-          value={{
-            coversBaseUrl: AppConfig.coversBaseURL,
-          }}
-        >
-          <Router>
-            <>
-              <Header />
-              <Route exact={true} path="/" component={HomePage} />
-              <Route path="/books/:bookId" component={BookPage} />
-            </>
-          </Router>
-        </AssetsConfigContext.Provider>
-      </CurrentLangContext.Provider>
-    </ReduxStoreProvider>,
+    <AppEnvelope>
+      <Layout />
+    </AppEnvelope>,
     appContainer
   );
 }

@@ -3,6 +3,7 @@ import { Book, BooksById } from "./core";
 export interface BooksRepository {
   getPinnedBooks(pagination: PaginationRequestData): Promise<BooksById>;
   getBookById(bookId: string): Promise<Book | null>;
+  quickSearch(pattern: string): Promise<Book[]>;
 }
 
 export interface PaginationRequestData {

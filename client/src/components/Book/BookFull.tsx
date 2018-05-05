@@ -1,6 +1,6 @@
 import * as React from "react";
-import { CurrentLangContext } from "../contexts/lang";
-import { Book, Lang } from "../domain/core";
+import { CurrentLangContext } from "../../contexts/lang";
+import { Book, Lang } from "../../domain/core";
 
 export interface BookFullProps {
   bookId: string;

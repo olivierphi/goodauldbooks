@@ -1,25 +1,23 @@
 import axios from "axios";
 import { Store } from "redux";
-import * as coreDomain from "../domain/core";
+import { Book, BooksById } from "../domain/core";
 import * as queriesDomain from "../domain/queries";
 import { AppState } from "../store";
 
 export class BooksRepository implements queriesDomain.BooksRepository {
   constructor(private appStateStore: Store<AppState>) {}
 
-  public async getPinnedBooks(
-    pagination: queriesDomain.PaginationRequestData
-  ): Promise<coreDomain.BooksById> {
+  public async getPinnedBooks(pagination: queriesDomain.PaginationRequestData): Promise<BooksById> {
     const response = await axios.get("/rpc/pinned_books");
-    const pinnedBooks: coreDomain.Book[] = response.data.map(
-      (pinnedBook: ServerResponse.PinnedBook): coreDomain.Book => {
+    const pinnedBooks: Book[] = response.data.map(
+      (pinnedBook: ServerResponse.PinnedBookData): Book => {
         return {
           id: pinnedBook.book_id,
           title: pinnedBook.book_title,
           subtitle: pinnedBook.book_subtitle,
           author: {
-            firstName: pinnedBook.author_firstname,
-            lastName: pinnedBook.author_lastname,
+            firstName: pinnedBook.author_first_name,
+            lastName: pinnedBook.author_last_name,
           },
           genres: pinnedBook.genres,
           cover: pinnedBook.cover_path,
@@ -30,7 +28,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     return Promise.resolve(getBooksByIdFromBooksArray(pinnedBooks));
   }
 
-  public async getBookById(bookId: string): Promise<coreDomain.Book | null> {
+  public async getBookById(bookId: string): Promise<Book | null> {
     const appStateStoreBooksById = this.appStateStore.getState().booksById;
     if (appStateStoreBooksById[bookId]) {
       return Promise.resolve(appStateStoreBooksById[bookId]);
@@ -38,18 +36,18 @@ export class BooksRepository implements queriesDomain.BooksRepository {
 
     const response = await axios.get("/rpc/get_book_by_id", {
       params: {
-        id: bookId,
+        book_id: bookId,
       },
     });
 
-    const bookDataFromServer: ServerResponse.Book = response.data[0];
-    const book: coreDomain.Book = {
+    const bookDataFromServer: ServerResponse.BookData = response.data[0];
+    const book: Book = {
       id: bookDataFromServer.book_id,
       title: bookDataFromServer.book_title,
       subtitle: bookDataFromServer.book_subtitle,
       author: {
-        firstName: bookDataFromServer.author_firstname,
-        lastName: bookDataFromServer.author_lastname,
+        firstName: bookDataFromServer.author_first_name,
+        lastName: bookDataFromServer.author_last_name,
       },
       genres: bookDataFromServer.genres,
       cover: bookDataFromServer.cover_path,
@@ -57,10 +55,32 @@ export class BooksRepository implements queriesDomain.BooksRepository {
 
     return Promise.resolve(book);
   }
+
+  public async quickSearch(pattern: string): Promise<Book[]> {
+    const response = await axios.get("/rpc/quick_autocompletion", {
+      params: { pattern },
+    });
+
+    const matchingBooks = response.data.map((row: ServerResponse.QuickAutocompletionData): Book => {
+      return {
+        id: row.book_id,
+        title: row.book_title,
+        subtitle: null,
+        author: {
+          firstName: row.author_first_name,
+          lastName: row.author_last_name,
+        },
+        genres: [],
+        cover: null,
+      };
+    });
+
+    return Promise.resolve(matchingBooks);
+  }
 }
 
-function getBooksByIdFromBooksArray(books: coreDomain.Book[]): coreDomain.BooksById {
-  const booksById: coreDomain.BooksById = {};
+function getBooksByIdFromBooksArray(books: Book[]): BooksById {
+  const booksById: BooksById = {};
   for (const book of books) {
     booksById[book.id] = book;
   }
@@ -68,10 +88,7 @@ function getBooksByIdFromBooksArray(books: coreDomain.Book[]): coreDomain.BooksB
   return booksById;
 }
 
-function getBookByIdFromBooksArray(
-  books: coreDomain.Book[],
-  bookId: string
-): coreDomain.Book | null {
+function getBookByIdFromBooksArray(books: Book[], bookId: string): Book | null {
   for (const book of books) {
     if (book.id === bookId) {
       return book;
@@ -82,16 +99,24 @@ function getBookByIdFromBooksArray(
 }
 
 namespace ServerResponse {
-  export interface Book {
+  export interface BookData {
     book_id: string;
     book_title: string;
     book_subtitle: string | null;
     cover_path: string | null;
     lang: string;
-    author_firstname: string | null;
-    author_lastname: string | null;
+    author_first_name: string | null;
+    author_last_name: string | null;
     genres: string[];
   }
 
-  export interface PinnedBook extends Book {}
+  export interface PinnedBookData extends BookData {}
+
+  export interface QuickAutocompletionData {
+    book_id: string;
+    book_title: string;
+    lang: string;
+    author_first_name: string;
+    author_last_name: string;
+  }
 }

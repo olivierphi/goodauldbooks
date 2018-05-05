@@ -17,8 +17,7 @@ export function ListItem(props: ListItemProps) {
       {(assetsConfig: AssetsConfig) => (
         <div className="card mb-4 box-shadow">
           <div className="card-header">
-            {book.title}
-            {book.cover ? <img src={`${assetsConfig.coversBaseUrl}${book.cover}`} /> : ""}
+            {book.cover ? <img src={`${assetsConfig.coversBaseUrl}${book.cover}`} /> : book.title}
           </div>
           <div className="card-body">
             <h5 className="card-title">

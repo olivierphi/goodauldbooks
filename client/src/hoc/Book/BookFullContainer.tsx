@@ -1,9 +1,9 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Action } from "redux";
-import { BookFull, BookFullProps } from "../components/BookFull";
-import { fetchBook } from "../store/actions";
-import { AppState } from "../store/index";
+import { BookFull, BookFullProps } from "../../components/Book/BookFull";
+import { fetchBook } from "../../store/actions";
+import { AppState } from "../../store/index";
 
 const mapStateToProps = (props: AppState, ownProps: { bookId: string }) => {
   return {

@@ -1,11 +1,10 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
 import { Action } from "redux";
-import { BooksList, BooksListProps } from "../components/BooksList";
-import { CurrentLangContext } from "../contexts/lang";
-import { PaginationRequestData } from "../domain/queries";
-import { AppState } from "../store";
-import { fetchPinnedBooksList } from "../store/actions";
+import { BooksList, BooksListProps } from "../../components/Book/BooksList";
+import { PaginationRequestData } from "../../domain/queries";
+import { AppState } from "../../store";
+import { fetchPinnedBooksList } from "../../store/actions";
 
 const mapStateToProps = (state: AppState) => {
   return {
@@ -34,4 +33,4 @@ const BooksListHOC = (props: BooksListHOCProps) => {
   return <BooksList {...props} />;
 };
 
-export const BooksListContainer = connect(mapStateToProps, mapDispatchToProps)(BooksListHOC);
+export const PinnedBooksContainer = connect(mapStateToProps, mapDispatchToProps)(BooksListHOC);
