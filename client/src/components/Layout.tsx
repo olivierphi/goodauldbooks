@@ -1,14 +1,17 @@
 import * as React from "react";
-import { AutocompleteSearchContainer } from "../hoc/AutocompleteSearchContainer";
-import { Header } from "./Header";
+import { Banner } from "./Layout/Banner";
+import { Head } from "./Layout/Head";
 import { Main } from "./Main";
 
 export function Layout(): JSX.Element {
   return (
     <>
-      <Header />
-      <AutocompleteSearchContainer />
-      <Main />
+      <Head />
+      <div id="page-wrapper">
+        {/*<Header />*/}
+        <Banner />
+        <Main />
+      </div>
     </>
   );
 }

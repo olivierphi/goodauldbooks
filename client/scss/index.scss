@@ -1,7 +1,25 @@
-// @import "~bootstrap/scss/functions";
-// @import "~bootstrap/scss/variables";
-// @import "~bootstrap/scss/mixins";
-// @import "~bootstrap/scss/reboot";
-// @import "~bootstrap/scss/grid";
-@import "~bootstrap/scss/bootstrap";
+/*
+Most of this SCSS comes from the CSS of the "Alpha" theme by HTML5 UP.
+I just refactored it in SCSS and added things here and there for my own needs.
+
+> Alpha by HTML5 UP
+> html5up.net | @ajlkn
+> Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+*/
+
+@import "mixins";
+@import "reset";
+@import "variables";
+@import "typography";
+
+@import "layout/basic";
+@import "layout/container";
+@import "layout/box";
+@import "layout/grid";
+
+@import "component/main";
+@import "component/banner";
+@import "component/books-list";
+@import "component/book-misc";
+
 @import "~react-select/scss/default";

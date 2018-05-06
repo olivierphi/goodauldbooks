@@ -82,17 +82,18 @@ as $function_quick_autocompletion$
     library.book_with_related_data
   where
     title ilike concat(pattern, '%')
+  order by
+    title asc
   limit 10
   ;
 $function_quick_autocompletion$;
 
--- `curl -sS localhost:8085/rpc/pinned_books | jq`
-create or replace function api_public.pinned_books(
+-- `curl -sS localhost:8085/rpc/featured_books | jq`
+create or replace function api_public.featured_books(
 ) returns setof api_public.book_search_result
 language sql
 stable
-as $function_pinned_books$
-  -- first (very) naive version, to improve later :-)
+as $function_featured_books$
   with
   pinned_books_ids as (
     select
@@ -118,7 +119,7 @@ as $function_pinned_books$
   where
     id in (select unnest(books_ids) from pinned_books_ids);
   ;
-$function_pinned_books$;
+$function_featured_books$;
 
 -- `curl -sS localhost:8085/rpc/get_book_by_id?book_id=g345 | jq`
 create or replace function api_public.get_book_by_id(

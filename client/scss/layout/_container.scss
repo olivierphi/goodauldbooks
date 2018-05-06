@@ -1,0 +1,11 @@
+/* Containers */
+
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  width: 60em;
+
+  @include media-queries-theme-normal {
+    width: 100%;
+  }
+}

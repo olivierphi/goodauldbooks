@@ -3,13 +3,13 @@ import { container } from "../ServicesContainer";
 import { Action } from "./index";
 
 export enum Actions {
-  FETCH_ALL_BOOKS = "FETCH_ALL_BOOKS",
+  FETCH_FEATURED_BOOKS = "FETCH_FEATURED_BOOKS",
   FETCH_BOOK = "FETCH_BOOK",
 }
 
-export function fetchPinnedBooksList(pagination: PaginationRequestData): Action {
-  const fetchBooksPromise = container.booksRepository.getPinnedBooks(pagination);
-  return { type: Actions.FETCH_ALL_BOOKS, payload: fetchBooksPromise };
+export function fetchFeaturedBooksList(): Action {
+  const fetchBooksPromise = container.booksRepository.getFeaturedBooks();
+  return { type: Actions.FETCH_FEATURED_BOOKS, payload: fetchBooksPromise };
 }
 
 export function fetchBook(bookId: string): Action {

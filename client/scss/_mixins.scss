@@ -1,0 +1,28 @@
+@mixin clearfix {
+  &:after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+}
+
+@mixin media-queries-theme-wide {
+  @media (min-width: $media-queries-max-width-normal + 1) {
+    @content;
+  }
+}
+@mixin media-queries-theme-normal {
+  @media (max-width: $media-queries-max-width-normal) {
+    @content;
+  }
+}
+@mixin media-queries-theme-mobile {
+  @media (max-width: $media-queries-max-width-mobile) {
+    @content;
+  }
+}
+@mixin media-queries-theme-mobile-portrait {
+  @media (max-width: $media-queries-max-width-mobile-portrait) {
+    @content;
+  }
+}

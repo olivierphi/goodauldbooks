@@ -4,9 +4,8 @@ import { BookFullContainer } from "../hoc/Book/BookFullContainer";
 
 export function BookPage(routeProps: RouteComponentProps<{ bookId: string }>): JSX.Element {
   return (
-    <>
-      <h1>Book {routeProps.match.params.bookId}</h1>
+    <section className="box">
       <BookFullContainer bookId={routeProps.match.params.bookId} />
-    </>
+    </section>
   );
 }

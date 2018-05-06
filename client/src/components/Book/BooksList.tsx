@@ -11,12 +11,10 @@ export const BooksList = (props: BooksListProps) => {
   return (
     <CurrentLangContext.Consumer>
       {(currentLang: Lang) => (
-        <div className="row books-list">
-          <div className="card-deck">
-            {Object.values(props.books).map((book: Book) => {
-              return <BookListItem book={book} currentLang={currentLang} key={book.id} />;
-            })}
-          </div>
+        <div className="grid books-list">
+          {Object.values(props.books).map((book: Book) => {
+            return <BookListItem book={book} currentLang={currentLang} key={book.id} />;
+          })}
         </div>
       )}
     </CurrentLangContext.Consumer>

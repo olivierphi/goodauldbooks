@@ -1,0 +1,29 @@
+.grid {
+  @include clearfix;
+
+  .grid-item {
+    width: 50%;
+    float: left;
+    padding: 3em;
+    border-bottom: solid 1px $color-white;
+
+    @include media-queries-theme-wide {
+      &:nth-child(odd) {
+        border-right: solid 1px $color-white;
+        padding-left: 0;
+      }
+      &:nth-child(even) {
+        padding-right: 0;
+      }
+      &:nth-last-child(1),
+      &:nth-last-child(2) {
+        border-bottom: none;
+      }
+    }
+
+    @include media-queries-theme-mobile {
+      width: 100%;
+      float: none;
+    }
+  }
+}

@@ -7,9 +7,9 @@ import { AppState } from "../store";
 export class BooksRepository implements queriesDomain.BooksRepository {
   constructor(private appStateStore: Store<AppState>) {}
 
-  public async getPinnedBooks(pagination: queriesDomain.PaginationRequestData): Promise<BooksById> {
-    const response = await axios.get("/rpc/pinned_books");
-    const pinnedBooks: Book[] = response.data.map(
+  public async getFeaturedBooks(): Promise<BooksById> {
+    const response = await axios.get("/rpc/featured_books");
+    const featuredBooks: Book[] = response.data.map(
       (pinnedBook: ServerResponse.PinnedBookData): Book => {
         return {
           id: pinnedBook.book_id,
@@ -25,7 +25,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
       }
     );
 
-    return Promise.resolve(getBooksByIdFromBooksArray(pinnedBooks));
+    return Promise.resolve(getBooksByIdFromBooksArray(featuredBooks));
   }
 
   public async getBookById(bookId: string): Promise<Book | null> {

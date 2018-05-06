@@ -7,7 +7,7 @@ import { container } from "../ServicesContainer";
 const booksRepository = container.booksRepository;
 
 const searchFunction = async (input: string): Promise<AsyncOptionsResult> => {
-  if (input.length < 3) {
+  if (input.length < 2) {
     return Promise.resolve({ options: [] });
   }
 
