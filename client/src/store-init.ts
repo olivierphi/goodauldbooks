@@ -9,8 +9,7 @@ export function initStore(): Store<AppState> {
 
   const windowRef: any = window || null;
   const composeEnhancers: any =
-    typeof windowRef === "object" &&
-    windowRef.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+    typeof windowRef === "object" && windowRef.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
       ? windowRef.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
       : compose;
 

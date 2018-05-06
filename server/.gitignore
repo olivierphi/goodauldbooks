@@ -1,5 +1,2 @@
-/node_modules/
-
-/dist/
-
-/db.sqlite3
+/gutenberg_raw_data.sql
+/.psql-history

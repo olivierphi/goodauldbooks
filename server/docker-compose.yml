@@ -4,17 +4,59 @@ services:
 
   db:
     image: postgres
-    restart: always
     environment:
       POSTGRES_PASSWORD: local
       POSTGRES_DB: goodauldbooks
     ports:
       - 5433:5432
 
+  db-cli:
+    # Usage: `dc run --rm db-cli`
+    image: postgres
+    entrypoint: psql
+    env_file:
+      - .env
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: goodauldbooks
+    depends_on:
+      - db
+    volumes:
+      - .:/host # Vagrant style! :-)
+      - ./psqlrc:/root/.psqlrc:ro
+      - ./.psql-history:/root/.psql-history
+
   adminer:
     image: adminer
-    restart: always
-    depends_on: 
+    depends_on:
       - db
     ports:
       - 8083:8080
+
+  nginx:
+    image: nginx:1-alpine
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ~/gutenberg-mirror/generated-collection:/www/gutenberg-mirror/generated-collection:ro
+    depends_on:
+      - postgrest
+    ports:
+      - 8080:80
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local
+      PGADMIN_DEFAULT_PASSWORD: 4yLuDlsWYzvX
+    depends_on:
+      - db
+    ports:
+      - 8084:80
+
+  postgrest:
+    build: docker/postgrest
+    volumes:
+      - ./postgrest-api-public.conf:/etc/postgrest.conf
+    ports:
+      - 8085:3000

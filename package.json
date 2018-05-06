@@ -1,6 +1,6 @@
 {
   "private": true,
-  "workspaces": ["client", "server"],
+  "workspaces": ["client", "server/api-admin"],
   "devDependencies": {
     "husky": "^0.15.0-rc.13",
     "lint-staged": "^7.0.2",

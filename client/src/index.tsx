@@ -1,25 +1,26 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { Provider as ReduxStoreProvider } from "react-redux";
-import { BrowserRouter as Router, Route } from "react-router-dom";
-import { Header } from "./components/Header";
-import { CurrentLangContext } from "./contexts/lang";
-import { Lang } from "./domain/core";
-import { BookPage } from "./pages/BookPage";
-import { HomePage } from "./pages/HomePage";
-import { container } from "./ServicesContainer";
+import { bootApp } from "./app-bootstrap";
+import { Layout } from "./components/Layout";
+import { AppEnvelope } from "./hoc/AppEnvelope";
 
-ReactDOM.render(
-  <ReduxStoreProvider store={container.appStateStore}>
-    <CurrentLangContext.Provider value={Lang.EN}>
-      <Router>
-        <>
-          <Header />
-          <Route exact={true} path="/" component={HomePage} />
-          <Route path="/books/:bookId" component={BookPage} />
-        </>
-      </Router>
-    </CurrentLangContext.Provider>
-  </ReduxStoreProvider>,
-  document.getElementById("app")
-);
+async function startApp(): Promise<boolean> {
+  await bootApp();
+  const appContainer = document.getElementById("app");
+  if (appContainer !== null) {
+    renderApp(appContainer);
+  }
+
+  return Promise.resolve(true);
+}
+
+startApp();
+
+function renderApp(appContainer: HTMLElement): void {
+  ReactDOM.render(
+    <AppEnvelope>
+      <Layout />
+    </AppEnvelope>,
+    appContainer
+  );
+}

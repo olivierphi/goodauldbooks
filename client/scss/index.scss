@@ -4,9 +4,4 @@
 // @import "~bootstrap/scss/reboot";
 // @import "~bootstrap/scss/grid";
 @import "~bootstrap/scss/bootstrap";
-
-$red: #ffcc00;
-
-body {
-  background-color: $red;
-}
+@import "~react-select/scss/default";
