@@ -1,7 +1,7 @@
 import * as React from "react";
 import { CurrentLangContext } from "../../contexts/lang";
 import { Book, BooksById, Lang } from "../../domain/core";
-import { ListItem as BookListItem } from "./../Book/ListItem";
+import { BookListItem } from "./BookListItem";
 
 export interface BooksListProps {
   books: BooksById;

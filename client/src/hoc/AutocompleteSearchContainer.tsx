@@ -19,7 +19,10 @@ const searchFunction = async (input: string): Promise<AsyncOptionsResult> => {
   const options = books.map((matchingBook: Book): Option => {
     return {
       value: matchingBook.id,
-      label: matchingBook.title,
+      // @see AutocompleteSearch component for the reason of this
+      label: [matchingBook.title, matchingBook.author.firstName, matchingBook.author.lastName].join(
+        "|"
+      ),
     };
   });
 

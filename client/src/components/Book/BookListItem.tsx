@@ -9,7 +9,7 @@ export interface ListItemProps {
   currentLang: Lang;
 }
 
-export function ListItem(props: ListItemProps) {
+export function BookListItem(props: ListItemProps) {
   const book = props.book;
 
   return (
@@ -17,10 +17,13 @@ export function ListItem(props: ListItemProps) {
       <div className="header">
         <BookCover book={book} />
       </div>
-      <h3>
+      <h3 className="book-title">
         <Link to={getBookPageUrl(book.id)}>{book.title}</Link>
       </h3>
-      <p className="card-text">{book.genres.join(", ")}</p>
+      {book.subtitle ? <p className="book-subtitle">{book.subtitle}</p> : ""}
+      <p className="book-author">
+        {book.author.firstName} {book.author.lastName}
+      </p>
     </div>
   );
 }

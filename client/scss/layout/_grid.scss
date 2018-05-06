@@ -7,7 +7,7 @@
     padding: 3em;
     border-bottom: solid 1px $color-white;
 
-    @include media-queries-theme-wide {
+    @include wide-screen-only {
       &:nth-child(odd) {
         border-right: solid 1px $color-white;
         padding-left: 0;

@@ -37,8 +37,7 @@ export function featuredBooksIds(state: string[] = [], action: Action): string[]
     case `${Actions.FETCH_FEATURED_BOOKS}_FULFILLED`:
       actionRef = action as BooksFetchedAction;
       const payload = actionRef.payload;
-      const featuredBooksIds = Object.keys(payload);
-      return featuredBooksIds;
+      return Object.keys(payload);
     default:
       return state;
   }

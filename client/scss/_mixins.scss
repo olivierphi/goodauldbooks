@@ -6,7 +6,7 @@
   }
 }
 
-@mixin media-queries-theme-wide {
+@mixin wide-screen-only {
   @media (min-width: $media-queries-max-width-normal + 1) {
     @content;
   }
@@ -21,7 +21,7 @@
     @content;
   }
 }
-@mixin media-queries-theme-mobile-portrait {
+@mixin mobile-portrait-screen-only {
   @media (max-width: $media-queries-max-width-mobile-portrait) {
     @content;
   }

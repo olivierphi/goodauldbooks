@@ -1,0 +1,25 @@
+// Here we style the "react-select" input
+$select-menu-max-height: 400px;
+.Select {
+  text-align: left;
+  .Select-placeholder,
+  .Select-input {
+    position: absolute;
+    padding-left: 10px;
+    overflow: hidden;
+  }
+  .Select-input {
+  }
+  .Select-menu-outer {
+  }
+  .Select-option {
+    color: $color-gray-2;
+    .book-title {
+      font-weight: bold;
+    }
+    .author-name {
+      padding-left: 15px;
+      font-style: italic;
+    }
+  }
+}
