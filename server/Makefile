@@ -1,5 +1,5 @@
 GUTENBERG_GENERATED_COLLECTION_PATH?=~/gutenberg-mirror/generated-collection
-PSQL?=docker-compose run --rm db-cli
+PSQL?=docker-compose run --rm db-cli -v ON_ERROR_STOP=1
 
 .phony: reset_db_and_import_gutenberg_books import_gutenberg_books build_api_admin dump_data_to_import_db start_dev_api_admin psql
 .phony: db_update_schema start_api_public pg_dump_raw_gutenberg_data pg_restore_raw_gutenberg_data
@@ -7,7 +7,7 @@ PSQL?=docker-compose run --rm db-cli
 reset_db_and_import_gutenberg_books:
 	docker-compose up -d db && sleep 2
 	@echo "\033[36mWiping and re-setting the database...\033[0m"
-	@${MAKE} db_update_schema || exit 1
+	@${MAKE} db_update_schema
 	@[ -f ./gutenberg_raw_data.sql ] && (\
 		echo "\033[36mFound a SQL dump for table 'gutenberg_raw_data.sql'. Using that data instead of re-scanning everything...\033[0m" && \
 		${MAKE} pg_restore_raw_gutenberg_data \

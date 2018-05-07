@@ -66,6 +66,7 @@ create materialized view library.book_with_related_data as
      book.subtitle as subtitle,
      book.lang as lang,
      book_cover.path as cover,
+     author.author_id::text as author_id,
      author.first_name as author_first_name,
      author.last_name as author_last_name,
      array_agg(genre.title) as genres
@@ -86,7 +87,9 @@ create materialized view library.book_with_related_data as
     book_cover.path
 ;
 create unique index on library.book_with_related_data(id collate "C");
+create index on library.book_with_related_data(author_id collate "C");
 create index on library.book_with_related_data(lang collate "C");
 create index on library.book_with_related_data using gin(title exts.gin_trgm_ops);
+create index on library.book_with_related_data using gin(author_last_name exts.gin_trgm_ops);
 
 commit;

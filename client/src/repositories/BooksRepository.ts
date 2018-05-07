@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Store } from "redux";
-import { Book, BooksById } from "../domain/core";
+import { Author, Book, BooksById } from "../domain/core";
 import * as queriesDomain from "../domain/queries";
 import { AppState } from "../store";
 
@@ -13,14 +13,16 @@ export class BooksRepository implements queriesDomain.BooksRepository {
       (pinnedBook: ServerResponse.PinnedBookData): Book => {
         return {
           id: pinnedBook.book_id,
+          lang: pinnedBook.book_lang,
           title: pinnedBook.book_title,
           subtitle: pinnedBook.book_subtitle,
           author: {
+            id: pinnedBook.author_id,
             firstName: pinnedBook.author_first_name,
             lastName: pinnedBook.author_last_name,
           },
           genres: pinnedBook.genres,
-          cover: pinnedBook.cover_path,
+          coverUrl: pinnedBook.book_cover_path,
         };
       }
     );
@@ -43,36 +45,51 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     const bookDataFromServer: ServerResponse.BookData = response.data[0];
     const book: Book = {
       id: bookDataFromServer.book_id,
+      lang: bookDataFromServer.book_lang,
       title: bookDataFromServer.book_title,
       subtitle: bookDataFromServer.book_subtitle,
       author: {
+        id: bookDataFromServer.author_id,
         firstName: bookDataFromServer.author_first_name,
         lastName: bookDataFromServer.author_last_name,
       },
       genres: bookDataFromServer.genres,
-      cover: bookDataFromServer.cover_path,
+      coverUrl: bookDataFromServer.book_cover_path,
     };
 
     return Promise.resolve(book);
   }
 
-  public async quickSearch(pattern: string): Promise<Book[]> {
+  public async quickSearch(pattern: string): Promise<Array<Book | Author>> {
     const response = await axios.get("/rpc/quick_autocompletion", {
       params: { pattern },
     });
 
-    const matchingBooks = response.data.map((row: ServerResponse.QuickAutocompletionData): Book => {
-      return {
-        id: row.book_id,
-        title: row.book_title,
-        subtitle: null,
-        author: {
-          firstName: row.author_first_name,
-          lastName: row.author_last_name,
-        },
-        genres: [],
-        cover: null,
-      };
+    const matchingBooks = response.data.map((row: ServerResponse.QuickAutocompletionData):
+      | Book
+      | Author => {
+      switch (row.type) {
+        case "book":
+          return {
+            id: row.book_id || "",
+            lang: row.book_lang,
+            title: row.book_title || "",
+            subtitle: null,
+            author: {
+              id: row.author_id,
+              firstName: row.author_first_name,
+              lastName: row.author_last_name,
+            },
+            genres: [],
+            coverUrl: null,
+          } as Book;
+        case "author":
+          return {
+            id: row.author_id,
+            firstName: row.author_first_name,
+            lastName: row.author_last_name,
+          } as Author;
+      }
     });
 
     return Promise.resolve(matchingBooks);
@@ -103,8 +120,9 @@ namespace ServerResponse {
     book_id: string;
     book_title: string;
     book_subtitle: string | null;
-    cover_path: string | null;
-    lang: string;
+    book_cover_path: string | null;
+    book_lang: string;
+    author_id: string;
     author_first_name: string | null;
     author_last_name: string | null;
     genres: string[];
@@ -113,9 +131,11 @@ namespace ServerResponse {
   export interface PinnedBookData extends BookData {}
 
   export interface QuickAutocompletionData {
-    book_id: string;
-    book_title: string;
-    lang: string;
+    type: "book" | "author";
+    book_id: string | null;
+    book_title: string | null;
+    book_lang: string;
+    author_id: string;
     author_first_name: string;
     author_last_name: string;
   }

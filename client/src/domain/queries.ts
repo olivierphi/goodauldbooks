@@ -1,9 +1,9 @@
-import { Book, BooksById } from "./core";
+import { Author, Book, BooksById } from "./core";
 
 export interface BooksRepository {
   getFeaturedBooks(): Promise<BooksById>;
   getBookById(bookId: string): Promise<Book | null>;
-  quickSearch(pattern: string): Promise<Book[]>;
+  quickSearch(pattern: string): Promise<Array<Book | Author>>;
 }
 
 export interface PaginationRequestData {

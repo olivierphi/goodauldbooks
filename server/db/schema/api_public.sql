@@ -11,17 +11,20 @@ create type api_public.book_search_result as (
   book_id text,
   book_title text,
   book_subtitle text,
-  cover_path text,
-  lang varchar(3),
+  book_cover_path text,
+  book_lang varchar(3),
+  author_id text,
   author_first_name text,
   author_last_name text,
   genres text[]
 );
 
 create type api_public.quick_autocompletion_result as (
+  type text,
   book_id text,
   book_title text,
-  lang varchar(3),
+  book_lang varchar(3),
+  author_id text,
   author_first_name text,
   author_last_name text
 );
@@ -50,6 +53,7 @@ as $function_search_book$
       subtitle,
       cover,
       lang,
+      author_id,
       author_first_name,
       author_last_name,
       genres
@@ -70,21 +74,51 @@ language sql
 stable
 as $function_quick_autocompletion$
   -- first (very) naive version, to improve later :-)
-  select
-    (
-      id,
-      title,
-      lang,
-      author_first_name,
-      author_last_name
-    )::api_public.quick_autocompletion_result
-  from
-    library.book_with_related_data
-  where
-    title ilike concat(pattern, '%')
-  order by
-    title asc
-  limit 10
+  with
+  books_search as (
+    select
+        'book' as type,
+        id as book_id,
+        title as book_title,
+        lang as book_lang,
+        author_id,
+        author_first_name,
+        author_last_name
+    from
+      library.book_with_related_data
+    where
+      title ilike concat(pattern, '%')
+    order by
+      title asc
+    limit 4
+  ),
+  authors_search as (
+    select
+        distinct
+        'author' as type,
+        null as book_id,
+        null as book_title,
+        null as book_lang,
+        author_id,
+        author_first_name,
+        author_last_name
+    from
+      library.book_with_related_data
+    where
+      author_last_name ilike concat(pattern, '%')
+    order by
+      author_last_name asc
+    limit 4
+  )
+  (
+    select *
+    from books_search
+  )
+  union all
+  (
+    select *
+    from authors_search
+  )
   ;
 $function_quick_autocompletion$;
 
@@ -110,6 +144,7 @@ as $function_featured_books$
       subtitle,
       cover,
       lang,
+      author_id,
       author_first_name,
       author_last_name,
       genres
@@ -136,6 +171,7 @@ as $function_get_book_by_id$
       subtitle,
       cover,
       lang,
+      author_id,
       author_first_name,
       author_last_name,
       genres
