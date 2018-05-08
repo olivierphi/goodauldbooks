@@ -26,7 +26,8 @@ create type api_public.quick_autocompletion_result as (
   book_lang varchar(3),
   author_id text,
   author_first_name text,
-  author_last_name text
+  author_last_name text,
+  author_nb_books integer
 );
 
 create type api_public.book_intro as (
@@ -83,7 +84,8 @@ as $function_quick_autocompletion$
         lang as book_lang,
         author_id,
         author_first_name,
-        author_last_name
+        author_last_name,
+        author_nb_books
     from
       library.book_with_related_data
     where
@@ -101,12 +103,14 @@ as $function_quick_autocompletion$
         null as book_lang,
         author_id,
         author_first_name,
-        author_last_name
+        author_last_name,
+        author_nb_books
     from
       library.book_with_related_data
     where
       author_last_name ilike concat(pattern, '%')
     order by
+      author_nb_books desc,
       author_last_name asc
     limit 4
   )

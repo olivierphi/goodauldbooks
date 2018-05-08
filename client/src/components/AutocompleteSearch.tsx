@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Redirect } from "react-router";
 import { Async, Option, OptionComponentProps, Options } from "react-select";
+import { QuickSearchResult } from "../domain/queries";
 import { getAuthorPageUrl, getBookPageUrl } from "../utils/routing-utils";
 
 interface AutocompleteSearchProps {
@@ -8,8 +9,7 @@ interface AutocompleteSearchProps {
 }
 
 interface AutocompleteSearchState {
-  selectedBookId: string | null;
-  selectedAuthorId: string | null;
+  selectedResult: QuickSearchResult | null;
 }
 
 export interface AsyncOptionsResult {
@@ -22,8 +22,7 @@ export class AutocompleteSearch extends React.Component<
   AutocompleteSearchState
 > {
   private static emptyState: AutocompleteSearchState = {
-    selectedBookId: null,
-    selectedAuthorId: null,
+    selectedResult: null,
   };
   private static noOpFilterFunction = (options: Options): Options => {
     return options;
@@ -36,13 +35,13 @@ export class AutocompleteSearch extends React.Component<
   }
 
   public render() {
-    if (this.state.selectedBookId) {
+    if (this.state.selectedResult) {
+      const selectedResult = this.state.selectedResult;
       this.resetValueOnNextTick();
-      return <Redirect to={getBookPageUrl(this.state.selectedBookId)} push={true} />;
-    }
-    if (this.state.selectedAuthorId) {
-      this.resetValueOnNextTick();
-      return <Redirect to={getAuthorPageUrl(this.state.selectedAuthorId)} push={true} />;
+      if (selectedResult.book) {
+        return <Redirect to={getBookPageUrl(selectedResult.book.id)} push={true} />;
+      }
+      return <Redirect to={getAuthorPageUrl(selectedResult.author.id)} push={true} />;
     }
 
     return (
@@ -67,20 +66,8 @@ export class AutocompleteSearch extends React.Component<
     if (!selectedOptionValue) {
       return;
     }
-    let idRegexMatch: string[] | null;
-    let newState: AutocompleteSearchState = AutocompleteSearch.emptyState;
-    if ((idRegexMatch = selectedOptionValue.toString().match(/^book:(.+)$/))) {
-      newState = {
-        selectedBookId: idRegexMatch[1],
-        selectedAuthorId: null,
-      };
-    } else if ((idRegexMatch = selectedOptionValue.toString().match(/^author:(.+)$/))) {
-      newState = {
-        selectedBookId: null,
-        selectedAuthorId: idRegexMatch[1],
-      };
-    }
-    this.setState(newState);
+    const searchResult: QuickSearchResult = JSON.parse(selectedOptionValue as string);
+    this.setState({ selectedResult: searchResult });
   }
 
   private resetValueOnNextTick() {
@@ -99,37 +86,26 @@ class AutocompleteOption extends React.Component<OptionComponentProps> {
   }
 
   public render() {
-    if (!this.props.option.label) {
-      return "[Unknown book]";
-    }
     // I would have liked to pass Book objects as values, but "@types/react-select" is hard-coded with strings as values
     // and therefore is not very happy with that... :-/
-    // So, let's use the good ol' tricks with ugly separators as a lightweight serialisation!
+    // This is why I have to serialise/unserialise the QuickSearchResults in JSON, which is far from being optimal...
     let optionContent: JSX.Element;
-    if (0 === this.props.option.label.indexOf("book|")) {
-      // This search result is a book
-      const [
-        ,
-        bookTitle,
-        bookLang,
-        authorFirstName,
-        authorLastName,
-      ] = this.props.option.label.toString().split("|");
+    const result: QuickSearchResult = JSON.parse(this.props.option.value as string);
+    if (result.book) {
       optionContent = (
         <BookResultOptionContent
-          bookTitle={bookTitle}
-          bookLang={bookLang}
-          authorFirstName={authorFirstName}
-          authorLastName={authorLastName}
+          bookTitle={result.book.title}
+          bookLang={result.book.lang}
+          authorFirstName={result.author.firstName}
+          authorLastName={result.author.lastName}
         />
       );
     } else {
-      // This search result is an author
-      const [, authorFirstName, authorLastName] = this.props.option.label.toString().split("|");
       optionContent = (
         <AuthorResultOptionContent
-          authorFirstName={authorFirstName}
-          authorLastName={authorLastName}
+          authorFirstName={result.author.firstName}
+          authorLastName={result.author.lastName}
+          authorNbBooks={result.author.nbBooks}
         />
       );
     }
@@ -195,6 +171,7 @@ function BookResultOptionContent(props: BookResultOptionContentProps) {
 interface AuthorResultOptionContentProps {
   authorFirstName: string;
   authorLastName: string;
+  authorNbBooks: number;
 }
 function AuthorResultOptionContent(props: AuthorResultOptionContentProps) {
   return (
@@ -204,6 +181,7 @@ function AuthorResultOptionContent(props: AuthorResultOptionContentProps) {
       <span className="author-name">
         {props.authorFirstName} {props.authorLastName}
       </span>
+      <span className="author-nb-books">{props.authorNbBooks} books</span>
     </div>
   );
 }

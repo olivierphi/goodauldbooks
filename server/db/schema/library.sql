@@ -69,6 +69,7 @@ create materialized view library.book_with_related_data as
      author.author_id::text as author_id,
      author.first_name as author_first_name,
      author.last_name as author_last_name,
+    (select count(*) from library.book as book2 where book2.author_id = author.author_id)::integer as author_nb_books,
      array_agg(genre.title) as genres
   from
     library.book

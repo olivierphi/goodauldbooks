@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Store } from "redux";
-import { Author, Book, BooksById } from "../domain/core";
+import { Book, BooksById } from "../domain/core";
 import * as queriesDomain from "../domain/queries";
 import { AppState } from "../store";
 
@@ -60,37 +60,33 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     return Promise.resolve(book);
   }
 
-  public async quickSearch(pattern: string): Promise<Array<Book | Author>> {
+  public async quickSearch(pattern: string): Promise<queriesDomain.QuickSearchResult[]> {
     const response = await axios.get("/rpc/quick_autocompletion", {
       params: { pattern },
     });
 
-    const matchingBooks = response.data.map((row: ServerResponse.QuickAutocompletionData):
-      | Book
-      | Author => {
-      switch (row.type) {
-        case "book":
-          return {
-            id: row.book_id || "",
-            lang: row.book_lang,
-            title: row.book_title || "",
-            subtitle: null,
-            author: {
-              id: row.author_id,
-              firstName: row.author_first_name,
-              lastName: row.author_last_name,
-            },
-            genres: [],
-            coverUrl: null,
-          } as Book;
-        case "author":
-          return {
+    const matchingBooks = response.data.map(
+      (row: ServerResponse.QuickAutocompletionData): queriesDomain.QuickSearchResult => {
+        const rowType = row.type;
+        return {
+          resultType: rowType,
+          book:
+            "book" === rowType
+              ? {
+                  id: row.book_id || "",
+                  title: row.book_title || "",
+                  lang: row.book_lang || "",
+                }
+              : null,
+          author: {
             id: row.author_id,
             firstName: row.author_first_name,
             lastName: row.author_last_name,
-          } as Author;
+            nbBooks: row.author_nb_books,
+          },
+        };
       }
-    });
+    );
 
     return Promise.resolve(matchingBooks);
   }
@@ -138,5 +134,6 @@ namespace ServerResponse {
     author_id: string;
     author_first_name: string;
     author_last_name: string;
+    author_nb_books: number;
   }
 }
