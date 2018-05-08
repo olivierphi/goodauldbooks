@@ -13,9 +13,11 @@ create type api_public.book_search_result as (
   book_subtitle text,
   book_cover_path text,
   book_lang varchar(3),
+  book_slug text,
   author_id text,
   author_first_name text,
   author_last_name text,
+  author_slug text,
   genres text[]
 );
 
@@ -24,9 +26,11 @@ create type api_public.quick_autocompletion_result as (
   book_id text,
   book_title text,
   book_lang varchar(3),
+  book_slug text,
   author_id text,
   author_first_name text,
   author_last_name text,
+  author_slug text,
   author_nb_books integer
 );
 
@@ -54,9 +58,11 @@ as $function_search_book$
       subtitle,
       cover,
       lang,
+      slug,
       author_id,
       author_first_name,
       author_last_name,
+      author_slug,
       genres
     )::api_public.book_search_result
   from
@@ -82,15 +88,21 @@ as $function_quick_autocompletion$
         id as book_id,
         title as book_title,
         lang as book_lang,
+        slug as book_slug,
         author_id,
         author_first_name,
         author_last_name,
+        author_slug,
         author_nb_books
     from
       library.book_with_related_data
     where
-      title ilike concat(pattern, '%')
+      title ilike concat('%', pattern, '%')
     order by
+      case
+        when title ilike concat(pattern, '%') then 1
+        else 0
+      end desc,-- we give priority to books *starting* with the given pattern, and not only containing it
       title asc
     limit 4
   ),
@@ -101,9 +113,11 @@ as $function_quick_autocompletion$
         null as book_id,
         null as book_title,
         null as book_lang,
+        null as book_slug,
         author_id,
         author_first_name,
         author_last_name,
+        author_slug,
         author_nb_books
     from
       library.book_with_related_data
@@ -148,9 +162,11 @@ as $function_featured_books$
       subtitle,
       cover,
       lang,
+      slug,
       author_id,
       author_first_name,
       author_last_name,
+      author_slug,
       genres
     )::api_public.book_search_result
   from
@@ -175,9 +191,11 @@ as $function_get_book_by_id$
       subtitle,
       cover,
       lang,
+      slug,
       author_id,
       author_first_name,
       author_last_name,
+      author_slug,
       genres
     )::api_public.book_search_result
   from

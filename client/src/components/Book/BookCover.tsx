@@ -13,10 +13,11 @@ export function BookCover(props: BookCoverProps) {
   const book = props.book;
   const hasCover: boolean = null !== book.coverUrl;
   const className = hasCover ? "has-cover" : "no-cover";
+  const bookUrl = getBookPageUrl(book.lang, book.author.slug, book.slug, book.id);
   return (
     <AssetsConfigContext.Consumer>
       {(assetsConfig: AssetsConfig) => (
-        <Link to={getBookPageUrl(book.id)}>
+        <Link to={bookUrl}>
           <span className={["book-cover", className].join(" ")}>
             {hasCover ? (
               <img src={`${assetsConfig.coversBaseUrl}${book.coverUrl}`} alt={book.title} />

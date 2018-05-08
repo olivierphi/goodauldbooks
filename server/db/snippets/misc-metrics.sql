@@ -191,3 +191,25 @@ where
   nb_books > 1
 order by
   nb_books desc;
+
+-- Books with the same title
+with
+books_by_title as (
+  select
+    title,
+    count(*) as nb_books,
+    array_agg(book_id) as books_ids,
+    array_agg(lang) as books_langs
+  from
+    library.book
+  group by
+    title
+  having
+    count(*) > 1
+)
+select
+  *
+from
+  books_by_title
+order by
+  nb_books desc;

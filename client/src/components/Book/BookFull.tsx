@@ -8,9 +8,26 @@ export interface BookFullProps {
 }
 
 export function BookFull(props: BookFullProps) {
+  const book = props.book;
+  const author = book.author;
+
   return (
     <CurrentLangContext.Consumer>
-      {(currentLang: Lang) => <h3>{props.book.title}</h3>}
+      {(currentLang: Lang) => (
+        <>
+          <h3>{book.title}</h3>
+          <p className="author">
+            <span className="author-name">
+              {author.firstName} {author.lastName}
+            </span>
+          </p>
+          <ul className="genres">
+            {book.genres.map((name: string, i) => {
+              return <li key={i}>{name}</li>;
+            })}
+          </ul>
+        </>
+      )}
     </CurrentLangContext.Consumer>
   );
 }

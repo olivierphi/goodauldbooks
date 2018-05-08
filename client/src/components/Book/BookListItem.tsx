@@ -11,6 +11,7 @@ export interface ListItemProps {
 
 export function BookListItem(props: ListItemProps) {
   const book = props.book;
+  const bookUrl = getBookPageUrl(book.lang, book.author.slug, book.slug, book.id);
 
   return (
     <div className="grid-item book-list-item">
@@ -18,7 +19,7 @@ export function BookListItem(props: ListItemProps) {
         <BookCover book={book} />
       </div>
       <h3 className="book-title">
-        <Link to={getBookPageUrl(book.id)}>{book.title}</Link>
+        <Link to={bookUrl}>{book.title}</Link>
       </h3>
       {book.subtitle ? <p className="book-subtitle">{book.subtitle}</p> : ""}
       <p className="book-author">

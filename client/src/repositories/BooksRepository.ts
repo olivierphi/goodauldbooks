@@ -4,6 +4,9 @@ import { Book, BooksById } from "../domain/core";
 import * as queriesDomain from "../domain/queries";
 import { AppState } from "../store";
 
+/**
+ * This module gets a bit messy, we'll probably refactor it at some point :-)
+ */
 export class BooksRepository implements queriesDomain.BooksRepository {
   constructor(private appStateStore: Store<AppState>) {}
 
@@ -11,19 +14,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     const response = await axios.get("/rpc/featured_books");
     const featuredBooks: Book[] = response.data.map(
       (pinnedBook: ServerResponse.PinnedBookData): Book => {
-        return {
-          id: pinnedBook.book_id,
-          lang: pinnedBook.book_lang,
-          title: pinnedBook.book_title,
-          subtitle: pinnedBook.book_subtitle,
-          author: {
-            id: pinnedBook.author_id,
-            firstName: pinnedBook.author_first_name,
-            lastName: pinnedBook.author_last_name,
-          },
-          genres: pinnedBook.genres,
-          coverUrl: pinnedBook.book_cover_path,
-        };
+        return serverResponseBookDataToSlug(pinnedBook);
       }
     );
 
@@ -43,19 +34,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     });
 
     const bookDataFromServer: ServerResponse.BookData = response.data[0];
-    const book: Book = {
-      id: bookDataFromServer.book_id,
-      lang: bookDataFromServer.book_lang,
-      title: bookDataFromServer.book_title,
-      subtitle: bookDataFromServer.book_subtitle,
-      author: {
-        id: bookDataFromServer.author_id,
-        firstName: bookDataFromServer.author_first_name,
-        lastName: bookDataFromServer.author_last_name,
-      },
-      genres: bookDataFromServer.genres,
-      coverUrl: bookDataFromServer.book_cover_path,
-    };
+    const book: Book = serverResponseBookDataToSlug(bookDataFromServer);
 
     return Promise.resolve(book);
   }
@@ -67,24 +46,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
 
     const matchingBooks = response.data.map(
       (row: ServerResponse.QuickAutocompletionData): queriesDomain.QuickSearchResult => {
-        const rowType = row.type;
-        return {
-          resultType: rowType,
-          book:
-            "book" === rowType
-              ? {
-                  id: row.book_id || "",
-                  title: row.book_title || "",
-                  lang: row.book_lang || "",
-                }
-              : null,
-          author: {
-            id: row.author_id,
-            firstName: row.author_first_name,
-            lastName: row.author_last_name,
-            nbBooks: row.author_nb_books,
-          },
-        };
+        return serverResponseQuickAutocompletionDataToQuickSearchResult(row);
       }
     );
 
@@ -111,6 +73,49 @@ function getBookByIdFromBooksArray(books: Book[], bookId: string): Book | null {
   return null;
 }
 
+function serverResponseBookDataToSlug(row: ServerResponse.BookData): Book {
+  return {
+    id: row.book_id,
+    lang: row.book_lang,
+    title: row.book_title,
+    subtitle: row.book_subtitle,
+    slug: row.book_slug,
+    author: {
+      id: row.author_id,
+      firstName: row.author_first_name,
+      lastName: row.author_last_name,
+      slug: row.author_slug,
+    },
+    genres: row.genres,
+    coverUrl: row.book_cover_path,
+  };
+}
+
+function serverResponseQuickAutocompletionDataToQuickSearchResult(
+  row: ServerResponse.QuickAutocompletionData
+): queriesDomain.QuickSearchResult {
+  const rowType = row.type;
+  return {
+    resultType: rowType,
+    book:
+      "book" === rowType
+        ? {
+            id: row.book_id as string,
+            title: row.book_title as string,
+            lang: row.book_lang as string,
+            slug: row.book_slug as string,
+          }
+        : null,
+    author: {
+      id: row.author_id,
+      firstName: row.author_first_name,
+      lastName: row.author_last_name,
+      slug: row.author_slug,
+      nbBooks: row.author_nb_books,
+    },
+  };
+}
+
 namespace ServerResponse {
   export interface BookData {
     book_id: string;
@@ -118,9 +123,11 @@ namespace ServerResponse {
     book_subtitle: string | null;
     book_cover_path: string | null;
     book_lang: string;
+    book_slug: string;
     author_id: string;
     author_first_name: string | null;
     author_last_name: string | null;
+    author_slug: string;
     genres: string[];
   }
 
@@ -131,9 +138,11 @@ namespace ServerResponse {
     book_id: string | null;
     book_title: string | null;
     book_lang: string;
+    book_slug: string;
     author_id: string;
     author_first_name: string;
     author_last_name: string;
+    author_slug: string;
     author_nb_books: number;
   }
 }

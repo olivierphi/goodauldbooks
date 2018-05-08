@@ -36,12 +36,17 @@ export class AutocompleteSearch extends React.Component<
 
   public render() {
     if (this.state.selectedResult) {
-      const selectedResult = this.state.selectedResult;
-      this.resetValueOnNextTick();
+      const selectedResult: QuickSearchResult = this.state.selectedResult;
+      const author = selectedResult.author;
+
       if (selectedResult.book) {
-        return <Redirect to={getBookPageUrl(selectedResult.book.id)} push={true} />;
+        this.setState(AutocompleteSearch.emptyState);
+        const book = selectedResult.book;
+        const bookUrl = getBookPageUrl(book.lang, author.slug, book.slug, book.id);
+        return <Redirect to={bookUrl} push={true} />;
       }
-      return <Redirect to={getAuthorPageUrl(selectedResult.author.id)} push={true} />;
+
+      return <Redirect to={getAuthorPageUrl(author.id)} push={true} />;
     }
 
     return (
@@ -68,12 +73,6 @@ export class AutocompleteSearch extends React.Component<
     }
     const searchResult: QuickSearchResult = JSON.parse(selectedOptionValue as string);
     this.setState({ selectedResult: searchResult });
-  }
-
-  private resetValueOnNextTick() {
-    setTimeout(() => {
-      this.setState(AutocompleteSearch.emptyState);
-    }, 0);
   }
 }
 

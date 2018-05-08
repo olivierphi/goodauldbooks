@@ -56,6 +56,7 @@ create table library.book_additional_data (
  * Views
  */
 
+-- This massive materialized view is what powers our public API :-)
 create materialized view library.book_with_related_data as
   select
     (case
@@ -65,11 +66,13 @@ create materialized view library.book_with_related_data as
      book.title as title,
      book.subtitle as subtitle,
      book.lang as lang,
+     substring(utils.slugify(book.title) for 50) as slug,
      book_cover.path as cover,
      author.author_id::text as author_id,
      author.first_name as author_first_name,
      author.last_name as author_last_name,
-    (select count(*) from library.book as book2 where book2.author_id = author.author_id)::integer as author_nb_books,
+     substring(utils.slugify(author.first_name || ' ' || author.last_name) for 50) as author_slug,
+     (select count(*) from library.book as book2 where book2.author_id = author.author_id)::integer as author_nb_books,
      array_agg(genre.title) as genres
   from
     library.book

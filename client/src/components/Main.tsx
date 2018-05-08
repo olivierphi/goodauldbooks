@@ -10,7 +10,10 @@ export function Main(props: MainProps) {
   return (
     <section id="main" className="container">
       <Route exact={true} path="/" component={HomePage} />
-      <Route path="/library/book/:bookId" component={BookPage} />
+      <Route
+        path="/library/book/:lang([a-z]{2,3})/:author_slug([a-z0-9-]+)/:book_slug([a-z0-9-]+)/:bookId(g?[0-9]+)"
+        component={BookPage}
+      />
       <Route path="/library/author/:authorId" component={AuthorPage} />
     </section>
   );

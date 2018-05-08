@@ -12,12 +12,14 @@ export interface Book {
   subtitle: string | null;
   genres: Genre[];
   coverUrl: string | null;
+  slug: string;
 }
 
 export interface Author {
   id: string;
   firstName: string | null;
   lastName: string | null;
+  slug: string;
   birthYear?: number | null;
   deathYear?: number | null;
 }

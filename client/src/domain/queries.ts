@@ -15,12 +15,14 @@ export interface QuickSearchResultBook {
   readonly id: string;
   readonly title: string;
   readonly lang: string;
+  readonly slug: string;
 }
 export interface QuickSearchResultAuthor {
   readonly id: string;
   readonly firstName: string;
   readonly lastName: string;
   readonly nbBooks: number;
+  readonly slug: string;
 }
 
 export interface PaginationRequestData {
