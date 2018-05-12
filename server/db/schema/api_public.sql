@@ -66,7 +66,7 @@ as $function_search_book$
       genres
     )::api_public.book_search_result
   from
-    library.book_with_related_data
+    library_view.book_with_related_data
   where
     title ilike concat('%', pattern, '%')
   limit 30
@@ -84,18 +84,18 @@ as $function_quick_autocompletion$
   with
   books_search as (
     select
-        'book' as type,
-        id as book_id,
-        title as book_title,
-        lang as book_lang,
-        slug as book_slug,
-        author_id,
-        author_first_name,
-        author_last_name,
-        author_slug,
-        author_nb_books
+      'book' as type,
+      id as book_id,
+      title as book_title,
+      lang as book_lang,
+      slug as book_slug,
+      author_id,
+      author_first_name,
+      author_last_name,
+      author_slug,
+      author_nb_books
     from
-      library.book_with_related_data
+      library_view.book_with_related_data
     where
       title ilike concat('%', pattern, '%')
     order by
@@ -108,19 +108,19 @@ as $function_quick_autocompletion$
   ),
   authors_search as (
     select
-        distinct
-        'author' as type,
-        null as book_id,
-        null as book_title,
-        null as book_lang,
-        null as book_slug,
-        author_id,
-        author_first_name,
-        author_last_name,
-        author_slug,
-        author_nb_books
+      distinct
+      'author' as type,
+      null as book_id,
+      null as book_title,
+      null as book_lang,
+      null as book_slug,
+      author_id,
+      author_first_name,
+      author_last_name,
+      author_slug,
+      author_nb_books
     from
-      library.book_with_related_data
+      library_view.book_with_related_data
     where
       author_last_name ilike concat(pattern, '%')
     order by
@@ -170,7 +170,7 @@ as $function_featured_books$
       genres
     )::api_public.book_search_result
   from
-    library.book_with_related_data
+    library_view.book_with_related_data
   where
     id in (select unnest(books_ids) from pinned_books_ids);
   ;
@@ -199,7 +199,7 @@ as $function_get_book_by_id$
       genres
     )::api_public.book_search_result
   from
-    library.book_with_related_data
+    library_view.book_with_related_data
   where
     id = book_id
   limit 1

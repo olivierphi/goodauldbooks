@@ -1,5 +1,7 @@
 GUTENBERG_GENERATED_COLLECTION_PATH?=~/gutenberg-mirror/generated-collection
 PSQL?=docker-compose run --rm db-cli -v ON_ERROR_STOP=1
+# @link http://petereisentraut.blogspot.co.uk/2010/03/running-sql-scripts-with-psql.html
+PSQL_QUIET?=docker-compose run --rm -e PGOPTIONS='--client-min-messages=warning' db-cli -v ON_ERROR_STOP=1
 
 .phony: reset_db_and_import_gutenberg_books import_gutenberg_books build_api_admin dump_data_to_import_db start_dev_api_admin psql
 .phony: db_update_schema start_api_public pg_dump_raw_gutenberg_data pg_restore_raw_gutenberg_data
@@ -18,11 +20,22 @@ reset_db_and_import_gutenberg_books:
 	) || exit 1
 	@echo "\033[36mNow converting this raw data from Project Gutenberg into normalised data...\033[0m"
 	@${MAKE} import_gutenberg_books
+	@echo "\033[36mLast but not least, we project this normalised data into some materialized views...\033[0m"
+	@${MAKE} refresh_materialized_views
 
 import_gutenberg_books: VERBOSITY?=1
 import_gutenberg_books:
-	${PSQL} --no-psqlrc \
+	@echo "\033[36mPopulating 'library' tables from 'import.gutenberg_raw_data' content...\033[0m"
+	time ${PSQL} --no-psqlrc \
 		-c  "select * from import.create_books_from_raw_rdfs(wipe_previsous_books => true, verbosity => ${VERBOSITY}::integer);"
+
+refresh_materialized_views: VIEWS=library_view.book_with_related_data library_view.genre_with_related_data
+refresh_materialized_views:
+	@echo "\033[36mRefreshing related materilized views...\033[0m"
+	@$(foreach materialized_view,$(VIEWS),\
+		(echo "\033[36m*******\nRefreshing '$(materialized_view)'...\n*******\033[0m" && \
+		time ${PSQL} --no-psqlrc -q -b -c "refresh materialized view $(materialized_view);") || exit 1; \
+	)
 
 build_api_admin:
 	cd api-admin/ && \
@@ -38,13 +51,13 @@ start_dev_api_admin:
 psql: .psql-history
 	${PSQL}
 
-db_update_schema: SQL_FILES=schema/utils.sql schema/library.sql schema/import.sql schema/webapp.sql schema/api_public.sql
+db_update_schema: SQL_FILES=schema/utils.sql schema/library.sql schema/library_view.sql schema/import.sql schema/webapp.sql schema/api_public.sql
 db_update_schema: .psql-history
 # We could have launched all those SQL files in a single pass via multiple "-f" args to psql,
 # but we want to stop as soon as one of the file fails for any reason.
 	@$(foreach sql_file,$(SQL_FILES),\
-		(echo "\033[36mRunning SQL file '$(sql_file)'...\033[0m" && \
-		${PSQL} --no-psqlrc -q -b -f /host/db/$(sql_file)) || exit 1; \
+		(echo "\033[36m*******\nRunning SQL file '$(sql_file)'...\n*******\033[0m" && \
+		${PSQL_QUIET} --no-psqlrc -q -b -f /host/db/$(sql_file)) || exit 1; \
 	)
 
 start_api_public:

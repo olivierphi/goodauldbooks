@@ -62,15 +62,15 @@ order by
 with
 grouped_genres as (
   select
-    title, count(*) as nb
+    genre_id, title, count(*) as nb
   from
     library.book_genre
       join library.genre using(genre_id)
   group by
-    title
+    genre_id, title
 )
 select
-  title, nb as nb_books_for_this_genre
+  genre_id, title, nb as nb_books_for_this_genre
 from
   grouped_genres
 where
@@ -212,4 +212,40 @@ select
 from
   books_by_title
 order by
-  nb_books desc;
+  nb_books desc
+;
+
+-- Nb genres
+select
+  count(*)
+from
+  library.genre
+;
+
+-- Nb langs
+select
+  count(distinct(lang))
+from
+  library.book
+;
+
+-- Nb genres by book (top 10)
+with
+nb_types_per_book as (
+  select
+    book_id,
+    count(*) as nb_genres
+  from
+    library.book_genre
+  group by
+    book_id
+)
+select
+  book_id,
+  nb_genres
+from
+  nb_types_per_book
+order by
+  nb_genres desc
+limit 10
+;
