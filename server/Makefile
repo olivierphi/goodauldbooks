@@ -34,7 +34,7 @@ refresh_materialized_views:
 	@echo "\033[36mRefreshing related materilized views...\033[0m"
 	@$(foreach materialized_view,$(VIEWS),\
 		(echo "\033[36m*******\nRefreshing '$(materialized_view)'...\n*******\033[0m" && \
-		time ${PSQL} --no-psqlrc -q -b -c "refresh materialized view $(materialized_view);") || exit 1; \
+		time ${PSQL} --no-psqlrc -q -b -c "refresh materialized view concurrently $(materialized_view);") || exit 1; \
 	)
 
 build_api_admin:

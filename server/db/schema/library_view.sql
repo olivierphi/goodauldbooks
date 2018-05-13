@@ -12,18 +12,21 @@ create materialized view library_view.book_with_related_data as
     (case
      when book.gutenberg_id is not null then concat('g', book.gutenberg_id)
      else book.book_id::text
-     end) as id,
+     end) as book_id,
     book.title as title,
     book.subtitle as subtitle,
     book.lang as lang,
     substring(utils.slugify(book.title) for 50) as slug,
     book_cover.path as cover,
-    author.author_id::text as author_id,
+    (case
+     when author.gutenberg_id is not null then concat('g', author.gutenberg_id)
+     else author.author_id::text
+     end) as author_id,
     author.first_name as author_first_name,
     author.last_name as author_last_name,
     substring(utils.slugify(author.first_name || ' ' || author.last_name) for 50) as author_slug,
     (select count(*) from library.book as book2 where book2.author_id = author.author_id)::integer as author_nb_books,
-    array_agg(genre.genre_id) as genres_ids,
+    array_agg(genre.genre_id::integer) as genres_ids,
     array_agg(genre.title) as genres
   from
     library.book
@@ -42,7 +45,7 @@ create materialized view library_view.book_with_related_data as
     book_cover.path
 with no data;
 create unique index on library_view.book_with_related_data
-  (id collate "C");
+  (book_id collate "C");
 create index on library_view.book_with_related_data
   (author_id collate "C");
 create index on library_view.book_with_related_data

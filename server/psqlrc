@@ -29,4 +29,4 @@ load 'auto_explain';
 \set auto_explain 'set auto_explain.log_min_duration = 0; set auto_explain.log_nested_statements = on;'
 \echo '`:auto_explain` in psql, then `dc logs -f --tail=0 db` in the terminal to view the explanations of what happen in our functions :-)'
 
-set search_path to 'exts', 'library', 'api_public';
+set search_path to 'exts', 'library', 'library_view', 'api_public';

@@ -21,6 +21,27 @@ create type api_public.book_search_result as (
   genres text[]
 );
 
+create type api_public.book_full_genre as (
+  title text,
+  nb_books integer,
+  -- This is a hash where keys are lang codes and values are number of books for this genre and this lang:
+  nb_books_by_lang jsonb
+);
+
+create type api_public.book_full as (
+  book_id text,
+  book_title text,
+  book_subtitle text,
+  book_cover_path text,
+  book_lang varchar(3),
+  book_slug text,
+  author_id text,
+  author_first_name text,
+  author_last_name text,
+  author_slug text,
+  genres api_public.book_full_genre[]
+);
+
 create type api_public.quick_autocompletion_result as (
   type text,
   book_id text,
@@ -53,7 +74,7 @@ as $function_search_book$
   -- but that will be enough for a first test :-)
   select
     (
-      id,
+      book_id,
       title,
       subtitle,
       cover,
@@ -85,7 +106,7 @@ as $function_quick_autocompletion$
   books_search as (
     select
       'book' as type,
-      id as book_id,
+      book_id,
       title as book_title,
       lang as book_lang,
       slug as book_slug,
@@ -157,7 +178,7 @@ as $function_featured_books$
   )
   select
     (
-      id,
+      book_id,
       title,
       subtitle,
       cover,
@@ -170,24 +191,51 @@ as $function_featured_books$
       genres
     )::api_public.book_search_result
   from
-    library_view.book_with_related_data
+    library_view.book_with_related_data,
+    pinned_books_ids
   where
-    id in (select unnest(books_ids) from pinned_books_ids);
+    book_id = any(pinned_books_ids.books_ids);
   ;
 $function_featured_books$;
 
 -- `curl -sS localhost:8085/rpc/get_book_by_id?book_id=g345 | jq`
 create or replace function api_public.get_book_by_id(
   book_id text
-) returns api_public.book_search_result
+) returns api_public.book_full
 language sql
 stable
 as $function_get_book_by_id$
   -- first (very) naive version, to improve later :-)
+  with
+  book_genres as (
+    select
+      genres::text[] as genres
+    from
+      library_view.book_with_related_data
+    where
+      book_id = $1
+  ),
+  book_detailed_genres as (
+    select
+      (
+        title,
+        nb_books,
+        nb_books_by_lang
+      )::api_public.book_full_genre as full_genre
+    from
+      library_view.genre_with_related_data
+        join book_genres on title = any(book_genres.genres)
+  ),
+  book_detailed_genres_array as (
+    select
+      array_agg(full_genre)::api_public.book_full_genre[] as full_genres
+    from
+      book_detailed_genres
+  )
   select
     (
-      id,
-      title,
+      book_id,
+      book_with_related_data.title,
       subtitle,
       cover,
       lang,
@@ -196,12 +244,13 @@ as $function_get_book_by_id$
       author_first_name,
       author_last_name,
       author_slug,
-      genres
-    )::api_public.book_search_result
+      full_genres
+    )::api_public.book_full
   from
-    library_view.book_with_related_data
+    library_view.book_with_related_data,
+    book_detailed_genres_array
   where
-    id = book_id
+    book_id = $1
   limit 1
   ;
 $function_get_book_by_id$;
