@@ -43,13 +43,13 @@ create materialized view library_view.book_with_related_data as
     book.book_id,
     author.author_id,
     book_cover.path
-with no data;
+;
 create unique index on library_view.book_with_related_data
-  (book_id collate "C");
+  (book_id);
 create index on library_view.book_with_related_data
-  (author_id collate "C");
+  (author_id);
 create index on library_view.book_with_related_data
-  (lang collate "C");
+  (lang);
 create index on library_view.book_with_related_data
   using gin(title exts.gin_trgm_ops);
 create index on library_view.book_with_related_data
@@ -66,10 +66,10 @@ create materialized view library_view.genre_with_related_data as (
       library.book
   )
   select
-    genre_id,
-    title,
-    count(nb_books_by_lang.lang) as nb_langs,
-    sum(nb_books_by_lang.nb_books) as nb_books,
+    genre_id::integer,
+    title::text,
+    count(nb_books_by_lang.lang)::integer as nb_langs,
+    sum(nb_books_by_lang.nb_books)::integer as nb_books,
     json_object(
       array_agg(nb_books_by_lang.lang),
       array_agg(nb_books_by_lang.nb_books::text)
@@ -93,9 +93,10 @@ create materialized view library_view.genre_with_related_data as (
     ) nb_books_by_lang(lang, nb_books) on true
   group by
     genre_id
-)
-with no data;
+);
 create unique index on library_view.genre_with_related_data
-  (title collate "C");
+  (genre_id);
+create unique index on library_view.genre_with_related_data
+  (title);
 
 commit;

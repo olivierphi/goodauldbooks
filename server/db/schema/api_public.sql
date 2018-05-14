@@ -224,7 +224,8 @@ as $function_get_book_by_id$
       )::api_public.book_full_genre as full_genre
     from
       library_view.genre_with_related_data
-        join book_genres on title = any(book_genres.genres)
+    where
+      title = any ((select genres from book_genres)::text[])
   ),
   book_detailed_genres_array as (
     select
@@ -274,6 +275,6 @@ as $function_get_book_intro$
 $function_get_book_intro$;
 
 
-\ir 'api_public_security_policies.sql'
+\ir 'api_public.security_policies.sql'
 
 commit;

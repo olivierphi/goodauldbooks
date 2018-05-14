@@ -20,6 +20,11 @@ set intervalstyle to 'postgres_verbose';
 -- custom stuff grabbed here and there:
 \set version 'select version();'
 \set extensions 'select * from pg_available_extensions;'
+-- @link https://github.com/datachomp/dotfiles/blob/master/.psqlrc
+\set _rtsize '(select table_schema, table_name, pg_relation_size( quote_ident( table_schema ) || \'.\' || quote_ident( table_name ) ) as size, pg_total_relation_size( quote_ident( table_schema ) || \'.\' || quote_ident( table_name ) ) as total_size  from information_schema.tables where table_type = \'BASE TABLE\' and table_schema not in (\'information_schema\', \'pg_catalog\') order by pg_relation_size( quote_ident( table_schema ) || \'.\' || quote_ident( table_name ) ) desc, table_schema, table_name)'
+\set rtsize ':_rtsize;'
+\set tsize '(select table_schema, table_name, pg_size_pretty(size) as size, pg_size_pretty(total_size) as total_size from (:_rtsize) x order by x.size desc, x.total_size desc, table_schema, table_name);'
+
 
 \set HISTFILE /root/.psql-history
 \set HISTSIZE 2000

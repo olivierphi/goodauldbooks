@@ -1,7 +1,7 @@
 GUTENBERG_GENERATED_COLLECTION_PATH?=~/gutenberg-mirror/generated-collection
-PSQL?=docker-compose run --rm db-cli -v ON_ERROR_STOP=1
+PSQL?=docker-compose run --rm --no-deps db-cli -v ON_ERROR_STOP=1
 # @link http://petereisentraut.blogspot.co.uk/2010/03/running-sql-scripts-with-psql.html
-PSQL_QUIET?=docker-compose run --rm -e PGOPTIONS='--client-min-messages=warning' db-cli -v ON_ERROR_STOP=1
+PSQL_QUIET?=docker-compose run --rm --no-deps -e PGOPTIONS='--client-min-messages=warning' db-cli -v ON_ERROR_STOP=1
 
 .phony: reset_db_and_import_gutenberg_books import_gutenberg_books build_api_admin dump_data_to_import_db start_dev_api_admin psql
 .phony: db_update_schema start_api_public pg_dump_raw_gutenberg_data pg_restore_raw_gutenberg_data

@@ -26,6 +26,6 @@ create table import.gutenberg_raw_data (
 /**
  * Functions (and their composite types)
  */
-\ir 'import_functions.sql'
+\ir 'import.functions.sql'
 
 commit;
