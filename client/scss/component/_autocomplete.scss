@@ -1,0 +1,53 @@
+// Here we style the "react-select" input
+$select-menu-max-height: 400px;
+.Select {
+  text-align: left;
+  .Select-placeholder,
+  .Select-input {
+    position: absolute;
+    padding-left: 10px;
+    overflow: hidden;
+  }
+  .Select-input {
+  }
+  .Select-menu-outer {
+  }
+  .Select-option {
+    color: $color-gray-2;
+
+    .option-type {
+      padding-right: 5px;
+    }
+
+    .book-result {
+      &.lang-en,
+      &.lang-fr {
+        background-position: 0 10px;
+        background-repeat: no-repeat;
+        padding-left: 25px;
+      }
+      &.lang-en {
+        background-image: url("/assets/img/lang/en.png");
+      }
+      &.lang-fr {
+        background-image: url("/assets/img/lang/fr.png");
+      }
+
+      .book-title {
+        font-weight: bold;
+        padding-right: 15px;
+      }
+      .author-name {
+        font-style: italic;
+      }
+    }
+    .author-result {
+      .author-name {
+        font-weight: bold;
+      }
+      .author-nb-books {
+        padding-left: 12px;
+      }
+    }
+  }
+}

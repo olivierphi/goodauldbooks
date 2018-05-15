@@ -291,8 +291,6 @@ begin
 
   end loop;
 
-  refresh materialized view concurrently library.book_with_related_data;
-
   return nb_books_created;
 end;
 $function_create_books_from_raw_rdfs$;

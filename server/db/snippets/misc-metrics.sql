@@ -62,15 +62,15 @@ order by
 with
 grouped_genres as (
   select
-    title, count(*) as nb
+    genre_id, title, count(*) as nb
   from
     library.book_genre
       join library.genre using(genre_id)
   group by
-    title
+    genre_id, title
 )
 select
-  title, nb as nb_books_for_this_genre
+  genre_id, title, nb as nb_books_for_this_genre
 from
   grouped_genres
 where
@@ -191,3 +191,104 @@ where
   nb_books > 1
 order by
   nb_books desc;
+
+-- Books with the same title
+with
+books_by_title as (
+  select
+    title,
+    count(*) as nb_books,
+    array_agg(book_id) as books_ids,
+    array_agg(lang) as books_langs
+  from
+    library.book
+  group by
+    title
+  having
+    count(*) > 1
+)
+select
+  *
+from
+  books_by_title
+order by
+  nb_books desc
+;
+
+-- Nb genres
+select
+  count(*)
+from
+  library.genre
+;
+
+-- Nb langs
+select
+  count(distinct(lang))
+from
+  library.book
+;
+
+-- Nb genres by book (top 10)
+with
+nb_types_per_book as (
+  select
+    book_id,
+    count(*) as nb_genres
+  from
+    library.book_genre
+  group by
+    book_id
+)
+select
+  book_id,
+  nb_genres
+from
+  nb_types_per_book
+order by
+  nb_genres desc
+limit 10
+;
+
+
+-- Low-level: see the physical size of our tables
+-- @link https://wiki.postgresql.org/wiki/Disk_Usage
+
+-- > This will report size information for all tables [and materialized views], in both raw bytes and "pretty" form.
+select
+  *,
+  pg_size_pretty(total_bytes) as total,
+  pg_size_pretty(index_bytes) as index,
+  pg_size_pretty(toast_bytes) as toast,
+  pg_size_pretty(table_bytes) as table
+from (
+   select
+     *,
+     total_bytes - index_bytes - coalesce(toast_bytes, 0) as table_bytes
+   from (
+          select
+            c.oid,
+            nspname                               as table_schema,
+            relname                               as table_name,
+            c.reltuples                           as row_estimate,
+            pg_total_relation_size(c.oid)         as total_bytes,
+            pg_indexes_size(c.oid)                as index_bytes,
+            pg_total_relation_size(reltoastrelid) as toast_bytes
+          from pg_class c
+            left join pg_namespace n on n.oid = c.relnamespace
+          where relkind in ('r', 'm') and nspname not in ('pg_catalog', 'information_schema')
+        ) a
+ ) a;
+
+-- > This version of the query uses pg_total_relation_size, which sums total disk space used by the table
+-- > including indexes and toasted data rather than breaking out the individual pieces:
+select
+  nspname || '.' || relname                     as "relation",
+  pg_size_pretty(pg_total_relation_size(c.oid)) as "total_size"
+from pg_class c
+  left join pg_namespace n on (n.oid = c.relnamespace)
+where nspname not in ('pg_catalog', 'information_schema')
+      and c.relkind <> 'i'
+      and nspname !~ '^pg_toast'
+order by pg_total_relation_size(c.oid) desc
+limit 20;

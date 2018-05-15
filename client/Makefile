@@ -22,7 +22,7 @@ build_css:
 
 lint:
 # @link https://github.com/prettier/prettier/issues/1358#issuecomment-295669193 :-)
-	${NODE_BIN_ROOT}/prettier --config ../prettier.config.js --write "{,!(node_modules|dist)/**/}*.{js,ts,tsx,json,md}"
+	${NODE_BIN_ROOT}/prettier --config ../prettier.config.js --write "{,!(node_modules|dist)/**/}*.{js,ts,tsx,json,md,scss}"
 	${NODE_BIN_ROOT}/tslint --fix 'src/**/*.{ts,tsx}'
 
 start_dev: copy_assets
@@ -31,4 +31,5 @@ start_dev: copy_assets
 		"${NODE_BIN}/webpack-cli --watch --mode ${NODE_ENV} --config webpack.config.scss.js"
 
 copy_assets:
-	cp index.html dist/index.html
+	cp index.html dist/
+	cp -r assets dist/

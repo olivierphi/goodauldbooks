@@ -1,9 +1,29 @@
-import { Book, BooksById } from "./core";
+import { BooksById, BookWithGenreStats } from "./core";
 
 export interface BooksRepository {
-  getPinnedBooks(pagination: PaginationRequestData): Promise<BooksById>;
-  getBookById(bookId: string): Promise<Book | null>;
-  quickSearch(pattern: string): Promise<Book[]>;
+  getFeaturedBooks(): Promise<BooksById>;
+  getBookById(bookId: string): Promise<BookWithGenreStats | null>;
+  quickSearch(pattern: string): Promise<QuickSearchResult[]>;
+  getBooksByGenre(genre: string): Promise<BooksById>;
+}
+
+export interface QuickSearchResult {
+  readonly resultType: "book" | "author";
+  readonly book: QuickSearchResultBook | null;
+  readonly author: QuickSearchResultAuthor;
+}
+export interface QuickSearchResultBook {
+  readonly id: string;
+  readonly title: string;
+  readonly lang: string;
+  readonly slug: string;
+}
+export interface QuickSearchResultAuthor {
+  readonly id: string;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly nbBooks: number;
+  readonly slug: string;
 }
 
 export interface PaginationRequestData {

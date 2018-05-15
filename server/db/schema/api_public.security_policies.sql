@@ -15,19 +15,19 @@ begin
      rolname in ('api_public_authenticator', 'api_public_anon')
   ) > 1 then
     revoke usage on schema
-      api_public, library, utils, webapp
+      api_public, library, library_view, utils, webapp
     from
       api_public_authenticator, api_public_anon
     cascade;
 
     revoke all privileges on all tables in schema
-      api_public, library, webapp
+      api_public, library, library_view, webapp
     from
       api_public_authenticator, api_public_anon
     cascade;
 
     revoke all privileges on all functions in schema
-      api_public, library, utils, webapp
+      api_public, library, library_view, utils, webapp
     from
       api_public_authenticator, api_public_anon
     cascade;
@@ -45,14 +45,13 @@ grant api_public_anon to api_public_authenticator;
 
 -- "Anonymous" role permissions. We have to be very careful with that! :-)
 grant usage on schema
-  api_public, library, utils, webapp
+  api_public, library, library_view, utils, webapp
 to
   api_public_anon;
 grant select on table
-  library.book, library.author,
-  library.book_genre, library.genre,
-  library.book_with_related_data,
   library.book_additional_data,
+  library_view.book_with_related_data,
+  library_view.genre_with_related_data,
   webapp.settings
 to
   api_public_anon;
@@ -60,7 +59,7 @@ to
 grant execute on function
   api_public.search_books(pattern text),
   api_public.quick_autocompletion(pattern text),
-  api_public.pinned_books(),
+  api_public.featured_books(),
   api_public.get_book_by_id(book_id text),
   api_public.get_book_intro(book_id text),
   utils.get_book_real_id(book_public_id text)

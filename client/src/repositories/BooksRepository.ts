@@ -1,37 +1,44 @@
 import axios from "axios";
 import { Store } from "redux";
-import { Book, BooksById } from "../domain/core";
+import { Book, BooksById, BookWithGenreStats, GenreWithStats } from "../domain/core";
 import * as queriesDomain from "../domain/queries";
 import { AppState } from "../store";
+import {
+  appStateHasGenresWithStats,
+  getBooksByIdsFromState,
+  getGenresWithStatsFromState,
+} from "../utils/app-state-utils";
+import * as ServerResponse from "./server-responses";
 
+/**
+ * This module gets a bit messy, we'll probably refactor it at some point :-)
+ */
 export class BooksRepository implements queriesDomain.BooksRepository {
   constructor(private appStateStore: Store<AppState>) {}
 
-  public async getPinnedBooks(pagination: queriesDomain.PaginationRequestData): Promise<BooksById> {
-    const response = await axios.get("/rpc/pinned_books");
-    const pinnedBooks: Book[] = response.data.map(
-      (pinnedBook: ServerResponse.PinnedBookData): Book => {
-        return {
-          id: pinnedBook.book_id,
-          title: pinnedBook.book_title,
-          subtitle: pinnedBook.book_subtitle,
-          author: {
-            firstName: pinnedBook.author_first_name,
-            lastName: pinnedBook.author_last_name,
-          },
-          genres: pinnedBook.genres,
-          cover: pinnedBook.cover_path,
-        };
-      }
-    );
+  public async getFeaturedBooks(): Promise<BooksById> {
+    // TODO: store the books ids into the app state, so that we can cache the result
+    const response = await axios.get("/rpc/featured_books");
+    const featuredBooks: Book[] = response.data.map(mapBookFromServer);
 
-    return Promise.resolve(getBooksByIdFromBooksArray(pinnedBooks));
+    return Promise.resolve(getBooksByIdFromBooksArray(featuredBooks));
   }
 
-  public async getBookById(bookId: string): Promise<Book | null> {
-    const appStateStoreBooksById = this.appStateStore.getState().booksById;
-    if (appStateStoreBooksById[bookId]) {
-      return Promise.resolve(appStateStoreBooksById[bookId]);
+  public async getBookById(bookId: string): Promise<BookWithGenreStats | null> {
+    const appState = this.appStateStore.getState();
+    const appStateStoreBooksById = appState.booksById;
+    const previouslyFetchedBookData: Book | null = appStateStoreBooksById[bookId];
+    if (
+      previouslyFetchedBookData &&
+      appStateHasGenresWithStats(previouslyFetchedBookData.genres, appState.genresWithStats)
+    ) {
+      return Promise.resolve({
+        book: appStateStoreBooksById[bookId],
+        genresWithStats: getGenresWithStatsFromState(
+          previouslyFetchedBookData.genres,
+          appState.genresWithStats
+        ),
+      });
     }
 
     const response = await axios.get("/rpc/get_book_by_id", {
@@ -40,42 +47,37 @@ export class BooksRepository implements queriesDomain.BooksRepository {
       },
     });
 
-    const bookDataFromServer: ServerResponse.BookData = response.data[0];
-    const book: Book = {
-      id: bookDataFromServer.book_id,
-      title: bookDataFromServer.book_title,
-      subtitle: bookDataFromServer.book_subtitle,
-      author: {
-        firstName: bookDataFromServer.author_first_name,
-        lastName: bookDataFromServer.author_last_name,
-      },
-      genres: bookDataFromServer.genres,
-      cover: bookDataFromServer.cover_path,
-    };
+    const bookDataFromServer: ServerResponse.BookWithGenreStats = response.data[0];
+    const bookWithGenreStats = mapBookWithGenreStatsFromServer(bookDataFromServer);
 
-    return Promise.resolve(book);
+    return Promise.resolve(bookWithGenreStats);
   }
 
-  public async quickSearch(pattern: string): Promise<Book[]> {
+  public async quickSearch(pattern: string): Promise<queriesDomain.QuickSearchResult[]> {
     const response = await axios.get("/rpc/quick_autocompletion", {
       params: { pattern },
     });
 
-    const matchingBooks = response.data.map((row: ServerResponse.QuickAutocompletionData): Book => {
-      return {
-        id: row.book_id,
-        title: row.book_title,
-        subtitle: null,
-        author: {
-          firstName: row.author_first_name,
-          lastName: row.author_last_name,
-        },
-        genres: [],
-        cover: null,
-      };
-    });
+    const matchingBooks = response.data.map(mapQuickAutocompletionDataFromServer);
 
     return Promise.resolve(matchingBooks);
+  }
+
+  public async getBooksByGenre(genre: string): Promise<BooksById> {
+    const appState = this.appStateStore.getState();
+    if (appState.booksIdsByGenre[genre]) {
+      return Promise.resolve(
+        getBooksByIdsFromState(appState.booksIdsByGenre[genre], appState.booksById)
+      );
+    }
+
+    const response = await axios.get("/rpc/get_books_by_genre", {
+      params: { genre },
+    });
+
+    const booksForThisGenre = getBooksByIdFromBooksArray(response.data.map(mapBookFromServer));
+
+    return Promise.resolve(booksForThisGenre);
   }
 }
 
@@ -88,35 +90,62 @@ function getBooksByIdFromBooksArray(books: Book[]): BooksById {
   return booksById;
 }
 
-function getBookByIdFromBooksArray(books: Book[], bookId: string): Book | null {
-  for (const book of books) {
-    if (book.id === bookId) {
-      return book;
-    }
-  }
-
-  return null;
+function mapBookFromServer(row: ServerResponse.BookData): Book {
+  return {
+    id: row.book_id,
+    lang: row.book_lang,
+    title: row.book_title,
+    subtitle: row.book_subtitle,
+    slug: row.book_slug,
+    author: {
+      id: row.author_id,
+      firstName: row.author_first_name,
+      lastName: row.author_last_name,
+      slug: row.author_slug,
+    },
+    coverUrl: row.book_cover_path,
+    genres: row.genres,
+  };
 }
 
-namespace ServerResponse {
-  export interface BookData {
-    book_id: string;
-    book_title: string;
-    book_subtitle: string | null;
-    cover_path: string | null;
-    lang: string;
-    author_first_name: string | null;
-    author_last_name: string | null;
-    genres: string[];
-  }
+function mapBookWithGenreStatsFromServer(
+  row: ServerResponse.BookWithGenreStats
+): BookWithGenreStats {
+  return {
+    book: mapBookFromServer(row.book),
+    genresWithStats: row.genres.map(mapGenreWithStatsFromServer),
+  };
+}
 
-  export interface PinnedBookData extends BookData {}
+function mapGenreWithStatsFromServer(row: ServerResponse.GenreWithStats): GenreWithStats {
+  return {
+    title: row.title,
+    nbBooks: row.nb_books,
+    nbBooksByLang: row.nb_books_by_lang,
+  };
+}
 
-  export interface QuickAutocompletionData {
-    book_id: string;
-    book_title: string;
-    lang: string;
-    author_first_name: string;
-    author_last_name: string;
-  }
+function mapQuickAutocompletionDataFromServer(
+  row: ServerResponse.QuickAutocompletionData
+): queriesDomain.QuickSearchResult {
+  const rowType = row.type;
+  return {
+    resultType: rowType,
+    book:
+      "book" === rowType
+        ? {
+            id: row.book_id as string,
+            title: row.book_title as string,
+            lang: row.book_lang as string,
+            slug: row.book_slug as string,
+          }
+        : null,
+    author: {
+      id: row.author_id,
+      firstName: row.author_first_name,
+      lastName: row.author_last_name,
+      slug: row.author_slug,
+      nbBooks: row.author_nb_books,
+    },
+  };
 }

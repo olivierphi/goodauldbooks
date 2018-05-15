@@ -7,23 +7,43 @@ create schema api_public;
  * Functions composite types
  */
 
-create type api_public.book_search_result as (
+create type api_public.book_light as (
   book_id text,
   book_title text,
   book_subtitle text,
-  cover_path text,
-  lang varchar(3),
+  book_cover_path text,
+  book_lang varchar(3),
+  book_slug text,
+  author_id text,
   author_first_name text,
   author_last_name text,
+  author_slug text,
   genres text[]
 );
 
+create type api_public.genre_with_stats as (
+  title text,
+  nb_books integer,
+  -- This is a hash where keys are lang codes and values are number of books for this genre and this lang:
+  nb_books_by_lang jsonb
+);
+
+create type api_public.book_light_with_genre_stats as (
+  book api_public.book_light,
+  genres api_public.genre_with_stats[]
+);
+
 create type api_public.quick_autocompletion_result as (
+  type text,
   book_id text,
   book_title text,
-  lang varchar(3),
+  book_lang varchar(3),
+  book_slug text,
+  author_id text,
   author_first_name text,
-  author_last_name text
+  author_last_name text,
+  author_slug text,
+  author_nb_books integer
 );
 
 create type api_public.book_intro as (
@@ -37,7 +57,7 @@ create type api_public.book_intro as (
 -- `curl -sS localhost:8085/rpc/search_books?pattern=frank | jq`
 create or replace function api_public.search_books(
   pattern text
-) returns setof api_public.book_search_result
+) returns setof api_public.book_light
 language sql
 stable
 as $function_search_book$
@@ -45,17 +65,20 @@ as $function_search_book$
   -- but that will be enough for a first test :-)
   select
     (
-      id,
+      book_id,
       title,
       subtitle,
       cover,
       lang,
+      slug,
+      author_id,
       author_first_name,
       author_last_name,
+      author_slug,
       genres
-    )::api_public.book_search_result
+    )::api_public.book_light
   from
-    library.book_with_related_data
+    library_view.book_with_related_data
   where
     title ilike concat('%', pattern, '%')
   limit 30
@@ -70,79 +93,154 @@ language sql
 stable
 as $function_quick_autocompletion$
   -- first (very) naive version, to improve later :-)
-  select
-    (
-      id,
-      title,
-      lang,
+  with
+  books_search as (
+    select
+      'book' as type,
+      book_id,
+      title as book_title,
+      lang as book_lang,
+      slug as book_slug,
+      author_id,
       author_first_name,
-      author_last_name
-    )::api_public.quick_autocompletion_result
-  from
-    library.book_with_related_data
-  where
-    title ilike concat(pattern, '%')
-  limit 10
+      author_last_name,
+      author_slug,
+      author_nb_books
+    from
+      library_view.book_with_related_data
+    where
+      title ilike concat('%', pattern, '%')
+    order by
+      case
+        when title ilike concat(pattern, '%') then 1
+        else 0
+      end desc,-- we give priority to books *starting* with the given pattern, and not only containing it
+      title asc
+    limit 4
+  ),
+  authors_search as (
+    select
+      distinct
+      'author' as type,
+      null as book_id,
+      null as book_title,
+      null as book_lang,
+      null as book_slug,
+      author_id,
+      author_first_name,
+      author_last_name,
+      author_slug,
+      author_nb_books
+    from
+      library_view.book_with_related_data
+    where
+      author_last_name ilike concat(pattern, '%')
+    order by
+      author_nb_books desc,
+      author_last_name asc
+    limit 4
+  )
+  (
+    select *
+    from books_search
+  )
+  union all
+  (
+    select *
+    from authors_search
+  )
   ;
 $function_quick_autocompletion$;
 
--- `curl -sS localhost:8085/rpc/pinned_books | jq`
-create or replace function api_public.pinned_books(
-) returns setof api_public.book_search_result
+-- `curl -sS localhost:8085/rpc/featured_books | jq`
+create or replace function api_public.featured_books(
+) returns setof api_public.book_light
 language sql
 stable
-as $function_pinned_books$
-  -- first (very) naive version, to improve later :-)
+as $function_featured_books$
   with
-  pinned_books_ids as (
+  featured_books_ids as (
     select
       value::text[] as books_ids
     from
       webapp.settings
     where
-      name = 'pinned_books_ids'
+      name = 'featured_books_ids'
   )
   select
     (
-      id,
+      book_id,
       title,
       subtitle,
       cover,
       lang,
+      slug,
+      author_id,
       author_first_name,
       author_last_name,
+      author_slug,
       genres
-    )::api_public.book_search_result
+    )::api_public.book_light
   from
-    library.book_with_related_data
+    library_view.book_with_related_data
   where
-    id in (select unnest(books_ids) from pinned_books_ids);
+    book_id = any((select books_ids from featured_books_ids)::text[]);
   ;
-$function_pinned_books$;
+$function_featured_books$;
 
 -- `curl -sS localhost:8085/rpc/get_book_by_id?book_id=g345 | jq`
 create or replace function api_public.get_book_by_id(
   book_id text
-) returns api_public.book_search_result
+) returns api_public.book_light_with_genre_stats
 language sql
 stable
 as $function_get_book_by_id$
-  -- first (very) naive version, to improve later :-)
+  with
+  book_genres as (
+    select
+      genres::text[] as genres
+    from
+      library_view.book_with_related_data
+    where
+      book_id = $1
+  ),
+  book_genres_with_stats as (
+    select
+      (
+        title,
+        nb_books,
+        nb_books_by_lang
+      )::api_public.genre_with_stats as genre
+    from
+      library_view.genre_with_related_data
+    where
+      title = any ((select genres from book_genres)::text[])
+    order by
+      nb_books desc
+  )
   select
     (
-      id,
-      title,
-      subtitle,
-      cover,
-      lang,
-      author_first_name,
-      author_last_name,
-      genres
-    )::api_public.book_search_result
+      (
+        book_id,
+        book_with_related_data.title,
+        subtitle,
+        cover,
+        lang,
+        slug,
+        author_id,
+        author_first_name,
+        author_last_name,
+        author_slug,
+        genres
+      )::api_public.book_light,
+      (
+        select array_agg(genre) from book_genres_with_stats
+      )::api_public.genre_with_stats[]
+    )::api_public.book_light_with_genre_stats
   from
-    library.book_with_related_data
+    library_view.book_with_related_data
   where
-    id = book_id
+    book_id = $1
   limit 1
   ;
 $function_get_book_by_id$;
@@ -165,7 +263,46 @@ as $function_get_book_intro$
   ;
 $function_get_book_intro$;
 
+-- `curl -sS localhost:8085/rpc/get_books_by_genre?genre=Vampires%20--%20Fiction | jq`
+create or replace function api_public.get_books_by_genre(
+  genre text,
+  nb_results integer = 10
+) returns setof api_public.book_light
+language sql
+stable
+as $function_get_books_by_genre$
+  with
+  pagination as (
+    select
+      min(nb)::integer as nb_results
+    from
+      -- we hard-code a max number of results, just in case:
+      unnest(array[nb_results, 30]) t(nb)
+  )
+  select
+    (
+      book_id,
+      title,
+      subtitle,
+      cover,
+      lang,
+      slug,
+      author_id,
+      author_first_name,
+      author_last_name,
+      author_slug,
+      genres
+    )::api_public.book_light
+  from
+    library_view.book_with_related_data
+  where
+    genres && array[genre]
+  order by
+    title asc
+  limit
+    (select nb_results from pagination)::integer
+$function_get_books_by_genre$;
 
-\ir 'api_public_security_policies.sql'
+\ir 'api_public.security_policies.sql'
 
 commit;
