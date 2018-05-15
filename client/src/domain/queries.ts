@@ -1,9 +1,10 @@
-import { Book, BooksById } from "./core";
+import { BooksById, BookWithGenreStats } from "./core";
 
 export interface BooksRepository {
   getFeaturedBooks(): Promise<BooksById>;
-  getBookById(bookId: string): Promise<Book | null>;
+  getBookById(bookId: string): Promise<BookWithGenreStats | null>;
   quickSearch(pattern: string): Promise<QuickSearchResult[]>;
+  getBooksByGenre(genre: string): Promise<BooksById>;
 }
 
 export interface QuickSearchResult {

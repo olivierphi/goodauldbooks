@@ -12,3 +12,7 @@ export function getBookPageUrl(
 export function getAuthorPageUrl(authorId: string) {
   return `/library/author/${authorId}`;
 }
+
+export function getGenrePageUrl(genre: string) {
+  return `/library/genre/${genre}`;
+}

@@ -10,9 +10,14 @@ export interface Book {
   author: Author;
   title: string;
   subtitle: string | null;
-  genres: Genre[];
   coverUrl: string | null;
   slug: string;
+  genres: Genre[];
+}
+
+export interface BookWithGenreStats {
+  book: Book;
+  genresWithStats: GenreWithStats[];
 }
 
 export interface Author {
@@ -26,4 +31,22 @@ export interface Author {
 
 export interface BooksById {
   [id: string]: Book;
+}
+
+export interface GenreWithStats {
+  title: string;
+  nbBooks: number;
+  nbBooksByLang: NbBooksByLang;
+}
+
+export interface GenreWithStatsByName {
+  [name: string]: GenreWithStats;
+}
+
+export interface NbBooksByLang {
+  [lang: string]: number;
+}
+
+export interface BooksIdsByGenre {
+  [genreName: string]: string[];
 }

@@ -26,8 +26,8 @@ create materialized view library_view.book_with_related_data as
     author.last_name as author_last_name,
     substring(utils.slugify(author.first_name || ' ' || author.last_name) for 50) as author_slug,
     (select count(*) from library.book as book2 where book2.author_id = author.author_id)::integer as author_nb_books,
-    array_agg(genre.genre_id::integer) as genres_ids,
-    array_agg(genre.title) as genres
+    array_agg(genre.genre_id)::integer[] as genres_ids,
+    array_agg(genre.title)::text[] as genres
   from
     library.book
     join
@@ -54,6 +54,8 @@ create index on library_view.book_with_related_data
   using gin(title exts.gin_trgm_ops);
 create index on library_view.book_with_related_data
   using gin(author_last_name exts.gin_trgm_ops);
+create index on library_view.book_with_related_data
+  using gin(genres);
 
 -- This materialized view has only 4 fields,
 -- but the "nb_book_per_lang" is quite expensive to compute.

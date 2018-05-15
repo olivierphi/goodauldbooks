@@ -1,11 +1,10 @@
 import * as React from "react";
 import { connect, Dispatch } from "react-redux";
 import { Action } from "redux";
-import { BooksList, BooksListProps } from "../../components/Book/BooksList";
+import { BooksList } from "../../components/Book/BooksList";
 import { BooksById } from "../../domain/core";
-import { PaginationRequestData } from "../../domain/queries";
 import { AppState } from "../../store";
-import { fetchFeaturedBooksList } from "../../store/actions";
+import { fetchFeaturedBooks } from "../../store/actions";
 
 const mapStateToProps = (state: AppState) => {
   return {
@@ -17,7 +16,7 @@ const mapStateToProps = (state: AppState) => {
 const mapDispatchToProps = (dispatch: (action: Action) => void) => {
   return {
     fetchFeaturedBooksList: () => {
-      dispatch(fetchFeaturedBooksList());
+      dispatch(fetchFeaturedBooks());
     },
   };
 };

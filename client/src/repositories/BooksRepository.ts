@@ -1,8 +1,14 @@
 import axios from "axios";
 import { Store } from "redux";
-import { Book, BooksById } from "../domain/core";
+import { Book, BooksById, BookWithGenreStats, GenreWithStats } from "../domain/core";
 import * as queriesDomain from "../domain/queries";
 import { AppState } from "../store";
+import {
+  appStateHasGenresWithStats,
+  getBooksByIdsFromState,
+  getGenresWithStatsFromState,
+} from "../utils/app-state-utils";
+import * as ServerResponse from "./server-responses";
 
 /**
  * This module gets a bit messy, we'll probably refactor it at some point :-)
@@ -11,20 +17,28 @@ export class BooksRepository implements queriesDomain.BooksRepository {
   constructor(private appStateStore: Store<AppState>) {}
 
   public async getFeaturedBooks(): Promise<BooksById> {
+    // TODO: store the books ids into the app state, so that we can cache the result
     const response = await axios.get("/rpc/featured_books");
-    const featuredBooks: Book[] = response.data.map(
-      (pinnedBook: ServerResponse.PinnedBookData): Book => {
-        return serverResponseBookDataToSlug(pinnedBook);
-      }
-    );
+    const featuredBooks: Book[] = response.data.map(mapBookFromServer);
 
     return Promise.resolve(getBooksByIdFromBooksArray(featuredBooks));
   }
 
-  public async getBookById(bookId: string): Promise<Book | null> {
-    const appStateStoreBooksById = this.appStateStore.getState().booksById;
-    if (appStateStoreBooksById[bookId]) {
-      return Promise.resolve(appStateStoreBooksById[bookId]);
+  public async getBookById(bookId: string): Promise<BookWithGenreStats | null> {
+    const appState = this.appStateStore.getState();
+    const appStateStoreBooksById = appState.booksById;
+    const previouslyFetchedBookData: Book | null = appStateStoreBooksById[bookId];
+    if (
+      previouslyFetchedBookData &&
+      appStateHasGenresWithStats(previouslyFetchedBookData.genres, appState.genresWithStats)
+    ) {
+      return Promise.resolve({
+        book: appStateStoreBooksById[bookId],
+        genresWithStats: getGenresWithStatsFromState(
+          previouslyFetchedBookData.genres,
+          appState.genresWithStats
+        ),
+      });
     }
 
     const response = await axios.get("/rpc/get_book_by_id", {
@@ -33,10 +47,10 @@ export class BooksRepository implements queriesDomain.BooksRepository {
       },
     });
 
-    const bookDataFromServer: ServerResponse.BookData = response.data[0];
-    const book: Book = serverResponseBookDataToSlug(bookDataFromServer);
+    const bookDataFromServer: ServerResponse.BookWithGenreStats = response.data[0];
+    const bookWithGenreStats = mapBookWithGenreStatsFromServer(bookDataFromServer);
 
-    return Promise.resolve(book);
+    return Promise.resolve(bookWithGenreStats);
   }
 
   public async quickSearch(pattern: string): Promise<queriesDomain.QuickSearchResult[]> {
@@ -44,13 +58,26 @@ export class BooksRepository implements queriesDomain.BooksRepository {
       params: { pattern },
     });
 
-    const matchingBooks = response.data.map(
-      (row: ServerResponse.QuickAutocompletionData): queriesDomain.QuickSearchResult => {
-        return serverResponseQuickAutocompletionDataToQuickSearchResult(row);
-      }
-    );
+    const matchingBooks = response.data.map(mapQuickAutocompletionDataFromServer);
 
     return Promise.resolve(matchingBooks);
+  }
+
+  public async getBooksByGenre(genre: string): Promise<BooksById> {
+    const appState = this.appStateStore.getState();
+    if (appState.booksIdsByGenre[genre]) {
+      return Promise.resolve(
+        getBooksByIdsFromState(appState.booksIdsByGenre[genre], appState.booksById)
+      );
+    }
+
+    const response = await axios.get("/rpc/get_books_by_genre", {
+      params: { genre },
+    });
+
+    const booksForThisGenre = getBooksByIdFromBooksArray(response.data.map(mapBookFromServer));
+
+    return Promise.resolve(booksForThisGenre);
   }
 }
 
@@ -63,17 +90,7 @@ function getBooksByIdFromBooksArray(books: Book[]): BooksById {
   return booksById;
 }
 
-function getBookByIdFromBooksArray(books: Book[], bookId: string): Book | null {
-  for (const book of books) {
-    if (book.id === bookId) {
-      return book;
-    }
-  }
-
-  return null;
-}
-
-function serverResponseBookDataToSlug(row: ServerResponse.BookData): Book {
+function mapBookFromServer(row: ServerResponse.BookData): Book {
   return {
     id: row.book_id,
     lang: row.book_lang,
@@ -86,12 +103,29 @@ function serverResponseBookDataToSlug(row: ServerResponse.BookData): Book {
       lastName: row.author_last_name,
       slug: row.author_slug,
     },
-    genres: row.genres,
     coverUrl: row.book_cover_path,
+    genres: row.genres,
   };
 }
 
-function serverResponseQuickAutocompletionDataToQuickSearchResult(
+function mapBookWithGenreStatsFromServer(
+  row: ServerResponse.BookWithGenreStats
+): BookWithGenreStats {
+  return {
+    book: mapBookFromServer(row.book),
+    genresWithStats: row.genres.map(mapGenreWithStatsFromServer),
+  };
+}
+
+function mapGenreWithStatsFromServer(row: ServerResponse.GenreWithStats): GenreWithStats {
+  return {
+    title: row.title,
+    nbBooks: row.nb_books,
+    nbBooksByLang: row.nb_books_by_lang,
+  };
+}
+
+function mapQuickAutocompletionDataFromServer(
   row: ServerResponse.QuickAutocompletionData
 ): queriesDomain.QuickSearchResult {
   const rowType = row.type;
@@ -114,35 +148,4 @@ function serverResponseQuickAutocompletionDataToQuickSearchResult(
       nbBooks: row.author_nb_books,
     },
   };
-}
-
-namespace ServerResponse {
-  export interface BookData {
-    book_id: string;
-    book_title: string;
-    book_subtitle: string | null;
-    book_cover_path: string | null;
-    book_lang: string;
-    book_slug: string;
-    author_id: string;
-    author_first_name: string | null;
-    author_last_name: string | null;
-    author_slug: string;
-    genres: string[];
-  }
-
-  export interface PinnedBookData extends BookData {}
-
-  export interface QuickAutocompletionData {
-    type: "book" | "author";
-    book_id: string | null;
-    book_title: string | null;
-    book_lang: string;
-    book_slug: string;
-    author_id: string;
-    author_first_name: string;
-    author_last_name: string;
-    author_slug: string;
-    author_nb_books: number;
-  }
 }
