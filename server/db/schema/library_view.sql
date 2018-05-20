@@ -24,6 +24,8 @@ create materialized view library_view.book_with_related_data as
      end) as author_id,
     author.first_name as author_first_name,
     author.last_name as author_last_name,
+    author.birth_year as author_birth_year,
+    author.death_year as author_death_year,
     substring(utils.slugify(author.first_name || ' ' || author.last_name) for 50) as author_slug,
     (select count(*) from library.book as book2 where book2.author_id = author.author_id)::integer as author_nb_books,
     array_agg(genre.genre_id)::integer[] as genres_ids,

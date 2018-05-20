@@ -101,6 +101,8 @@ function mapBookFromServer(row: ServerResponse.BookData): Book {
       id: row.author_id,
       firstName: row.author_first_name,
       lastName: row.author_last_name,
+      birthYear: row.author_birth_year,
+      deathYear: row.author_death_year,
       slug: row.author_slug,
     },
     coverUrl: row.book_cover_path,

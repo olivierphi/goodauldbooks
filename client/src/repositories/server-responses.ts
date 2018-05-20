@@ -8,6 +8,8 @@ export interface BookData {
   author_id: string;
   author_first_name: string | null;
   author_last_name: string | null;
+  author_birth_year: number | null;
+  author_death_year: number | null;
   author_slug: string;
   genres: string[];
 }
