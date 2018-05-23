@@ -21,6 +21,24 @@ create type api_public.book_light as (
   genres text[]
 );
 
+create type api_public.book_full as (
+  book_id text,
+  book_title text,
+  book_subtitle text,
+  book_cover_path text,
+  book_epub_size integer,
+  book_mobi_size integer,
+  book_lang varchar(3),
+  book_slug text,
+  author_id text,
+  author_first_name text,
+  author_last_name text,
+  author_birth_year integer,
+  author_death_year integer,
+  author_slug text,
+  genres text[]
+);
+
 create type api_public.genre_with_stats as (
   title text,
   nb_books integer,
@@ -28,8 +46,8 @@ create type api_public.genre_with_stats as (
   nb_books_by_lang jsonb
 );
 
-create type api_public.book_light_with_genre_stats as (
-  book api_public.book_light,
+create type api_public.book_full_with_genre_stats as (
+  book api_public.book_full,
   genres api_public.genre_with_stats[]
 );
 
@@ -191,7 +209,7 @@ $function_featured_books$;
 -- `curl -sS localhost:8085/rpc/get_book_by_id?book_id=g345 | jq`
 create or replace function api_public.get_book_by_id(
   book_id text
-) returns api_public.book_light_with_genre_stats
+) returns api_public.book_full_with_genre_stats
 language sql
 stable
 as $function_get_book_by_id$
@@ -225,18 +243,22 @@ as $function_get_book_by_id$
         book_with_related_data.title,
         subtitle,
         cover,
+        epub_size,
+        mobi_size,
         lang,
         slug,
         author_id,
         author_first_name,
         author_last_name,
+        author_birth_year,
+        author_death_year,
         author_slug,
         genres
-      )::api_public.book_light,
+      )::api_public.book_full,
       (
         select array_agg(genre) from book_genres_with_stats
       )::api_public.genre_with_stats[]
-    )::api_public.book_light_with_genre_stats
+    )::api_public.book_full_with_genre_stats
   from
     library_view.book_with_related_data
   where

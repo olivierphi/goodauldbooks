@@ -95,6 +95,12 @@ where
 
 -- books assets sizes:
 with
+nb_books as (
+  select
+    count(*)::integer
+  from
+    library.book
+),
 total as (
   select
     count(*) as nb,
@@ -132,6 +138,7 @@ all_raw as (
     select
       'Total' as type,
       nb,
+      (nb * 100.00 / (select count from nb_books)) as percentage_of_books,
       100 as nb_percent,
       size,
       100 as size_percent
@@ -143,6 +150,7 @@ all_raw as (
     select
       asset_type.type,
       metrics.nb,
+      (metrics.nb * 100.00 / (select count from nb_books)) as percentage_of_books,
       percentages.nb as nb_percent,
       metrics.sum as size,
       percentages.size as size_percent
@@ -159,6 +167,11 @@ all_raw as (
 select
   type,
   nb,
+  case
+    when percentage_of_books > 100
+      then ''
+      else format('%s %%', percentage_of_books::numeric(5,2))
+  end as percentage_of_books,
   format('%s %%', nb_percent::numeric(5,2)) as nb_percent,
   pg_size_pretty(size) as size,
   format('%s %%', size_percent::numeric(5,2)) as size_percent

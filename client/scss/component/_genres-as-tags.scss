@@ -1,0 +1,19 @@
+.genres.tags {
+  $margin-size: 10px;
+
+  margin: 0 -$margin-size;
+
+  li {
+    display: inline-block;
+    margin: $margin-size;
+    line-height: 1em;
+    padding: 5px 10px;
+    background-color: $color-gray-2;
+    border-radius: 5px;
+
+    a {
+      font-size: 14px;
+      color: $color-white;
+    }
+  }
+}

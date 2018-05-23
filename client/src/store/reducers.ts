@@ -95,3 +95,22 @@ export function booksIdsByGenre(state: string[] = [], action: Action): string[] 
       return state;
   }
 }
+
+export function booksAssetsSize(state: string[] = [], action: Action): string[] {
+  let actionRef;
+  switch (action.type) {
+    case `${Actions.FETCH_BOOK_WITH_GENRE_STATS}_FULFILLED`:
+      actionRef = action as BookFetchedAction;
+      return {
+        ...state,
+        ...{
+          [actionRef.payload.book.id]: {
+            epub: actionRef.payload.book.epubSize,
+            mobi: actionRef.payload.book.mobiSize,
+          },
+        },
+      };
+    default:
+      return state;
+  }
+}

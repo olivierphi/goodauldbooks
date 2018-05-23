@@ -11,7 +11,9 @@ create table library.author (
   author_id serial primary key,
   gutenberg_id integer unique null,
   first_name text null,
-  last_name text null
+  last_name text null,
+  birth_year integer null,
+  death_year integer null
 );
 
 create table library.book (

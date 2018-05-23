@@ -14,7 +14,9 @@ async function startApp(): Promise<boolean> {
   return Promise.resolve(true);
 }
 
-startApp();
+startApp().catch((reason) => {
+  console.error("Can't start app!", reason);
+});
 
 function renderApp(appContainer: HTMLElement): void {
   ReactDOM.render(

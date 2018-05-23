@@ -15,8 +15,13 @@ export interface Book {
   genres: Genre[];
 }
 
+export interface BookFull extends Book {
+  epubSize: number;
+  mobiSize: number;
+}
+
 export interface BookWithGenreStats {
-  book: Book;
+  book: BookFull;
   genresWithStats: GenreWithStats[];
 }
 
@@ -30,7 +35,7 @@ export interface Author {
 }
 
 export interface BooksById {
-  [id: string]: Book;
+  [bookId: string]: Book;
 }
 
 export interface GenreWithStats {
@@ -49,4 +54,13 @@ export interface NbBooksByLang {
 
 export interface BooksIdsByGenre {
   [genreName: string]: string[];
+}
+
+export interface BooksAssetsSizeById {
+  [bookId: string]: BookAssetsSize;
+}
+
+export interface BookAssetsSize {
+  epub: number;
+  mobi: number;
 }

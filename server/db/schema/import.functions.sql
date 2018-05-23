@@ -187,8 +187,8 @@ begin
   -- only create the author if it doesn't exists already:
   select author_id into returned_author_id from library.author where gutenberg_id = imported_author.gutenberg_id;
   if returned_author_id is null then
-    insert into library.author(gutenberg_id, first_name, last_name)
-    values (imported_author.gutenberg_id, imported_author.first_name, imported_author.last_name)
+    insert into library.author(gutenberg_id, first_name, last_name, birth_year, death_year)
+    values (imported_author.gutenberg_id, imported_author.first_name, imported_author.last_name, imported_author.birth_year, imported_author.death_year)
     returning author_id into returned_author_id;
   end if;
 

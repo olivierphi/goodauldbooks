@@ -1,11 +1,12 @@
 import axios from "axios";
 import { Store } from "redux";
-import { Book, BooksById, BookWithGenreStats, GenreWithStats } from "../domain/core";
+import { Book, BookFull, BooksById, BookWithGenreStats, GenreWithStats } from "../domain/core";
 import * as queriesDomain from "../domain/queries";
 import { AppState } from "../store";
 import {
   appStateHasGenresWithStats,
   getBooksByIdsFromState,
+  getFullBookDataFromState,
   getGenresWithStatsFromState,
 } from "../utils/app-state-utils";
 import * as ServerResponse from "./server-responses";
@@ -30,10 +31,11 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     const previouslyFetchedBookData: Book | null = appStateStoreBooksById[bookId];
     if (
       previouslyFetchedBookData &&
-      appStateHasGenresWithStats(previouslyFetchedBookData.genres, appState.genresWithStats)
+      appStateHasGenresWithStats(previouslyFetchedBookData.genres, appState.genresWithStats) &&
+      appState.booksAssetsSize[bookId]
     ) {
       return Promise.resolve({
-        book: appStateStoreBooksById[bookId],
+        book: getFullBookDataFromState(bookId, appStateStoreBooksById, appState.booksAssetsSize),
         genresWithStats: getGenresWithStatsFromState(
           previouslyFetchedBookData.genres,
           appState.genresWithStats
@@ -101,6 +103,8 @@ function mapBookFromServer(row: ServerResponse.BookData): Book {
       id: row.author_id,
       firstName: row.author_first_name,
       lastName: row.author_last_name,
+      birthYear: row.author_birth_year,
+      deathYear: row.author_death_year,
       slug: row.author_slug,
     },
     coverUrl: row.book_cover_path,
@@ -108,11 +112,19 @@ function mapBookFromServer(row: ServerResponse.BookData): Book {
   };
 }
 
+function mapBookFullFromServer(row: ServerResponse.BookFullData): BookFull {
+  return {
+    ...mapBookFromServer(row),
+    epubSize: row.book_epub_size,
+    mobiSize: row.book_mobi_size,
+  };
+}
+
 function mapBookWithGenreStatsFromServer(
   row: ServerResponse.BookWithGenreStats
 ): BookWithGenreStats {
   return {
-    book: mapBookFromServer(row.book),
+    book: mapBookFullFromServer(row.book),
     genresWithStats: row.genres.map(mapGenreWithStatsFromServer),
   };
 }
