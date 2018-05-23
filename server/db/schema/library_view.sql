@@ -18,6 +18,10 @@ create materialized view library_view.book_with_related_data as
     book.lang as lang,
     substring(utils.slugify(book.title) for 50) as slug,
     book_cover.path as cover,
+    book_epub.path as epub,
+    book_epub.size as epub_size,
+    book_mobi.path as mobi,
+    book_mobi.size as mobi_size,
     (case
      when author.gutenberg_id is not null then concat('g', author.gutenberg_id)
      else author.author_id::text
@@ -41,10 +45,18 @@ create materialized view library_view.book_with_related_data as
     left join
     library.book_asset as book_cover
       on (book.book_id = book_cover.book_id and book_cover.type = 'cover')
+    left join
+    library.book_asset as book_epub
+      on (book.book_id = book_epub.book_id and book_epub.type = 'epub')
+    left join
+    library.book_asset as book_mobi
+      on (book.book_id = book_mobi.book_id and book_mobi.type = 'mobi')
   group by
     book.book_id,
     author.author_id,
-    book_cover.path
+    book_cover.book_id, book_cover.type,
+    book_epub.book_id, book_epub.type,
+    book_mobi.book_id, book_mobi.type
 ;
 create unique index on library_view.book_with_related_data
   (book_id);

@@ -1,4 +1,10 @@
-import { BooksById, GenreWithStats, GenreWithStatsByName } from "../domain/core";
+import {
+  BookFull,
+  BooksAssetsSizeById,
+  BooksById,
+  GenreWithStats,
+  GenreWithStatsByName,
+} from "../domain/core";
 
 export function getBooksByIdsFromState(bookIds: string[], appStateBooks: BooksById): BooksById {
   const result: BooksById = {};
@@ -49,4 +55,23 @@ export function getGenresByNameWithStatsFromState(
     result[genre] = appStateGenres[genre];
   }
   return result;
+}
+
+export function getFullBookDataFromState(
+  bookId: string,
+  appStateBooks: BooksById,
+  appStateBooksAssetsSize: BooksAssetsSizeById
+): BookFull {
+  if (!appStateBooks[bookId]) {
+    throw new Error(`Missing "appState.booksById" for book "${bookId}"`);
+  }
+  if (!appStateBooksAssetsSize[bookId]) {
+    throw new Error(`Missing "appState.booksAssetsSize" for book "${bookId}"`);
+  }
+
+  return {
+    ...appStateBooks[bookId],
+    epubSize: appStateBooksAssetsSize[bookId].epub,
+    mobiSize: appStateBooksAssetsSize[bookId].mobi,
+  };
 }

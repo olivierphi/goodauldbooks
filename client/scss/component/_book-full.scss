@@ -1,21 +1,13 @@
 .book-full {
-  .genres {
-    $margin-size: 10px;
+  @include clearfix;
 
-    margin: 0 -$margin-size;
+  .book-cover {
+    width: 24%;
+    float: left;
+  }
 
-    li {
-      display: inline-block;
-      margin: $margin-size;
-      line-height: 1em;
-      padding: 5px 10px;
-      background-color: $color-gray-2;
-      border-radius: 5px;
-
-      a {
-        font-size: 14px;
-        color: $color-white;
-      }
-    }
+  .book-data {
+    width: 70%;
+    float: right;
   }
 }

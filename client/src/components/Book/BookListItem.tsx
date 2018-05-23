@@ -1,12 +1,11 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { Book, Lang } from "../../domain/core";
+import { Book } from "../../domain/core";
 import { getBookPageUrl } from "../../utils/routing-utils";
 import { BookCover } from "./BookCover";
 
 export interface ListItemProps {
   book: Book;
-  currentLang: Lang;
 }
 
 export function BookListItem(props: ListItemProps) {

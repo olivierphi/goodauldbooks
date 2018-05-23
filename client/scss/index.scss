@@ -22,6 +22,8 @@ I just refactored it in SCSS and added things here and there for my own needs.
 @import "component/books-list";
 @import "component/book-full";
 @import "component/book-misc";
+@import "component/genres-as-tags";
+@import "component/ebook-download-links";
 @import "component/autocomplete";
 
 @import "~react-select/scss/default";

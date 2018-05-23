@@ -1,19 +1,20 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Action } from "redux";
-import { BookFull } from "../../components/Book/BookFull";
-import { Book, GenreWithStats, GenreWithStatsByName } from "../../domain/core";
+import { BookFull as BookFullComponent } from "../../components/Book/BookFull";
+import { Book, BookFull, GenreWithStats, GenreWithStatsByName } from "../../domain/core";
 import { fetchBookWithGenreStats } from "../../store/actions";
 import { AppState } from "../../store/index";
 import {
   appStateHasGenresWithStats,
+  getFullBookDataFromState,
   getGenresWithStatsFromState,
 } from "../../utils/app-state-utils";
 
 const mapStateToProps = (props: AppState, ownProps: { bookId: string }) => {
   const book: Book | null = props.booksById[ownProps.bookId];
   return {
-    allGenresWithStats: props.genresWithStats,
+    appState: props,
     bookId: ownProps.bookId,
     book,
   };
@@ -49,7 +50,7 @@ const getSortedGenresWithStats = (
 };
 
 interface BookFullHOCProps {
-  allGenresWithStats: GenreWithStatsByName;
+  appState: AppState;
   bookId: string;
   book?: Book;
   fetchBookWithGenreStats: (bookId: string) => void;
@@ -60,14 +61,22 @@ const BookFullHOC = (props: BookFullHOCProps) => {
     props.fetchBookWithGenreStats(props.bookId);
     return <div className="loading">Loading full book...</div>;
   }
-  if (!appStateHasGenresWithStats(props.book.genres, props.allGenresWithStats)) {
+  if (!appStateHasGenresWithStats(props.book.genres, props.appState.genresWithStats)) {
     props.fetchBookWithGenreStats(props.bookId);
     return <div className="loading">Loading book genre stats...</div>;
   }
 
-  const genresWithStats = getSortedGenresWithStats(props.book.genres, props.allGenresWithStats);
+  const genresWithStats = getSortedGenresWithStats(
+    props.book.genres,
+    props.appState.genresWithStats
+  );
+  const bookFull: BookFull = getFullBookDataFromState(
+    props.bookId,
+    props.appState.booksById,
+    props.appState.booksAssetsSize
+  );
 
-  return <BookFull book={props.book} genresWithStats={genresWithStats} />;
+  return <BookFullComponent book={bookFull} genresWithStats={genresWithStats} />;
 };
 
 export const BookFullContainer = connect(mapStateToProps, mapDispatchToProps)(BookFullHOC);

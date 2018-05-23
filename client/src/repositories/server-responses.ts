@@ -14,8 +14,13 @@ export interface BookData {
   genres: string[];
 }
 
+export interface BookFullData extends BookData {
+  book_epub_size: number;
+  book_mobi_size: number;
+}
+
 export interface BookWithGenreStats {
-  book: BookData;
+  book: BookFullData;
   genres: GenreWithStats[];
 }
 

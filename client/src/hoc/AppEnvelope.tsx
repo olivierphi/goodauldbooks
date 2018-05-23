@@ -1,10 +1,9 @@
 import * as React from "react";
+import { I18nextProvider } from "react-i18next";
 import { Provider as ReduxStoreProvider } from "react-redux";
 import { BrowserRouter as Router } from "react-router-dom";
 import { AppConfig } from "../app-config";
 import { AssetsConfigContext } from "../contexts/assets-config";
-import { CurrentLangContext } from "../contexts/lang";
-import { Lang } from "../domain/core";
 import { container } from "../ServicesContainer";
 
 interface AppEnvelopeProps {
@@ -17,7 +16,7 @@ interface AppEnvelopeProps {
 export function AppEnvelope(props: AppEnvelopeProps) {
   return (
     <ReduxStoreProvider store={container.appStateStore}>
-      <CurrentLangContext.Provider value={Lang.EN}>
+      <I18nextProvider i18n={container.i18n}>
         <AssetsConfigContext.Provider
           value={{
             coversBaseUrl: AppConfig.coversBaseURL,
@@ -30,7 +29,7 @@ export function AppEnvelope(props: AppEnvelopeProps) {
             </>
           </Router>
         </AssetsConfigContext.Provider>
-      </CurrentLangContext.Provider>
+      </I18nextProvider>
     </ReduxStoreProvider>
   );
 }

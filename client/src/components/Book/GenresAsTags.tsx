@@ -9,7 +9,7 @@ export interface GenresAsTagsProps {
 
 export function GenresAsTags(props: GenresAsTagsProps) {
   return (
-    <ul className="genres">
+    <ul className="genres tags">
       {props.genresWithStats.map((genre: GenreWithStats, i) => {
         return (
           <li key={i}>

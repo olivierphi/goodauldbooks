@@ -1,11 +1,12 @@
 import * as React from "react";
-import { CurrentLangContext } from "../../contexts/lang";
-import { Book, GenreWithStats, Lang } from "../../domain/core";
+import { BookFull, GenreWithStats } from "../../domain/core";
 import { Author } from "./Author";
+import { BookCover } from "./BookCover";
+import { EbookDownloadLinks } from "./EbookDownloadLinks";
 import { GenresAsTags } from "./GenresAsTags";
 
 export interface BookFullProps {
-  book: Book;
+  book: BookFull;
   genresWithStats: GenreWithStats[];
 }
 
@@ -13,15 +14,15 @@ export function BookFull(props: BookFullProps) {
   const book = props.book;
 
   return (
-    <CurrentLangContext.Consumer>
-      {(currentLang: Lang) => (
-        <div className="book-full">
-          <h3>{book.title}</h3>
-          {book.subtitle ? <h4>{book.subtitle}</h4> : ""}
-          <GenresAsTags genresWithStats={props.genresWithStats} />
-          <Author author={book.author} />
-        </div>
-      )}
-    </CurrentLangContext.Consumer>
+    <div className="book-full">
+      <BookCover book={book} />
+      <div className="book-data">
+        <h3>{book.title}</h3>
+        {book.subtitle ? <h4>{book.subtitle}</h4> : ""}
+        <GenresAsTags genresWithStats={props.genresWithStats} />
+        <Author author={book.author} />
+        <EbookDownloadLinks book={book} />
+      </div>
+    </div>
   );
 }

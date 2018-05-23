@@ -15,15 +15,7 @@ export function Author(props: AuthorProps) {
       </span>
       {author.birthYear || author.deathYear ? (
         <span className="lifePeriod">
-          {author.birthYear && author.deathYear ? (
-            <>
-              {author.birthYear} - {author.deathYear}
-            </>
-          ) : (
-            ""
-          )}
-          {author.birthYear && !author.deathYear ? <>{author.birthYear} - ?</> : ""}
-          {!author.birthYear && author.deathYear ? <>? - {author.deathYear}</> : ""}
+          {author.birthYear || "?"} - {author.deathYear || "?"}
         </span>
       ) : (
         ""
