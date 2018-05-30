@@ -278,9 +278,9 @@ as $function_get_book_intro$
   select
     intro
   from
-    library.book_additional_data
+    library_view.book_additional_data
   where
-    book_id = utils.get_book_real_id($1)
+    book_id = $1
   limit 1
   ;
 $function_get_book_intro$;

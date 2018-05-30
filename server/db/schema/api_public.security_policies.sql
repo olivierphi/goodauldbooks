@@ -49,9 +49,9 @@ grant usage on schema
 to
   api_public_anon;
 grant select on table
-  library.book_additional_data,
   library_view.book_with_related_data,
   library_view.genre_with_related_data,
+  library_view.book_additional_data,
   webapp.settings
 to
   api_public_anon;

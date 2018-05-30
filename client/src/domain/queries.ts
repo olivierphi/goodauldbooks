@@ -5,6 +5,7 @@ export interface BooksRepository {
   getBookById(bookId: string): Promise<BookWithGenreStats | null>;
   quickSearch(pattern: string): Promise<QuickSearchResult[]>;
   getBooksByGenre(genre: string): Promise<BooksById>;
+  getBookIntro(bookId: string): Promise<string | null>;
 }
 
 export interface QuickSearchResult {

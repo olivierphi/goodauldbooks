@@ -81,6 +81,16 @@ export class BooksRepository implements queriesDomain.BooksRepository {
 
     return Promise.resolve(booksForThisGenre);
   }
+
+  public async getBookIntro(bookId: string): Promise<string | null> {
+    const response = await axios.get("/rpc/get_book_intro", {
+      params: {
+        book_id: bookId,
+      },
+    });
+
+    return Promise.resolve(response.data[0].intro || null);
+  }
 }
 
 function getBooksByIdFromBooksArray(books: Book[]): BooksById {

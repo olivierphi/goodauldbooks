@@ -115,4 +115,18 @@ create unique index on library_view.genre_with_related_data
 create unique index on library_view.genre_with_related_data
   (title);
 
+create materialized view library_view.book_additional_data as
+  select
+    (case
+     when gutenberg_id is not null then concat('g', gutenberg_id)
+     else book_id::text
+     end) as book_id,
+    intro
+  from
+    library.book_additional_data
+    join library.book using (book_id)
+;
+create unique index on library_view.book_additional_data
+  (book_id);
+
 commit;
