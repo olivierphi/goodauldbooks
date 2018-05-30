@@ -169,5 +169,6 @@ function mapQuickAutocompletionDataFromServer(
       slug: row.author_slug,
       nbBooks: row.author_nb_books,
     },
+    highlight: row.highlight,
   };
 }

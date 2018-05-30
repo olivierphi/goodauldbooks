@@ -37,6 +37,7 @@ export interface QuickAutocompletionData {
   author_last_name: string;
   author_slug: string;
   author_nb_books: number;
+  highlight: number;
 }
 
 export interface GenreWithStats {

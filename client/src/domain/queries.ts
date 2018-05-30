@@ -12,6 +12,7 @@ export interface QuickSearchResult {
   readonly resultType: "book" | "author";
   readonly book: QuickSearchResultBook | null;
   readonly author: QuickSearchResultAuthor;
+  readonly highlight: number;
 }
 export interface QuickSearchResultBook {
   readonly id: string;

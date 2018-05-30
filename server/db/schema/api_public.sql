@@ -61,7 +61,8 @@ create type api_public.quick_autocompletion_result as (
   author_first_name text,
   author_last_name text,
   author_slug text,
-  author_nb_books integer
+  author_nb_books integer,
+  highlight integer
 );
 
 create type api_public.book_intro as (
@@ -123,7 +124,8 @@ as $function_quick_autocompletion$
       author_first_name,
       author_last_name,
       author_slug,
-      author_nb_books
+      author_nb_books,
+      highlight
     from
       library_view.book_with_related_data
     where
@@ -133,12 +135,12 @@ as $function_quick_autocompletion$
         when title ilike concat(pattern, '%') then 1
         else 0
       end desc,-- we give priority to books *starting* with the given pattern, and not only containing it
+      highlight desc,
       title asc
     limit 4
   ),
   authors_search as (
     select
-      distinct
       'author' as type,
       null as book_id,
       null as book_title,
@@ -148,24 +150,43 @@ as $function_quick_autocompletion$
       author_first_name,
       author_last_name,
       author_slug,
-      author_nb_books
+      author_nb_books,
+      highlight
     from
       library_view.book_with_related_data
     where
-      author_last_name ilike concat(pattern, '%')
+      author_last_name ilike concat(pattern, '%') or
+      author_first_name ilike concat(pattern, '%')
     order by
+      highlight desc,
       author_nb_books desc,
       author_last_name asc
-    limit 4
+    limit 8
   )
   (
-    select *
-    from books_search
+    select
+      *
+    from
+      books_search
   )
   union all
   (
-    select *
-    from authors_search
+    select
+      author.*
+    from
+      (
+        select
+          distinct on (author_id)
+          *
+        from
+          authors_search
+        limit
+          4
+      ) as author
+    order by
+      highlight desc,
+      author_nb_books desc,
+      author_last_name asc
   )
   ;
 $function_quick_autocompletion$;
@@ -216,7 +237,7 @@ as $function_get_book_by_id$
   with
   book_genres as (
     select
-      genres::text[] as genres
+      genres::varchar[] as genres
     from
       library_view.book_with_related_data
     where
@@ -232,7 +253,7 @@ as $function_get_book_by_id$
     from
       library_view.genre_with_related_data
     where
-      title = any ((select genres from book_genres)::text[])
+      title = any ((select genres from book_genres)::varchar[])
     order by
       nb_books desc
   )
@@ -287,7 +308,7 @@ $function_get_book_intro$;
 
 -- `curl -sS localhost:8085/rpc/get_books_by_genre?genre=Vampires%20--%20Fiction | jq`
 create or replace function api_public.get_books_by_genre(
-  genre text,
+  genre varchar,
   nb_results integer = 10
 ) returns setof api_public.book_light
 language sql
