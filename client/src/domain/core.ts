@@ -32,6 +32,7 @@ export interface Author {
   slug: string;
   birthYear?: number | null;
   deathYear?: number | null;
+  nbBooks: number;
 }
 
 export interface BooksById {
@@ -54,6 +55,10 @@ export interface NbBooksByLang {
 
 export interface BooksIdsByGenre {
   [genreName: string]: string[];
+}
+
+export interface BooksIdsByAuthor {
+  [authorId: string]: string[];
 }
 
 export interface BooksAssetsSizeById {

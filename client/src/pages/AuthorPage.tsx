@@ -1,11 +1,11 @@
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
+import { BooksByAuthorContainer } from "../hoc/Book/BooksByAuthorContainer";
 
 export function AuthorPage(routeProps: RouteComponentProps<{ authorId: string }>): JSX.Element {
   return (
     <section className="box">
-      <p>TODO: author page</p>
-      (author {routeProps.match.params.authorId})
+      <BooksByAuthorContainer authorId={routeProps.match.params.authorId} />
     </section>
   );
 }

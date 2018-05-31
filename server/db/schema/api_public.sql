@@ -18,6 +18,7 @@ create type api_public.book_light as (
   author_first_name text,
   author_last_name text,
   author_slug text,
+  author_nb_books integer,
   genres text[]
 );
 
@@ -36,6 +37,7 @@ create type api_public.book_full as (
   author_birth_year integer,
   author_death_year integer,
   author_slug text,
+  author_nb_books integer,
   genres text[]
 );
 
@@ -94,6 +96,7 @@ as $function_search_book$
       author_first_name,
       author_last_name,
       author_slug,
+      author_nb_books,
       genres
     )::api_public.book_light
   from
@@ -218,6 +221,7 @@ as $function_featured_books$
       author_first_name,
       author_last_name,
       author_slug,
+      author_nb_books,
       genres
     )::api_public.book_light
   from
@@ -274,6 +278,7 @@ as $function_get_book_by_id$
         author_birth_year,
         author_death_year,
         author_slug,
+        author_nb_books,
         genres
       )::api_public.book_full,
       (
@@ -334,6 +339,7 @@ as $function_get_books_by_genre$
       author_first_name,
       author_last_name,
       author_slug,
+      author_nb_books,
       genres
     )::api_public.book_light
   from
@@ -345,6 +351,47 @@ as $function_get_books_by_genre$
   limit
     (select nb_results from pagination)::integer
 $function_get_books_by_genre$;
+
+-- `curl -sS localhost:8085/rpc/get_books_by_author?author_id=g61 | jq`
+create or replace function api_public.get_books_by_author(
+  author_id varchar,
+  nb_results integer = 10
+) returns setof api_public.book_light
+language sql
+stable
+as $function_get_books_by_author$
+  with
+  pagination as (
+    select
+      min(nb)::integer as nb_results
+    from
+      -- we hard-code a max number of results, just in case:
+      unnest(array[nb_results, 30]) t(nb)
+  )
+  select
+    (
+      book_id,
+      title,
+      subtitle,
+      cover,
+      lang,
+      slug,
+      author_id,
+      author_first_name,
+      author_last_name,
+      author_slug,
+      author_nb_books,
+      genres
+    )::api_public.book_light
+  from
+    library_view.book_with_related_data
+  where
+    author_id = $1
+  order by
+    title asc
+  limit
+    (select nb_results from pagination)::integer
+$function_get_books_by_author$;
 
 \ir 'api_public.security_policies.sql'
 
