@@ -8,7 +8,7 @@ export interface BooksListProps {
 
 export const BooksList = (props: BooksListProps) => {
   return (
-    <div className="grid books-list">
+    <div className="columns books-list is-multiline">
       {Object.values(props.books).map((book: Book) => {
         return <BookListItem book={book} key={book.id} />;
       })}

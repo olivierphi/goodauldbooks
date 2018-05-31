@@ -13,17 +13,21 @@ export function BookListItem(props: ListItemProps) {
   const bookUrl = getBookPageUrl(book.lang, book.author.slug, book.slug, book.id);
 
   return (
-    <div className="grid-item book-list-item">
-      <div className="header">
-        <BookCover book={book} />
+    <div className="column is-one-third">
+      <div className="box book-list-item">
+        <div className="box-header">
+          <BookCover book={book} />
+        </div>
+        <div className="box-content">
+          <h3 className="book-title">
+            <Link to={bookUrl}>{book.title}</Link>
+          </h3>
+          {book.subtitle ? <p className="book-subtitle">{book.subtitle}</p> : ""}
+          <p className="book-author">
+            {book.author.firstName} {book.author.lastName}
+          </p>
+        </div>
       </div>
-      <h3 className="book-title">
-        <Link to={bookUrl}>{book.title}</Link>
-      </h3>
-      {book.subtitle ? <p className="book-subtitle">{book.subtitle}</p> : ""}
-      <p className="book-author">
-        {book.author.firstName} {book.author.lastName}
-      </p>
     </div>
   );
 }

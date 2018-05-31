@@ -27,10 +27,9 @@
   $title-color: $color-black;
   $title-border-color: $color-whiter;
   h1 {
-    font-family: "Belwe", serif;
+    font-family: $family-serif, serif;
     color: $title-color;
-    font-size: 3.5em;
-    line-height: 1em;
+    font-size: 5rem;
     margin: 0 0 0.5em 0;
     padding: 0;
     text-shadow: -1px -1px 0 $title-border-color, 1px -1px 0 $title-border-color,

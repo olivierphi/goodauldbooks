@@ -4,7 +4,7 @@ import { FeaturedBooksContainer } from "../hoc/Book/FeaturedBooksContainer";
 
 function TranslatableHomePage(props: InjectedTranslateProps) {
   return (
-    <section className="box">
+    <section>
       <h1>{props.t("page.homepage.title")}</h1>
       <FeaturedBooksContainer />
     </section>

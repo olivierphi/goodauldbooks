@@ -4,7 +4,7 @@ import { BooksByGenreContainer } from "../hoc/Book/BooksByGenreContainer";
 
 export function GenrePage(routeProps: RouteComponentProps<{ genre: string }>): JSX.Element {
   return (
-    <section className="box">
+    <section>
       <BooksByGenreContainer genre={routeProps.match.params.genre} />
     </section>
   );

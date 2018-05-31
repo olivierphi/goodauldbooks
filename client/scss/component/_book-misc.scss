@@ -1,8 +1,7 @@
 .book-cover {
   display: block;
   height: 300px;
-  background-color: $color-teal;
-  border-radius: 20px;
+  background-color: $purple;
 
   &.has-cover {
     text-align: center;
@@ -17,7 +16,7 @@
       margin-right: -50%;
       transform: translate(-50%, -50%);
       font-size: 2.3rem;
-      font-family: Belwe, serif;
+      font-family: $family-serif, serif;
       color: $color-white;
       font-weight: bold;
       text-align: center;

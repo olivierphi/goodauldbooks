@@ -1,13 +1,7 @@
 .book-full {
   @include clearfix;
 
-  .book-cover {
-    width: 24%;
-    float: left;
-  }
-
-  .book-data {
-    width: 70%;
-    float: right;
+  h3 {
+    font-family: $family-serif;
   }
 }
