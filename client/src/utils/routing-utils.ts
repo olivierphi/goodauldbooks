@@ -9,8 +9,8 @@ export function getBookPageUrl(
   return `/library/book/${bookLang}/${authorSlug}/${bookSlug}/${bookId}`;
 }
 
-export function getAuthorPageUrl(authorId: string) {
-  return `/library/author/${authorId}`;
+export function getAuthorPageUrl(authorSlug: string, authorId: string) {
+  return `/library/author/${authorSlug}/${authorId}`;
 }
 
 export function getGenrePageUrl(genre: string) {

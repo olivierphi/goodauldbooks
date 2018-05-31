@@ -13,10 +13,14 @@ export function Main(props: MainProps) {
       <Route exact={true} path="/" component={HomePage} />
       <Route
         exact={true}
-        path="/library/book/:lang([a-z]{2,3})/:author_slug([a-z0-9-]+)/:book_slug([a-z0-9-]+)/:bookId(g?[0-9]+)"
+        path="/library/book/:lang([a-z]{2,3})/:authorSlug([a-z0-9-]+)/:book_slug([a-z0-9-]+)/:bookId(g?[0-9]+)"
         component={BookPage}
       />
-      <Route exact={true} path="/library/author/:authorId" component={AuthorPage} />
+      <Route
+        exact={true}
+        path="/library/author/:authorSlug([a-z0-9-]+)/:authorId(g?[0-9]+)"
+        component={AuthorPage}
+      />
       <Route exact={true} path="/library/genre/:genre" component={GenrePage} />
     </section>
   );

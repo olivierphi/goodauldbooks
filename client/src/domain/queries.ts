@@ -5,12 +5,15 @@ export interface BooksRepository {
   getBookById(bookId: string): Promise<BookWithGenreStats | null>;
   quickSearch(pattern: string): Promise<QuickSearchResult[]>;
   getBooksByGenre(genre: string): Promise<BooksById>;
+  getBooksByAuthor(authorId: string): Promise<BooksById>;
+  getBookIntro(bookId: string): Promise<string | null>;
 }
 
 export interface QuickSearchResult {
   readonly resultType: "book" | "author";
   readonly book: QuickSearchResultBook | null;
   readonly author: QuickSearchResultAuthor;
+  readonly highlight: number;
 }
 export interface QuickSearchResultBook {
   readonly id: string;

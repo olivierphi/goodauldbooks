@@ -11,6 +11,7 @@ export interface BookData {
   author_birth_year: number | null;
   author_death_year: number | null;
   author_slug: string;
+  author_nb_books: number;
   genres: string[];
 }
 
@@ -37,6 +38,7 @@ export interface QuickAutocompletionData {
   author_last_name: string;
   author_slug: string;
   author_nb_books: number;
+  highlight: number;
 }
 
 export interface GenreWithStats {

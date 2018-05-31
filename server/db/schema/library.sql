@@ -10,8 +10,8 @@ create schema library;
 create table library.author (
   author_id serial primary key,
   gutenberg_id integer unique null,
-  first_name text null,
-  last_name text null,
+  first_name varchar null,
+  last_name varchar null,
   birth_year integer null,
   death_year integer null
 );
@@ -20,8 +20,9 @@ create table library.book (
   book_id serial primary key,
   gutenberg_id integer unique null,
   lang varchar(3) collate "C" not null,
-  title text not null,
-  subtitle text null,
+  title varchar not null,
+  subtitle varchar null,
+  highlight integer not null default 0,
   author_id int references library.author(author_id) not null
 );
 create index on library.book(author_id);
@@ -29,7 +30,7 @@ create index on library.book(author_id);
 create table library.book_asset (
   book_id integer references library.book(book_id) not null,
   type varchar(10) collate "C" not null,
-  path text collate "C" not null,
+  path varchar collate "C" not null,
   size integer not null,
   primary key (book_id, type)
 );

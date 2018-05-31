@@ -45,10 +45,16 @@ export class AutocompleteSearch extends React.Component<
         const bookUrl = getBookPageUrl(book.lang, author.slug, book.slug, book.id);
         return <Redirect to={bookUrl} push={true} />;
       }
-
-      return <Redirect to={getAuthorPageUrl(author.id)} push={true} />;
+      if (author) {
+        this.setState(AutocompleteSearch.emptyState);
+        const authorUrl = getAuthorPageUrl(author.slug, author.id);
+        return <Redirect to={authorUrl} push={true} />;
+      }
     }
 
+    {
+      /* TODO: i18n :-) */
+    }
     return (
       <Async
         name="form-field-name"
@@ -158,7 +164,7 @@ function BookResultOptionContent(props: BookResultOptionContentProps) {
   return (
     <div className={`book-result lang-${props.bookLang}`}>
       <span className="option-type book">Book:</span>
-      {/* TODO; i18n :-) */}
+      {/* TODO: i18n :-) */}
       <span className="book-title">{props.bookTitle}</span>
       <span className="author-name">
         {props.authorFirstName} {props.authorLastName}
@@ -176,7 +182,7 @@ function AuthorResultOptionContent(props: AuthorResultOptionContentProps) {
   return (
     <div className="author-result">
       <span className="option-type author">Author:</span>
-      {/* TODO; i18n :-) */}
+      {/* TODO: i18n :-) */}
       <span className="author-name">
         {props.authorFirstName} {props.authorLastName}
       </span>

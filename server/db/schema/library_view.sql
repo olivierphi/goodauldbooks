@@ -10,30 +10,31 @@ create extension if not exists pg_trgm schema exts;
 create materialized view library_view.book_with_related_data as
   select
     (case
-     when book.gutenberg_id is not null then concat('g', book.gutenberg_id)
-     else book.book_id::text
+     when book.gutenberg_id is not null then concat('g', book.gutenberg_id)::varchar
+     else book.book_id::varchar
      end) as book_id,
     book.title as title,
     book.subtitle as subtitle,
     book.lang as lang,
-    substring(utils.slugify(book.title) for 50) as slug,
+    substring(utils.slugify(book.title) for 50)::varchar as slug,
+    book.highlight as highlight,
     book_cover.path as cover,
     book_epub.path as epub,
     book_epub.size as epub_size,
     book_mobi.path as mobi,
     book_mobi.size as mobi_size,
     (case
-     when author.gutenberg_id is not null then concat('g', author.gutenberg_id)
-     else author.author_id::text
+     when author.gutenberg_id is not null then concat('g', author.gutenberg_id)::varchar
+     else author.author_id::varchar
      end) as author_id,
     author.first_name as author_first_name,
     author.last_name as author_last_name,
     author.birth_year as author_birth_year,
     author.death_year as author_death_year,
-    substring(utils.slugify(author.first_name || ' ' || author.last_name) for 50) as author_slug,
+    substring(utils.slugify(author.first_name || ' ' || author.last_name) for 50)::varchar as author_slug,
     (select count(*) from library.book as book2 where book2.author_id = author.author_id)::integer as author_nb_books,
     array_agg(genre.genre_id)::integer[] as genres_ids,
-    array_agg(genre.title)::text[] as genres
+    array_agg(genre.title)::varchar[] as genres
   from
     library.book
     join
@@ -67,6 +68,8 @@ create index on library_view.book_with_related_data
 create index on library_view.book_with_related_data
   using gin(title exts.gin_trgm_ops);
 create index on library_view.book_with_related_data
+  using gin(author_first_name exts.gin_trgm_ops);
+create index on library_view.book_with_related_data
   using gin(author_last_name exts.gin_trgm_ops);
 create index on library_view.book_with_related_data
   using gin(genres);
@@ -83,7 +86,7 @@ create materialized view library_view.genre_with_related_data as (
   )
   select
     genre_id::integer,
-    title::text,
+    title::varchar,
     count(nb_books_by_lang.lang)::integer as nb_langs,
     sum(nb_books_by_lang.nb_books)::integer as nb_books,
     json_object(
@@ -114,5 +117,19 @@ create unique index on library_view.genre_with_related_data
   (genre_id);
 create unique index on library_view.genre_with_related_data
   (title);
+
+create materialized view library_view.book_additional_data as
+  select
+    (case
+     when gutenberg_id is not null then concat('g', gutenberg_id)::varchar
+     else book_id::varchar
+     end) as book_id,
+    intro
+  from
+    library.book_additional_data
+    join library.book using (book_id)
+;
+create unique index on library_view.book_additional_data
+  (book_id);
 
 commit;

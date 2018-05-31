@@ -1,5 +1,6 @@
 import * as React from "react";
 import { BookFull, GenreWithStats } from "../../domain/core";
+import { BookIntroContainer } from "../../hoc/Book/BookIntroContainer";
 import { Author } from "./Author";
 import { BookCover } from "./BookCover";
 import { EbookDownloadLinks } from "./EbookDownloadLinks";
@@ -22,6 +23,7 @@ export function BookFull(props: BookFullProps) {
         <GenresAsTags genresWithStats={props.genresWithStats} />
         <Author author={book.author} />
         <EbookDownloadLinks book={book} />
+        <BookIntroContainer bookId={book.id} />
       </div>
     </div>
   );

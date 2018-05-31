@@ -81,6 +81,35 @@ export class BooksRepository implements queriesDomain.BooksRepository {
 
     return Promise.resolve(booksForThisGenre);
   }
+
+  public async getBooksByAuthor(authorId: string): Promise<BooksById> {
+    const appState = this.appStateStore.getState();
+    if (appState.booksIdsByAuthor[authorId]) {
+      return Promise.resolve(
+        getBooksByIdsFromState(appState.booksIdsByAuthor[authorId], appState.booksById)
+      );
+    }
+
+    const response = await axios.get("/rpc/get_books_by_author", {
+      params: {
+        author_id: authorId,
+      },
+    });
+
+    const booksForThisAuthor = getBooksByIdFromBooksArray(response.data.map(mapBookFromServer));
+
+    return Promise.resolve(booksForThisAuthor);
+  }
+
+  public async getBookIntro(bookId: string): Promise<string | null> {
+    const response = await axios.get("/rpc/get_book_intro", {
+      params: {
+        book_id: bookId,
+      },
+    });
+
+    return Promise.resolve(response.data[0].intro || null);
+  }
 }
 
 function getBooksByIdFromBooksArray(books: Book[]): BooksById {
@@ -106,6 +135,7 @@ function mapBookFromServer(row: ServerResponse.BookData): Book {
       birthYear: row.author_birth_year,
       deathYear: row.author_death_year,
       slug: row.author_slug,
+      nbBooks: row.author_nb_books,
     },
     coverUrl: row.book_cover_path,
     genres: row.genres,
@@ -159,5 +189,6 @@ function mapQuickAutocompletionDataFromServer(
       slug: row.author_slug,
       nbBooks: row.author_nb_books,
     },
+    highlight: row.highlight,
   };
 }

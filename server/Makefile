@@ -20,6 +20,8 @@ reset_db_and_import_gutenberg_books:
 	) || exit 1
 	@echo "\033[36mNow converting this raw data from Project Gutenberg into normalised data...\033[0m"
 	@${MAKE} import_gutenberg_books
+	@echo "\033[36mEditorial pass...\033[0m"
+	@${MAKE} editorial_pass
 	@echo "\033[36mLast but not least, we project this normalised data into some materialized views...\033[0m"
 	@${MAKE} refresh_materialized_views
 
@@ -36,6 +38,9 @@ refresh_materialized_views:
 		(echo "\033[36m*******\nRefreshing '$(materialized_view)'...\n*******\033[0m" && \
 		time ${PSQL} --no-psqlrc -q -b -c "refresh materialized view concurrently $(materialized_view);") || exit 1; \
 	)
+
+editorial_pass:
+	${PSQL_QUIET} --no-psqlrc -q -b -f /host/db/editing.sql
 
 build_api_admin:
 	cd api-admin/ && \

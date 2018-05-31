@@ -14,6 +14,10 @@ interface BooksByGenreFetchedAction extends Action {
   payload: BooksById;
   meta: BooksByGenreFetchedActionMeta;
 }
+interface BooksByAuthorFetchedAction extends Action {
+  payload: BooksById;
+  meta: BooksByAuthorFetchedActionMeta;
+}
 
 interface BookFetchedAction extends Action {
   payload: BookWithGenreStats;
@@ -21,6 +25,10 @@ interface BookFetchedAction extends Action {
 
 interface BooksByGenreFetchedActionMeta {
   genre: string;
+}
+
+interface BooksByAuthorFetchedActionMeta {
+  authorId: string;
 }
 
 export function booksById(state: BooksById = {}, action: Action): BooksById {
@@ -34,6 +42,12 @@ export function booksById(state: BooksById = {}, action: Action): BooksById {
       };
     case `${Actions.FETCH_BOOKS_FOR_GENRE}_FULFILLED`:
       actionRef = action as BooksByGenreFetchedAction;
+      return {
+        ...state,
+        ...actionRef.payload,
+      };
+    case `${Actions.FETCH_BOOKS_FOR_AUTHOR}_FULFILLED`:
+      actionRef = action as BooksByAuthorFetchedAction;
       return {
         ...state,
         ...actionRef.payload,
@@ -90,6 +104,20 @@ export function booksIdsByGenre(state: string[] = [], action: Action): string[] 
       return {
         ...state,
         ...{ [actionRef.meta.genre]: Object.keys(actionRef.payload) },
+      };
+    default:
+      return state;
+  }
+}
+
+export function booksIdsByAuthor(state: string[] = [], action: Action): string[] {
+  let actionRef;
+  switch (action.type) {
+    case `${Actions.FETCH_BOOKS_FOR_AUTHOR}_FULFILLED`:
+      actionRef = action as BooksByAuthorFetchedAction;
+      return {
+        ...state,
+        ...{ [actionRef.meta.authorId]: Object.keys(actionRef.payload) },
       };
     default:
       return state;
