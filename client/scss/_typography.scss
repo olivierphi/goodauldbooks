@@ -1,24 +1,24 @@
 :root {
   text-rendering: optimizeLegibility;
-  font-family: "Archivo Narrow", sans-serif;
+  font-family: $family-sans-serif, sans-serif;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
 }
 
 @font-face {
-  font-family: "Belwe";
-  src: local("Belwe"), url("/assets/fonts/belwe/Belwe.woff2") format("woff2"),
-    url("/assets/fonts/belwe/Belwe.woff") format("woff"),
-    url("/assets/fonts/belwe/Belwe.ttf") format("truetype");
+  font-family: $family-serif;
+  src: local("Libre Baskerville Bold"), local("LibreBaskerville-Bold"),
+    url("/assets/fonts/libre-baskerville/LibreBaskerville-Bold.woff2") format("woff2"),
+    url("/assets/fonts/libre-baskerville/LibreBaskerville-Bold.woff") format("woff"),
+    url("/assets/fonts/libre-baskerville/LibreBaskerville-Bold.ttf") format("truetype");
   font-weight: bold;
 }
 
 @font-face {
-  font-family: "Source Sans Pro";
+  font-family: $family-sans-serif;
   font-style: normal;
-  font-weight: 400;
-  src: local("Source Sans Pro Regular"), local("SourceSansPro-Regular"),
-    url("/assets/fonts/source-sans-pro/SourceSansPro-Regular.woff2") format("woff2"),
-    url("/assets/fonts/source-sans-pro/SourceSansPro-Regular.woff") format("woff"),
-    url("/assets/fonts/source-sans-pro/SourceSansPro-Regular.ttf") format("truetype");
+  src: local("Metropolis Regular"), local("Metropolis-Regular"),
+    url("/assets/fonts/metropolis/Metropolis-Regular.woff2") format("woff2"),
+    url("/assets/fonts/metropolis/Metropolis-Regular.woff") format("woff"),
+    url("/assets/fonts/metropolis/Metropolis-Regular.ttf") format("truetype");
 }

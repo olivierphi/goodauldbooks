@@ -7,38 +7,44 @@ create schema api_public;
  * Functions composite types
  */
 
+create type api_public.pagination_info as (
+  page integer,
+  nb_per_page integer,
+  nb_results_total integer
+);
+
 create type api_public.book_light as (
-  book_id text,
-  book_title text,
-  book_subtitle text,
-  book_cover_path text,
+  book_id varchar,
+  book_title varchar,
+  book_subtitle varchar,
+  book_cover_path varchar,
   book_lang varchar(3),
-  book_slug text,
-  author_id text,
-  author_first_name text,
-  author_last_name text,
-  author_slug text,
+  book_slug varchar,
+  author_id varchar,
+  author_first_name varchar,
+  author_last_name varchar,
+  author_slug varchar,
   author_nb_books integer,
-  genres text[]
+  genres varchar[]
 );
 
 create type api_public.book_full as (
-  book_id text,
-  book_title text,
-  book_subtitle text,
-  book_cover_path text,
+  book_id varchar,
+  book_title varchar,
+  book_subtitle varchar,
+  book_cover_path varchar,
   book_epub_size integer,
   book_mobi_size integer,
   book_lang varchar(3),
-  book_slug text,
-  author_id text,
-  author_first_name text,
-  author_last_name text,
+  book_slug varchar,
+  author_id varchar,
+  author_first_name varchar,
+  author_last_name varchar,
   author_birth_year integer,
   author_death_year integer,
-  author_slug text,
+  author_slug varchar,
   author_nb_books integer,
-  genres text[]
+  genres varchar[]
 );
 
 create type api_public.genre_with_stats as (
@@ -54,21 +60,31 @@ create type api_public.book_full_with_genre_stats as (
 );
 
 create type api_public.quick_autocompletion_result as (
-  type text,
-  book_id text,
-  book_title text,
+  type varchar,
+  book_id varchar,
+  book_title varchar,
   book_lang varchar(3),
-  book_slug text,
-  author_id text,
-  author_first_name text,
-  author_last_name text,
-  author_slug text,
+  book_slug varchar,
+  author_id varchar,
+  author_first_name varchar,
+  author_last_name varchar,
+  author_slug varchar,
   author_nb_books integer,
   highlight integer
 );
 
 create type api_public.book_intro as (
   intro text
+);
+
+create type api_public.books_by_genre_with_pagination as (
+  books api_public.book_light[],
+  pagination api_public.pagination_info
+);
+
+create type api_public.books_by_author_with_pagination as (
+  books api_public.book_light[],
+  pagination api_public.pagination_info
 );
 
 /**
@@ -314,83 +330,133 @@ $function_get_book_intro$;
 -- `curl -sS localhost:8085/rpc/get_books_by_genre?genre=Vampires%20--%20Fiction | jq`
 create or replace function api_public.get_books_by_genre(
   genre varchar,
-  nb_results integer = 10
-) returns setof api_public.book_light
+  page integer = 1,
+  nb_per_page integer = 10
+) returns api_public.books_by_genre_with_pagination
 language sql
 stable
 as $function_get_books_by_genre$
   with
   pagination as (
     select
-      min(nb)::integer as nb_results
+      (page - 1) * nb_per_page as p_offset,
+      min(nb)::integer as p_nb
     from
       -- we hard-code a max number of results, just in case:
-      unnest(array[nb_results, 30]) t(nb)
+      unnest(array[nb_per_page, 30]) t(nb)
+  ),
+  nb_results_total as (
+    select
+      count(book_id) as count
+    from
+      library_view.book_with_related_data
+    where
+      genres && array[genre]
+  ),
+  results as (
+    select
+      (
+        book_id,
+        title,
+        subtitle,
+        cover,
+        lang,
+        slug,
+        author_id,
+        author_first_name,
+        author_last_name,
+        author_slug,
+        author_nb_books,
+        genres
+      )::api_public.book_light as book
+    from
+      library_view.book_with_related_data
+    where
+      genres && array[genre]
+    order by
+      title asc, subtitle asc
+    limit
+      (select p_nb from pagination)::integer
+    offset
+      (select p_offset from pagination)::integer
   )
   select
     (
-      book_id,
-      title,
-      subtitle,
-      cover,
-      lang,
-      slug,
-      author_id,
-      author_first_name,
-      author_last_name,
-      author_slug,
-      author_nb_books,
-      genres
-    )::api_public.book_light
+      array_agg(book)::api_public.book_light[],
+      (
+        page,
+        nb_per_page,
+        (select count from nb_results_total)::integer
+      )::api_public.pagination_info
+    )::api_public.books_by_genre_with_pagination
   from
-    library_view.book_with_related_data
-  where
-    genres && array[genre]
-  order by
-    title asc
-  limit
-    (select nb_results from pagination)::integer
+    results
 $function_get_books_by_genre$;
 
 -- `curl -sS localhost:8085/rpc/get_books_by_author?author_id=g61 | jq`
 create or replace function api_public.get_books_by_author(
   author_id varchar,
-  nb_results integer = 10
-) returns setof api_public.book_light
+  page integer = 1,
+  nb_per_page integer = 10
+) returns api_public.books_by_author_with_pagination
 language sql
 stable
 as $function_get_books_by_author$
-  with
+with
   pagination as (
     select
-      min(nb)::integer as nb_results
+      (page - 1) * nb_per_page as p_offset,
+      min(nb)::integer as p_nb
     from
       -- we hard-code a max number of results, just in case:
-      unnest(array[nb_results, 30]) t(nb)
+      unnest(array[nb_per_page, 30]) t(nb)
+  ),
+  nb_results_total as (
+    select
+      count(book_id) as count
+    from
+      library_view.book_with_related_data
+    where
+      author_id = $1
+  ),
+  results as (
+    select
+      (
+        book_id,
+        title,
+        subtitle,
+        cover,
+        lang,
+        slug,
+        author_id,
+        author_first_name,
+        author_last_name,
+        author_slug,
+        author_nb_books,
+        genres
+      )::api_public.book_light as book
+    from
+      library_view.book_with_related_data
+    where
+      author_id = $1
+    order by
+      title asc, subtitle asc
+     limit
+      (select p_nb from pagination)::integer
+    offset
+      (select p_offset from pagination)::integer
   )
   select
     (
-      book_id,
-      title,
-      subtitle,
-      cover,
-      lang,
-      slug,
-      author_id,
-      author_first_name,
-      author_last_name,
-      author_slug,
-      author_nb_books,
-      genres
-    )::api_public.book_light
+      array_agg(book)::api_public.book_light[],
+      (
+        page,
+        nb_per_page,
+        (select count from nb_results_total)::integer
+      )::api_public.pagination_info
+    )::api_public.books_by_author_with_pagination
   from
-    library_view.book_with_related_data
-  where
-    author_id = $1
-  order by
-    title asc
-  limit
-    (select nb_results from pagination)::integer
+    results
 $function_get_books_by_author$;
 
 \ir 'api_public.security_policies.sql'

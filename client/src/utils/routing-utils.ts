@@ -9,10 +9,14 @@ export function getBookPageUrl(
   return `/library/book/${bookLang}/${authorSlug}/${bookSlug}/${bookId}`;
 }
 
-export function getAuthorPageUrl(authorSlug: string, authorId: string) {
-  return `/library/author/${authorSlug}/${authorId}`;
+export function getAuthorPageUrl(
+  authorSlug: string,
+  authorId: string,
+  pageNumber: null | number = null
+) {
+  return `/library/author/${authorSlug}/${authorId}${pageNumber ? `&page=${pageNumber}` : ""}`;
 }
 
-export function getGenrePageUrl(genre: string) {
-  return `/library/genre/${genre}`;
+export function getGenrePageUrl(genre: string, pageNumber: null | number = null) {
+  return `/library/genre/${genre}${pageNumber ? `&page=${pageNumber}` : ""}`;
 }

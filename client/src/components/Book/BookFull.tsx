@@ -15,15 +15,25 @@ export function BookFull(props: BookFullProps) {
   const book = props.book;
 
   return (
-    <div className="book-full">
-      <BookCover book={book} />
-      <div className="book-data">
-        <h3>{book.title}</h3>
-        {book.subtitle ? <h4>{book.subtitle}</h4> : ""}
-        <GenresAsTags genresWithStats={props.genresWithStats} />
-        <Author author={book.author} />
-        <EbookDownloadLinks book={book} />
-        <BookIntroContainer bookId={book.id} />
+    <div className="columns book-full">
+      <div className="column">
+        <div className="box">
+          <div className="box-header">
+            <BookCover book={book} />
+          </div>
+        </div>
+      </div>
+      <div className="column is-three-quarters">
+        <div className="box book-data">
+          <div className="box-content">
+            <h3>{book.title}</h3>
+            {book.subtitle ? <h4>{book.subtitle}</h4> : ""}
+            <GenresAsTags genresWithStats={props.genresWithStats} />
+            <Author author={book.author} />
+            <EbookDownloadLinks book={book} />
+            <BookIntroContainer bookId={book.id} />
+          </div>
+        </div>
       </div>
     </div>
   );

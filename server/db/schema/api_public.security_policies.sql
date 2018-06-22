@@ -62,6 +62,7 @@ grant execute on function
   api_public.featured_books(),
   api_public.get_book_by_id(book_id text),
   api_public.get_book_intro(book_id text),
+  api_public.get_books_by_genre(genre varchar, starting_from integer, nb_results integer),
   utils.get_book_real_id(book_public_id text)
 to
   api_public_anon;

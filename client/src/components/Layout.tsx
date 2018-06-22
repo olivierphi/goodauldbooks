@@ -8,7 +8,6 @@ export function Layout(): JSX.Element {
     <>
       <Head />
       <div id="page-wrapper">
-        {/*<Header />*/}
         <Banner />
         <Main />
       </div>

@@ -53,11 +53,20 @@ export interface NbBooksByLang {
   [lang: string]: number;
 }
 
-export interface BooksIdsByGenre {
+export interface PaginatedBooksIdsList {
+  nbResultsTotal: number;
+  results: BooksIdsByCriteria;
+}
+
+export interface BooksIdsByCriteria {
+  [criteriaName: string]: string[];
+}
+
+export interface BooksIdsByGenre extends BooksIdsByCriteria {
   [genreName: string]: string[];
 }
 
-export interface BooksIdsByAuthor {
+export interface BooksIdsByAuthor extends BooksIdsByCriteria {
   [authorId: string]: string[];
 }
 

@@ -1,33 +1,20 @@
 /* Box */
 
 .box {
-  padding: 3em 2em;
+  @include clearfix();
 
-  background: $color-whitemost;
-  border-radius: 6px;
-  box-shadow: 0 2px 0 0 $color-white;
-  margin: 0 0 2em 0;
+  background: $white;
+  box-shadow: 0 2px 0 0 $grey-light;
 
-  > :last-child {
-    margin-bottom: 0;
+  .box-header {
+    text-align: center;
   }
 
-  &.features > section {
-    padding: 3em 2em;
-  }
+  .box-content {
+    margin: 0 1rem;
 
-  .image.featured {
-    margin-left: -2em;
-    width: calc(100% + 4em);
-  }
-
-  .image.featured:first-child {
-    margin-bottom: 3em;
-    margin-top: -3em;
-  }
-
-  .image.featured:last-child {
-    margin-bottom: -3em;
-    margin-top: 3em;
+    h3 {
+      font-family: $family-serif;
+    }
   }
 }

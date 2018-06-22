@@ -9,13 +9,16 @@ export interface GenresAsTagsProps {
 
 export function GenresAsTags(props: GenresAsTagsProps) {
   return (
-    <ul className="genres tags">
+    <ul className="genres tags field is-grouped is-grouped-multiline">
       {props.genresWithStats.map((genre: GenreWithStats, i) => {
         return (
-          <li key={i}>
-            <Link to={getGenrePageUrl(genre.title)}>
-              {genre.title} ({genre.nbBooks} books)
-            </Link>
+          <li key={i} className="control">
+            <div className="tags has-addons">
+              <span className="tag is-dark">
+                <Link to={getGenrePageUrl(genre.title)}>{genre.title}</Link>
+              </span>
+              <span className="tag is-info">{genre.nbBooks}</span>
+            </div>
           </li>
         );
       })}

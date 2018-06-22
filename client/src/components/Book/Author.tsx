@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { Author } from "../../domain/core";
 import { getAuthorPageUrl } from "../../utils/routing-utils";
 
@@ -11,9 +12,9 @@ export function Author(props: AuthorProps) {
 
   return (
     <p className="author">
-      <a href={getAuthorPageUrl(author.slug, author.id)} className="name">
+      <Link to={getAuthorPageUrl(author.slug, author.id)} className="name">
         {author.firstName} {author.lastName}
-      </a>
+      </Link>
       {author.birthYear || author.deathYear ? (
         <span className="life-period">
           ({author.birthYear || "?"} - {author.deathYear || "?"})

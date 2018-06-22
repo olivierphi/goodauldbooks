@@ -1,14 +1,16 @@
 import { i18n as i18next } from "i18next";
 import { Store } from "redux";
 import { initI18n } from "./boot/i18n-init";
-import * as queriesDomain from "./domain/queries";
-import { BooksRepository } from "./repositories/BooksRepository";
+import { BooksRepository } from "./domain/queries";
+import { BooksHttpRepository } from "./repositories/BooksHttpRepository";
+import { BooksWithAppStateCacheRepository } from "./repositories/BooksWithAppStateCacheRepository";
 import { AppState } from "./store";
 import { initStore } from "./store-init";
 
 enum SharedServicesIds {
   APP_STATE_STORE,
-  BOOKS_REPOSITORY,
+  BOOKS_HTTP_REPOSITORY,
+  BOOKS_APP_STATE_CACHE_REPOSITORY,
   I18N,
 }
 
@@ -45,9 +47,15 @@ export class ServicesContainer {
     });
   }
 
-  get booksRepository(): queriesDomain.BooksRepository {
-    return sharedService(SharedServicesIds.BOOKS_REPOSITORY, () => {
-      return new BooksRepository(this.appStateStore);
+  get booksRepository(): BooksRepository {
+    return sharedService(SharedServicesIds.BOOKS_APP_STATE_CACHE_REPOSITORY, () => {
+      const booksHttpRepository = this.booksHttpRepository;
+      const bookWithCacheRepository = new BooksWithAppStateCacheRepository(
+        this.appStateStore,
+        booksHttpRepository
+      );
+
+      return booksHttpRepository;
     });
   }
 
@@ -56,6 +64,14 @@ export class ServicesContainer {
       this.throwNotBootedError("i18n");
     }
     return sharedServicesRegistry.get(SharedServicesIds.I18N);
+  }
+
+  private get booksHttpRepository(): BooksRepository {
+    return sharedService(SharedServicesIds.BOOKS_HTTP_REPOSITORY, () => {
+      const booksHttpRepository = new BooksHttpRepository();
+
+      return booksHttpRepository;
+    });
   }
 
   private async bootAsyncServices() {

@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import "url-search-params-polyfill";
 import { bootApp } from "./app-bootstrap";
 import { Layout } from "./components/Layout";
 import { AppEnvelope } from "./hoc/AppEnvelope";

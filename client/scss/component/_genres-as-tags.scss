@@ -1,8 +1,10 @@
 .genres.tags {
-  $margin-size: 10px;
-
-  margin: 0 -$margin-size;
-
+  li {
+    a {
+      color: $white-ter;
+    }
+  }
+  /*
   li {
     display: inline-block;
     margin: $margin-size;
@@ -16,4 +18,5 @@
       color: $color-white;
     }
   }
+  */
 }
