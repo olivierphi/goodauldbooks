@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { Book } from "../../domain/core";
-import { getBookPageUrl } from "../../utils/routing-utils";
+import { getAuthorPageUrl, getBookPageUrl } from "../../utils/routing-utils";
 import { BookCover } from "./BookCover";
 
 export interface ListItemProps {
@@ -24,7 +24,9 @@ export function BookListItem(props: ListItemProps) {
           </h3>
           {book.subtitle ? <p className="book-subtitle">{book.subtitle}</p> : ""}
           <p className="book-author">
-            {book.author.firstName} {book.author.lastName}
+            <Link to={getAuthorPageUrl(book.author.slug, book.author.id)} className="name">
+              {book.author.firstName} {book.author.lastName}
+            </Link>
           </p>
         </div>
       </div>

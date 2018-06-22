@@ -24,7 +24,7 @@ export function fetchBooksForGenre(genre: string, pagination: PaginationRequestD
   return { type: Actions.FETCH_BOOKS_FOR_GENRE, payload: fetchBooksPromise, meta: { genre } };
 }
 
-export function fetchBooksForAuthor(authorId: string): Action {
-  const fetchBooksPromise = container.booksRepository.getBooksByAuthor(authorId);
+export function fetchBooksForAuthor(authorId: string, pagination: PaginationRequestData): Action {
+  const fetchBooksPromise = container.booksRepository.getBooksByAuthor(authorId, pagination);
   return { type: Actions.FETCH_BOOKS_FOR_AUTHOR, payload: fetchBooksPromise, meta: { authorId } };
 }

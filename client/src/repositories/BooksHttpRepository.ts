@@ -71,16 +71,31 @@ export class BooksHttpRepository implements BooksRepository {
     });
   }
 
-  public async getBooksByAuthor(authorId: string): Promise<BooksById> {
+  public async getBooksByAuthor(
+    authorId: string,
+    pagination: PaginationRequestData
+  ): Promise<PaginatedBooksList> {
     const response = await axios.get("/rpc/get_books_by_author", {
       params: {
         author_id: authorId,
+        page: pagination.page,
+        nb_per_page: pagination.nbPerPage,
       },
     });
 
-    const booksForThisAuthor = getBooksByIdFromBooksArray(response.data.map(mapBookFromServer));
+    const booksWithPagination: ServerResponse.BooksDataWithPagination<ServerResponse.BookData> =
+      response.data[0];
+    const paginationData: PaginationResponseData = getPaginationResponseDataFromServerResponse(
+      booksWithPagination.pagination
+    );
+    const booksForThisGenre = getBooksByIdFromBooksArray(
+      booksWithPagination.books.map(mapBookFromServer)
+    );
 
-    return Promise.resolve(booksForThisAuthor);
+    return Promise.resolve({
+      books: booksForThisGenre,
+      pagination: paginationData,
+    });
   }
 
   public async getBookIntro(bookId: string): Promise<string | null> {

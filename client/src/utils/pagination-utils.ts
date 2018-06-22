@@ -11,13 +11,16 @@ export function getPaginatedBooksIdsResultsFromCache(
   }
   const [offset, limit] = [(pagination.page - 1) * pagination.nbPerPage, pagination.nbPerPage];
   const upperLimit = Math.min(offset + limit, appStateList.nbResultsTotal);
+  const results: string[] = [];
   for (let i = offset; i < upperLimit; i++) {
-    if (!appStateList.results[criteriaName][i]) {
+    const bookId = appStateList.results[criteriaName][i];
+    if (!bookId) {
       return null;
     }
+    results.push(bookId);
   }
 
-  return appStateList.results[criteriaName].slice(offset, upperLimit);
+  return results;
 }
 
 export function getPaginationResponseDataFromPaginationRequest(

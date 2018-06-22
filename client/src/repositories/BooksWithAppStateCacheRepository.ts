@@ -50,15 +50,28 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
     return this.underlyingRepository.getBookIntro(bookId);
   }
 
-  public getBooksByAuthor(authorId: string): Promise<BooksById> {
+  public getBooksByAuthor(
+    authorId: string,
+    pagination: PaginationRequestData
+  ): Promise<PaginatedBooksList> {
     const appState = this.appStateStore.getState();
-    if (appState.booksIdsByAuthor[authorId]) {
-      return Promise.resolve(
-        getBooksByIdsFromState(appState.booksIdsByAuthor[authorId], appState.booksById)
-      );
+    const paginatedBooksIdsResultsFromCache = getPaginatedBooksIdsResultsFromCache(
+      appState.booksIdsByAuthor,
+      authorId,
+      pagination
+    );
+
+    if (paginatedBooksIdsResultsFromCache) {
+      return Promise.resolve({
+        pagination: getPaginationResponseDataFromPaginationRequest(
+          pagination,
+          appState.booksIdsByAuthor.nbResultsTotal
+        ),
+        books: getBooksByIdsFromState(paginatedBooksIdsResultsFromCache, appState.booksById),
+      });
     }
 
-    return this.underlyingRepository.getBooksByAuthor(authorId);
+    return this.underlyingRepository.getBooksByAuthor(authorId, pagination);
   }
 
   public getBooksByGenre(

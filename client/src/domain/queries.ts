@@ -5,7 +5,10 @@ export interface BooksRepository {
   getBookById(bookId: string): Promise<BookWithGenreStats | null>;
   quickSearch(pattern: string): Promise<QuickSearchResult[]>;
   getBooksByGenre(genre: string, pagination: PaginationRequestData): Promise<PaginatedBooksList>;
-  getBooksByAuthor(authorId: string): Promise<BooksById>;
+  getBooksByAuthor(
+    authorId: string,
+    pagination: PaginationRequestData
+  ): Promise<PaginatedBooksList>;
   getBookIntro(bookId: string): Promise<string | null>;
 }
 
