@@ -1,22 +1,18 @@
 import axios from "axios";
-import { Store } from "redux";
 import { Book, BookFull, BooksById, BookWithGenreStats, GenreWithStats } from "../domain/core";
-import * as queriesDomain from "../domain/queries";
-import { AppState } from "../store";
 import {
-  appStateHasGenresWithStats,
-  getBooksByIdsFromState,
-  getFullBookDataFromState,
-  getGenresWithStatsFromState,
-} from "../utils/app-state-utils";
+  BooksRepository,
+  PaginatedBooksList,
+  PaginationRequestData,
+  PaginationResponseData,
+  QuickSearchResult,
+} from "../domain/queries";
 import * as ServerResponse from "./server-responses";
 
 /**
  * This module gets a bit messy, we'll probably refactor it at some point :-)
  */
-export class BooksRepository implements queriesDomain.BooksRepository {
-  constructor(private appStateStore: Store<AppState>) {}
-
+export class BooksHttpRepository implements BooksRepository {
   public async getFeaturedBooks(): Promise<BooksById> {
     // TODO: store the books ids into the app state, so that we can cache the result
     const response = await axios.get("/rpc/featured_books");
@@ -26,23 +22,6 @@ export class BooksRepository implements queriesDomain.BooksRepository {
   }
 
   public async getBookById(bookId: string): Promise<BookWithGenreStats | null> {
-    const appState = this.appStateStore.getState();
-    const appStateStoreBooksById = appState.booksById;
-    const previouslyFetchedBookData: Book | null = appStateStoreBooksById[bookId];
-    if (
-      previouslyFetchedBookData &&
-      appStateHasGenresWithStats(previouslyFetchedBookData.genres, appState.genresWithStats) &&
-      appState.booksAssetsSize[bookId]
-    ) {
-      return Promise.resolve({
-        book: getFullBookDataFromState(bookId, appStateStoreBooksById, appState.booksAssetsSize),
-        genresWithStats: getGenresWithStatsFromState(
-          previouslyFetchedBookData.genres,
-          appState.genresWithStats
-        ),
-      });
-    }
-
     const response = await axios.get("/rpc/get_book_by_id", {
       params: {
         book_id: bookId,
@@ -55,7 +34,7 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     return Promise.resolve(bookWithGenreStats);
   }
 
-  public async quickSearch(pattern: string): Promise<queriesDomain.QuickSearchResult[]> {
+  public async quickSearch(pattern: string): Promise<QuickSearchResult[]> {
     const response = await axios.get("/rpc/quick_autocompletion", {
       params: { pattern },
     });
@@ -65,31 +44,34 @@ export class BooksRepository implements queriesDomain.BooksRepository {
     return Promise.resolve(matchingBooks);
   }
 
-  public async getBooksByGenre(genre: string): Promise<BooksById> {
-    const appState = this.appStateStore.getState();
-    if (appState.booksIdsByGenre[genre]) {
-      return Promise.resolve(
-        getBooksByIdsFromState(appState.booksIdsByGenre[genre], appState.booksById)
-      );
-    }
-
+  public async getBooksByGenre(
+    genre: string,
+    pagination: PaginationRequestData
+  ): Promise<PaginatedBooksList> {
     const response = await axios.get("/rpc/get_books_by_genre", {
-      params: { genre },
+      params: {
+        genre,
+        page: pagination.page,
+        nb_per_page: pagination.nbPerPage,
+      },
     });
 
-    const booksForThisGenre = getBooksByIdFromBooksArray(response.data.map(mapBookFromServer));
+    const booksWithPagination: ServerResponse.BooksDataWithPagination<ServerResponse.BookData> =
+      response.data[0];
+    const paginationData: PaginationResponseData = getPaginationResponseDataFromServerResponse(
+      booksWithPagination.pagination
+    );
+    const booksForThisGenre = getBooksByIdFromBooksArray(
+      booksWithPagination.books.map(mapBookFromServer)
+    );
 
-    return Promise.resolve(booksForThisGenre);
+    return Promise.resolve({
+      books: booksForThisGenre,
+      pagination: paginationData,
+    });
   }
 
   public async getBooksByAuthor(authorId: string): Promise<BooksById> {
-    const appState = this.appStateStore.getState();
-    if (appState.booksIdsByAuthor[authorId]) {
-      return Promise.resolve(
-        getBooksByIdsFromState(appState.booksIdsByAuthor[authorId], appState.booksById)
-      );
-    }
-
     const response = await axios.get("/rpc/get_books_by_author", {
       params: {
         author_id: authorId,
@@ -169,7 +151,7 @@ function mapGenreWithStatsFromServer(row: ServerResponse.GenreWithStats): GenreW
 
 function mapQuickAutocompletionDataFromServer(
   row: ServerResponse.QuickAutocompletionData
-): queriesDomain.QuickSearchResult {
+): QuickSearchResult {
   const rowType = row.type;
   return {
     resultType: rowType,
@@ -190,5 +172,15 @@ function mapQuickAutocompletionDataFromServer(
       nbBooks: row.author_nb_books,
     },
     highlight: row.highlight,
+  };
+}
+
+function getPaginationResponseDataFromServerResponse(
+  responsePagination: ServerResponse.PaginationResponseData
+): PaginationResponseData {
+  return {
+    page: responsePagination.page,
+    nbPerPage: responsePagination.nb_per_page,
+    nbResultsTotal: responsePagination.nb_results_total,
   };
 }

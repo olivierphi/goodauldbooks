@@ -2,15 +2,15 @@ import {
   BooksAssetsSizeById,
   BooksById,
   BooksIdsByAuthor,
-  BooksIdsByGenre,
   GenreWithStatsByName,
+  PaginatedBooksIdsList,
 } from "../domain/core";
 
 export interface AppState {
   booksById: BooksById;
   genresWithStats: GenreWithStatsByName;
   featuredBooksIds: string[];
-  booksIdsByGenre: BooksIdsByGenre;
+  booksIdsByGenre: PaginatedBooksIdsList;
   booksIdsByAuthor: BooksIdsByAuthor;
   booksAssetsSize: BooksAssetsSizeById;
 }

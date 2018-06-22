@@ -1,3 +1,4 @@
+import { PaginationRequestData } from "../domain/queries";
 import { container } from "../ServicesContainer";
 import { Action } from "./index";
 
@@ -18,8 +19,8 @@ export function fetchBookWithGenreStats(bookId: string): Action {
   return { type: Actions.FETCH_BOOK_WITH_GENRE_STATS, payload: fetchBookPromise };
 }
 
-export function fetchBooksForGenre(genre: string): Action {
-  const fetchBooksPromise = container.booksRepository.getBooksByGenre(genre);
+export function fetchBooksForGenre(genre: string, pagination: PaginationRequestData): Action {
+  const fetchBooksPromise = container.booksRepository.getBooksByGenre(genre, pagination);
   return { type: Actions.FETCH_BOOKS_FOR_GENRE, payload: fetchBooksPromise, meta: { genre } };
 }
 

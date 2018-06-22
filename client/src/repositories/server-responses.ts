@@ -50,3 +50,14 @@ export interface GenreWithStats {
 export interface NbBooksByLang {
   [lang: string]: number;
 }
+
+export interface BooksDataWithPagination<T> {
+  books: T[];
+  pagination: PaginationResponseData;
+}
+
+export interface PaginationResponseData {
+  page: number;
+  nb_per_page: number;
+  nb_results_total: number;
+}

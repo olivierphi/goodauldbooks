@@ -1,10 +1,10 @@
-import { BooksById, BookWithGenreStats } from "./core";
+import { BooksById, BooksIdsByGenre, BookWithGenreStats } from "./core";
 
 export interface BooksRepository {
   getFeaturedBooks(): Promise<BooksById>;
   getBookById(bookId: string): Promise<BookWithGenreStats | null>;
   quickSearch(pattern: string): Promise<QuickSearchResult[]>;
-  getBooksByGenre(genre: string): Promise<BooksById>;
+  getBooksByGenre(genre: string, pagination: PaginationRequestData): Promise<PaginatedBooksList>;
   getBooksByAuthor(authorId: string): Promise<BooksById>;
   getBookIntro(bookId: string): Promise<string | null>;
 }
@@ -29,14 +29,18 @@ export interface QuickSearchResultAuthor {
   readonly slug: string;
 }
 
+export interface PaginatedBooksList {
+  books: BooksById;
+  pagination: PaginationResponseData;
+}
+
 export interface PaginationRequestData {
-  page: number;
   nbPerPage: number;
+  page: number;
 }
 
 export interface PaginationResponseData {
-  currentPage: number;
   nbPerPage: number;
-  nbPages: number;
-  nbResults: number;
+  page: number;
+  nbResultsTotal: number;
 }

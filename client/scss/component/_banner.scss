@@ -1,13 +1,13 @@
 #banner {
   background-attachment: scroll, fixed;
-  background-color: $color-gray-2;
+  background-color: $grey;
   // Photo by Mario Klassen on Unsplash
   background-image: url("/assets/img/overlay.png"),
     url("/assets/img/mario-klassen-591787-unsplash.jpg");
   background-position: top left, center center;
   background-repeat: repeat, no-repeat;
   background-size: auto, cover;
-  color: $color-whitemost;
+  color: $white;
   padding: 6em 0 7em 0;
   text-align: center;
 
@@ -15,17 +15,12 @@
     margin-bottom: 0;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    color: $color-whitemost;
+  h1 a {
+    color: $black-bis;
   }
 
-  $title-color: $color-black;
-  $title-border-color: $color-whiter;
+  $title-color: $black;
+  $title-border-color: $white-bis;
   h1 {
     font-family: $family-serif, serif;
     color: $title-color;
@@ -53,7 +48,7 @@
   .button {
     background-color: transparent;
     box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
-    color: $color-whitemost;
+    color: $white;
     min-width: 12em;
   }
 
@@ -75,7 +70,7 @@
   input[type="reset"].special,
   input[type="button"].special,
   .button.special {
-    background: $color-whitemost;
-    color: $color-gray-2 !important;
+    background: $white;
+    color: $grey !important;
   }
 }

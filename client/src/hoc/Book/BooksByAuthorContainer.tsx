@@ -6,6 +6,7 @@ import { BooksById, BooksIdsByAuthor } from "../../domain/core";
 import { AppState } from "../../store";
 import { fetchBooksForAuthor } from "../../store/actions";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
+import { getAuthorPageUrl } from "../../utils/routing-utils";
 
 const mapStateToProps = (state: AppState) => {
   return {
@@ -40,7 +41,13 @@ const BooksListHOC = (props: BooksListHOCProps) => {
     props.allBooks
   );
 
-  return <BooksList books={booksToDisplay} />;
+  const authorSlug = props.allBooks[0].author.slug;
+  return (
+    <BooksList
+      books={booksToDisplay}
+      baseUrlWithoutPagination={getAuthorPageUrl(authorSlug, props.authorId)}
+    />
+  );
 };
 
 export const BooksByAuthorContainer = connect(mapStateToProps, mapDispatchToProps)(BooksListHOC);
