@@ -58,7 +58,7 @@ to
 
 grant execute on function
   api_public.search_books(pattern text),
-  api_public.quick_autocompletion(pattern text),
+  api_public.quick_autocompletion(pattern text, lang text),
   api_public.featured_books(),
   api_public.get_book_by_id(book_id text),
   api_public.get_book_intro(book_id text),

@@ -125,7 +125,8 @@ $function_search_book$;
 
 -- `curl -sS localhost:8085/rpc/quick_autocompletion?pattern=frank | jq`
 create or replace function api_public.quick_autocompletion(
-  pattern text
+  pattern text,
+  lang text = 'all'
 ) returns setof api_public.quick_autocompletion_result
 language sql
 stable
@@ -148,7 +149,11 @@ as $function_quick_autocompletion$
     from
       library_view.book_with_related_data
     where
-      title ilike concat('%', pattern, '%')
+      title ilike concat('%', pattern, '%') and
+      case
+        when $2 = 'all' then true
+        else lang = $2
+      end
     order by
       case
         when title ilike concat(pattern, '%') then 1
