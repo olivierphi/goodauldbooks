@@ -73,7 +73,7 @@ export class BooksHttpRepository implements BooksRepository {
       booksWithPagination.pagination
     );
     const booksForThisGenre = getBooksByIdFromBooksArray(
-      booksWithPagination.books.map(mapBookFromServer)
+      (booksWithPagination.books || []).map(mapBookFromServer)
     );
 
     return Promise.resolve({
@@ -102,7 +102,7 @@ export class BooksHttpRepository implements BooksRepository {
       booksWithPagination.pagination
     );
     const booksForThisGenre = getBooksByIdFromBooksArray(
-      booksWithPagination.books.map(mapBookFromServer)
+      (booksWithPagination.books || []).map(mapBookFromServer)
     );
 
     return Promise.resolve({
