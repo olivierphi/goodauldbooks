@@ -1,11 +1,11 @@
 import { Action } from "redux";
 import {
+  BookId,
   BooksById,
-  BooksIdsByGenre,
   BookWithGenreStats,
   GenreWithStats,
   GenreWithStatsByName,
-  PaginatedBooksIdsList,
+  PaginatedBooksIdsListByCriteria,
 } from "../domain/core";
 import { PaginatedBooksList } from "../domain/queries";
 import { Actions } from "./actions";
@@ -31,10 +31,12 @@ interface BookFetchedAction extends Action {
 
 interface BooksByGenreFetchedActionMeta {
   genre: string;
+  lang: string;
 }
 
 interface BooksByAuthorFetchedActionMeta {
   authorId: string;
+  lang: string;
 }
 
 export function lang(state: string = "all", action: Action): string {
@@ -114,30 +116,34 @@ export function featuredBooksIds(state: string[] = [], action: Action): string[]
 }
 
 export function booksIdsByGenre(
-  state: PaginatedBooksIdsList = { results: {}, nbResultsTotal: 0 },
+  state: PaginatedBooksIdsListByCriteria = {},
   action: Action
-): PaginatedBooksIdsList {
+): PaginatedBooksIdsListByCriteria {
   let actionRef;
   switch (action.type) {
     case `${Actions.FETCH_BOOKS_FOR_GENRE}_FULFILLED`:
       actionRef = action as BooksByGenreFetchedAction;
       const genre = actionRef.meta.genre;
+      const language = actionRef.meta.lang;
       const pagination = actionRef.payload.pagination;
       const nbResultsTotal = pagination.nbResultsTotal;
-      const booksIdsForThisGenre: string[] = state.results[genre] || {};
+      const criteriaName: string = `${genre}-${language}`;
+      const booksIdsForThisGenreAndLang: BookId[] = state[criteriaName]
+        ? state[criteriaName].results || []
+        : [];
       const pageStartIndex = (pagination.page - 1) * pagination.nbPerPage;
       const fetchedBooks = Object.values(actionRef.payload.books);
       for (let i = 0; i < pagination.nbPerPage; i++) {
         if (!fetchedBooks[i]) {
           break; // this can happen when we display the last page :-)
         }
-        booksIdsForThisGenre[pageStartIndex + i] = fetchedBooks[i].id;
+        booksIdsForThisGenreAndLang[pageStartIndex + i] = fetchedBooks[i].id;
       }
       return {
-        nbResultsTotal,
-        results: {
-          ...state.results,
-          [genre]: booksIdsForThisGenre,
+        ...state,
+        [criteriaName]: {
+          nbResultsTotal,
+          results: booksIdsForThisGenreAndLang,
         },
       };
     default:
@@ -146,30 +152,34 @@ export function booksIdsByGenre(
 }
 
 export function booksIdsByAuthor(
-  state: PaginatedBooksIdsList = { results: {}, nbResultsTotal: 0 },
+  state: PaginatedBooksIdsListByCriteria = {},
   action: Action
-): PaginatedBooksIdsList {
+): PaginatedBooksIdsListByCriteria {
   let actionRef;
   switch (action.type) {
     case `${Actions.FETCH_BOOKS_FOR_AUTHOR}_FULFILLED`:
       actionRef = action as BooksByAuthorFetchedAction;
       const authorId = actionRef.meta.authorId;
+      const language = actionRef.meta.lang;
       const pagination = actionRef.payload.pagination;
       const nbResultsTotal = pagination.nbResultsTotal;
-      const booksIdsForThisAuthor: string[] = state.results[authorId] || {};
+      const criteriaName: string = `${authorId}-${language}`;
+      const booksIdsForThisAuthorAndLang: BookId[] = state[criteriaName]
+        ? state[criteriaName].results || []
+        : [];
       const pageStartIndex = (pagination.page - 1) * pagination.nbPerPage;
       const fetchedBooks = Object.values(actionRef.payload.books);
       for (let i = 0; i < pagination.nbPerPage; i++) {
         if (!fetchedBooks[i]) {
           break; // this can happen when we display the last page :-)
         }
-        booksIdsForThisAuthor[pageStartIndex + i] = fetchedBooks[i].id;
+        booksIdsForThisAuthorAndLang[pageStartIndex + i] = fetchedBooks[i].id;
       }
       return {
-        nbResultsTotal,
-        results: {
-          ...state.results,
-          [authorId]: booksIdsForThisAuthor,
+        ...state,
+        [criteriaName]: {
+          nbResultsTotal,
+          results: booksIdsForThisAuthorAndLang,
         },
       };
     default:

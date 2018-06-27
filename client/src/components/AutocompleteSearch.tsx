@@ -41,13 +41,13 @@ export class AutocompleteSearch extends React.Component<
       const author = selectedResult.author;
 
       if (selectedResult.book) {
-        this.setState(AutocompleteSearch.emptyState);
+        setTimeout(this.setState.bind(this, AutocompleteSearch.emptyState), 0);
         const book = selectedResult.book;
         const bookUrl = getBookPageUrl(book.lang, author.slug, book.slug, book.id);
         return <Redirect to={bookUrl} push={true} />;
       }
       if (author) {
-        this.setState(AutocompleteSearch.emptyState);
+        setTimeout(this.setState.bind(this, AutocompleteSearch.emptyState), 0);
         const authorUrl = getAuthorPageUrl(author.slug, author.id);
         return <Redirect to={authorUrl} push={true} />;
       }

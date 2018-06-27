@@ -3,9 +3,10 @@ export enum Lang {
 }
 
 export type Genre = string;
+export type BookId = string;
 
 export interface Book {
-  id: string;
+  id: BookId;
   lang: string;
   author: Author;
   title: string;
@@ -53,21 +54,28 @@ export interface NbBooksByLang {
   [lang: string]: number;
 }
 
+export interface PaginatedBooksIdsListByCriteria {
+  [criteriaName: string]: {
+    nbResultsTotal: number;
+    results: BookId[];
+  };
+}
+
 export interface PaginatedBooksIdsList {
   nbResultsTotal: number;
   results: BooksIdsByCriteria;
 }
 
 export interface BooksIdsByCriteria {
-  [criteriaName: string]: string[];
+  [criteriaName: string]: BookId[];
 }
 
 export interface BooksIdsByGenre extends BooksIdsByCriteria {
-  [genreName: string]: string[];
+  [genreName: string]: BookId[];
 }
 
 export interface BooksIdsByAuthor extends BooksIdsByCriteria {
-  [authorId: string]: string[];
+  [authorId: string]: BookId[];
 }
 
 export interface BooksAssetsSizeById {

@@ -1,5 +1,11 @@
 import { Store } from "redux";
-import { Book, BooksById, BooksIdsByGenre, BookWithGenreStats } from "../domain/core";
+import {
+  Book,
+  BooksById,
+  BooksIdsByGenre,
+  BookWithGenreStats,
+  PaginatedBooksIdsListByCriteria,
+} from "../domain/core";
 import {
   BooksRepository,
   PaginatedBooksList,
@@ -52,12 +58,14 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
 
   public getBooksByAuthor(
     authorId: string,
+    lang: string,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const appState = this.appStateStore.getState();
+    const booksIdsByAuthorCriteriaName = `${authorId}-${lang}`;
     const paginatedBooksIdsResultsFromCache = getPaginatedBooksIdsResultsFromCache(
       appState.booksIdsByAuthor,
-      authorId,
+      booksIdsByAuthorCriteriaName,
       pagination
     );
 
@@ -65,23 +73,25 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
       return Promise.resolve({
         pagination: getPaginationResponseDataFromPaginationRequest(
           pagination,
-          appState.booksIdsByAuthor.nbResultsTotal
+          appState.booksIdsByAuthor[booksIdsByAuthorCriteriaName].nbResultsTotal
         ),
         books: getBooksByIdsFromState(paginatedBooksIdsResultsFromCache, appState.booksById),
       });
     }
 
-    return this.underlyingRepository.getBooksByAuthor(authorId, pagination);
+    return this.underlyingRepository.getBooksByAuthor(authorId, lang, pagination);
   }
 
   public getBooksByGenre(
     genre: string,
+    lang: string,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const appState = this.appStateStore.getState();
+    const booksIdsByGenreCriteriaName = `${genre}-${lang}`;
     const paginatedBooksIdsResultsFromCache = getPaginatedBooksIdsResultsFromCache(
       appState.booksIdsByGenre,
-      genre,
+      booksIdsByGenreCriteriaName,
       pagination
     );
 
@@ -89,13 +99,13 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
       return Promise.resolve({
         pagination: getPaginationResponseDataFromPaginationRequest(
           pagination,
-          appState.booksIdsByGenre.nbResultsTotal
+          appState.booksIdsByGenre[booksIdsByGenreCriteriaName].nbResultsTotal
         ),
         books: getBooksByIdsFromState(paginatedBooksIdsResultsFromCache, appState.booksById),
       });
     }
 
-    return this.underlyingRepository.getBooksByGenre(genre, pagination);
+    return this.underlyingRepository.getBooksByGenre(genre, lang, pagination);
   }
 
   public getFeaturedBooks(): Promise<BooksById> {

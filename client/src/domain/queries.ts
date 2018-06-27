@@ -4,9 +4,14 @@ export interface BooksRepository {
   getFeaturedBooks(): Promise<BooksById>;
   getBookById(bookId: string): Promise<BookWithGenreStats | null>;
   quickSearch(pattern: string, lang: string): Promise<QuickSearchResult[]>;
-  getBooksByGenre(genre: string, pagination: PaginationRequestData): Promise<PaginatedBooksList>;
+  getBooksByGenre(
+    genre: string,
+    lang: string,
+    pagination: PaginationRequestData
+  ): Promise<PaginatedBooksList>;
   getBooksByAuthor(
     authorId: string,
+    lang: string,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList>;
   getBookIntro(bookId: string): Promise<string | null>;

@@ -58,11 +58,12 @@ to
 
 grant execute on function
   api_public.search_books(pattern text),
-  api_public.quick_autocompletion(pattern text, lang text),
+  api_public.quick_autocompletion(pattern text, lang varchar(3)),
   api_public.featured_books(),
   api_public.get_book_by_id(book_id text),
   api_public.get_book_intro(book_id text),
-  api_public.get_books_by_genre(genre varchar, starting_from integer, nb_results integer),
+  api_public.get_books_by_genre(genre varchar, lang varchar(3), starting_from integer, nb_results integer),
+  api_public.get_books_by_author(author_id varchar, lang varchar(3), starting_from integer, nb_results integer),
   utils.get_book_real_id(book_public_id text)
 to
   api_public_anon;

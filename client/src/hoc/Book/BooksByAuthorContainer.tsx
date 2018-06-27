@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Action } from "redux";
 import { BooksList } from "../../components/Book/BooksList";
-import { BooksById, PaginatedBooksIdsList } from "../../domain/core";
+import { BooksById, PaginatedBooksIdsListByCriteria } from "../../domain/core";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
 import { AppState } from "../../store";
 import { fetchBooksForAuthor } from "../../store/actions";
@@ -17,6 +17,7 @@ interface BooksByAuthorContainerProps {
 
 const mapStateToProps = (state: AppState, ownProps: BooksByAuthorContainerProps) => {
   return {
+    currentBooksLang: state.lang,
     allBooks: state.booksById,
     booksIdsByAuthor: state.booksIdsByAuthor,
     authorId: ownProps.authorId,
@@ -26,33 +27,34 @@ const mapStateToProps = (state: AppState, ownProps: BooksByAuthorContainerProps)
 
 const mapDispatchToProps = (dispatch: (action: Action) => void) => {
   return {
-    fetchBooksForAuthor: (authorId: string, pagination: PaginationRequestData) => {
-      dispatch(fetchBooksForAuthor(authorId, pagination));
+    fetchBooksForAuthor: (authorId: string, lang: string, pagination: PaginationRequestData) => {
+      dispatch(fetchBooksForAuthor(authorId, lang, pagination));
     },
   };
 };
 
 interface BooksListHOCProps {
-  authorId: string;
+  currentBooksLang: string;
   allBooks: BooksById;
-  booksIdsByAuthor: PaginatedBooksIdsList;
-  fetchBooksForAuthor: (authorId: string, pagination: PaginationRequestData) => void;
+  booksIdsByAuthor: PaginatedBooksIdsListByCriteria;
+  fetchBooksForAuthor: (authorId: string, lang: string, pagination: PaginationRequestData) => void;
 }
 
 const BooksListHOC = (props: BooksByAuthorContainerProps & BooksListHOCProps) => {
+  const criteriaName = `${props.authorId}-${props.currentBooksLang}`;
   const booksIdsByAuthor = getPaginatedBooksIdsResultsFromCache(
     props.booksIdsByAuthor,
-    props.authorId,
+    criteriaName,
     props.pagination
   );
   if (!booksIdsByAuthor) {
-    props.fetchBooksForAuthor(props.authorId, props.pagination);
+    props.fetchBooksForAuthor(props.authorId, props.currentBooksLang, props.pagination);
     return <div className="loading">Loading books for this author...</div>;
   }
 
   const booksToDisplay = getBooksByIdsFromState(booksIdsByAuthor, props.allBooks);
   const paginationResponseData: PaginationResponseData = {
-    nbResultsTotal: props.booksIdsByAuthor.nbResultsTotal,
+    nbResultsTotal: props.booksIdsByAuthor[criteriaName].nbResultsTotal,
     ...props.pagination,
   };
 

@@ -55,11 +55,13 @@ export class BooksHttpRepository implements BooksRepository {
 
   public async getBooksByGenre(
     genre: string,
+    lang: string,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const response = await axios.get("/rpc/get_books_by_genre", {
       params: {
         genre,
+        lang,
         page: pagination.page,
         nb_per_page: pagination.nbPerPage,
       },
@@ -82,11 +84,13 @@ export class BooksHttpRepository implements BooksRepository {
 
   public async getBooksByAuthor(
     authorId: string,
+    lang: string,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const response = await axios.get("/rpc/get_books_by_author", {
       params: {
         author_id: authorId,
+        lang,
         page: pagination.page,
         nb_per_page: pagination.nbPerPage,
       },

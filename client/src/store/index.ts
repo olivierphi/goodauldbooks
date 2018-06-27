@@ -2,7 +2,7 @@ import {
   BooksAssetsSizeById,
   BooksById,
   GenreWithStatsByName,
-  PaginatedBooksIdsList,
+  PaginatedBooksIdsListByCriteria,
 } from "../domain/core";
 
 export interface AppState {
@@ -10,8 +10,8 @@ export interface AppState {
   booksById: BooksById;
   genresWithStats: GenreWithStatsByName;
   featuredBooksIds: string[];
-  booksIdsByGenre: PaginatedBooksIdsList;
-  booksIdsByAuthor: PaginatedBooksIdsList;
+  booksIdsByGenre: PaginatedBooksIdsListByCriteria;
+  booksIdsByAuthor: PaginatedBooksIdsListByCriteria;
   booksAssetsSize: BooksAssetsSizeById;
 }
 

@@ -24,12 +24,24 @@ export function fetchBookWithGenreStats(bookId: string): Action {
   return { type: Actions.FETCH_BOOK_WITH_GENRE_STATS, payload: fetchBookPromise };
 }
 
-export function fetchBooksForGenre(genre: string, pagination: PaginationRequestData): Action {
-  const fetchBooksPromise = container.booksRepository.getBooksByGenre(genre, pagination);
-  return { type: Actions.FETCH_BOOKS_FOR_GENRE, payload: fetchBooksPromise, meta: { genre } };
+export function fetchBooksForGenre(
+  genre: string,
+  lang: string,
+  pagination: PaginationRequestData
+): Action {
+  const fetchBooksPromise = container.booksRepository.getBooksByGenre(genre, lang, pagination);
+  return { type: Actions.FETCH_BOOKS_FOR_GENRE, payload: fetchBooksPromise, meta: { genre, lang } };
 }
 
-export function fetchBooksForAuthor(authorId: string, pagination: PaginationRequestData): Action {
-  const fetchBooksPromise = container.booksRepository.getBooksByAuthor(authorId, pagination);
-  return { type: Actions.FETCH_BOOKS_FOR_AUTHOR, payload: fetchBooksPromise, meta: { authorId } };
+export function fetchBooksForAuthor(
+  authorId: string,
+  lang: string,
+  pagination: PaginationRequestData
+): Action {
+  const fetchBooksPromise = container.booksRepository.getBooksByAuthor(authorId, lang, pagination);
+  return {
+    type: Actions.FETCH_BOOKS_FOR_AUTHOR,
+    payload: fetchBooksPromise,
+    meta: { authorId, lang },
+  };
 }

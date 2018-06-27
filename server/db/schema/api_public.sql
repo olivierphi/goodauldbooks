@@ -126,7 +126,7 @@ $function_search_book$;
 -- `curl -sS localhost:8085/rpc/quick_autocompletion?pattern=frank | jq`
 create or replace function api_public.quick_autocompletion(
   pattern text,
-  lang text = 'all'
+  lang varchar(3) = 'all'
 ) returns setof api_public.quick_autocompletion_result
 language sql
 stable
@@ -335,6 +335,7 @@ $function_get_book_intro$;
 -- `curl -sS localhost:8085/rpc/get_books_by_genre?genre=Vampires%20--%20Fiction | jq`
 create or replace function api_public.get_books_by_genre(
   genre varchar,
+  lang varchar(3) = 'all',
   page integer = 1,
   nb_per_page integer = 10
 ) returns api_public.books_by_genre_with_pagination
@@ -356,7 +357,11 @@ as $function_get_books_by_genre$
     from
       library_view.book_with_related_data
     where
-      genres && array[genre]
+      genres && array[genre] and
+      case
+        when $2 = 'all' then true
+        else lang = $2
+      end
   ),
   results as (
     select
@@ -377,7 +382,11 @@ as $function_get_books_by_genre$
     from
       library_view.book_with_related_data
     where
-      genres && array[genre]
+      genres && array[genre] and
+      case
+        when $2 = 'all' then true
+        else lang = $2
+      end
     order by
       title asc, subtitle asc
     limit
@@ -401,6 +410,7 @@ $function_get_books_by_genre$;
 -- `curl -sS localhost:8085/rpc/get_books_by_author?author_id=g61 | jq`
 create or replace function api_public.get_books_by_author(
   author_id varchar,
+  lang varchar(3) = 'all',
   page integer = 1,
   nb_per_page integer = 10
 ) returns api_public.books_by_author_with_pagination
@@ -422,7 +432,11 @@ with
     from
       library_view.book_with_related_data
     where
-      author_id = $1
+      author_id = $1 and
+      case
+        when $2 = 'all' then true
+        else lang = $2
+      end
   ),
   results as (
     select
@@ -443,7 +457,11 @@ with
     from
       library_view.book_with_related_data
     where
-      author_id = $1
+      author_id = $1 and
+      case
+        when $2 = 'all' then true
+        else lang = $2
+      end
     order by
       title asc, subtitle asc
      limit

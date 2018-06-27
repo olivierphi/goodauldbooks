@@ -1,19 +1,19 @@
-import { PaginatedBooksIdsList } from "../domain/core";
+import { BookId, PaginatedBooksIdsListByCriteria } from "../domain/core";
 import { PaginationRequestData, PaginationResponseData } from "../domain/queries";
 
 export function getPaginatedBooksIdsResultsFromCache(
-  appStateList: PaginatedBooksIdsList,
+  appStateList: PaginatedBooksIdsListByCriteria,
   criteriaName: string,
   pagination: PaginationRequestData
 ): string[] | null {
-  if (!appStateList.results[criteriaName]) {
+  if (!appStateList[criteriaName]) {
     return null;
   }
   const [offset, limit] = [(pagination.page - 1) * pagination.nbPerPage, pagination.nbPerPage];
-  const upperLimit = Math.min(offset + limit, appStateList.nbResultsTotal);
+  const upperLimit = Math.min(offset + limit, appStateList[criteriaName].nbResultsTotal);
   const results: string[] = [];
   for (let i = offset; i < upperLimit; i++) {
-    const bookId = appStateList.results[criteriaName][i];
+    const bookId: BookId = appStateList[criteriaName].results[i];
     if (!bookId) {
       return null;
     }
