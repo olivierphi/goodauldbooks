@@ -36,15 +36,17 @@ const getSortedGenresWithStats = (
     bookGenres,
     genresWithStatsByName
   );
-  genresWithStats.sort((genreA: GenreWithStats, genreB: GenreWithStats): number => {
-    if (genreA.nbBooks > genreB.nbBooks) {
-      return -1;
+  genresWithStats.sort(
+    (genreA: GenreWithStats, genreB: GenreWithStats): number => {
+      if (genreA.nbBooks > genreB.nbBooks) {
+        return -1;
+      }
+      if (genreA.nbBooks < genreB.nbBooks) {
+        return 1;
+      }
+      return 0;
     }
-    if (genreA.nbBooks < genreB.nbBooks) {
-      return 1;
-    }
-    return 0;
-  });
+  );
 
   return genresWithStats;
 };
@@ -79,4 +81,7 @@ const BookFullHOC = (props: BookFullHOCProps) => {
   return <BookFullComponent book={bookFull} genresWithStats={genresWithStats} />;
 };
 
-export const BookFullContainer = connect(mapStateToProps, mapDispatchToProps)(BookFullHOC);
+export const BookFullContainer = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(BookFullHOC);

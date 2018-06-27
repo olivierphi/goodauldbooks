@@ -5,6 +5,7 @@ import { QuickSearchResult } from "../domain/queries";
 import { getAuthorPageUrl, getBookPageUrl } from "../utils/routing-utils";
 
 interface AutocompleteSearchProps {
+  currentLang: string;
   searchFunction: (input: string) => Promise<AsyncOptionsResult>;
 }
 
@@ -53,7 +54,14 @@ export class AutocompleteSearch extends React.Component<
     }
 
     {
-      /* TODO: i18n :-) */
+      /**
+       * N.B.: Because this <select> input is not the only cache key we must consider for results
+       * (the same input can have different results, depending on the current selected language),
+       * we have to disable the internal cache of the Async select, and implement it ourself in the Books repository
+       * if we want caching.
+       *
+       * TODO: i18n :-)
+       */
     }
     return (
       <Async
@@ -68,6 +76,7 @@ export class AutocompleteSearch extends React.Component<
         filterOptions={AutocompleteSearch.noOpFilterFunction}
         optionComponent={AutocompleteOption}
         onChange={this.handleChange}
+        cache={false}
       />
     );
   }

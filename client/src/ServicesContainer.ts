@@ -1,8 +1,9 @@
 import { i18n as i18next } from "i18next";
 import { Store } from "redux";
 import { initI18n } from "./boot/i18n-init";
-import { BooksRepository } from "./domain/queries";
+import { BooksLanguagesRepository, BooksRepository } from "./domain/queries";
 import { BooksHttpRepository } from "./repositories/BooksHttpRepository";
+import { BooksLanguagesGeneratedJsonRepository } from "./repositories/BooksLanguagesGeneratedJsonRepository";
 import { BooksWithAppStateCacheRepository } from "./repositories/BooksWithAppStateCacheRepository";
 import { AppState } from "./store";
 import { initStore } from "./store-init";
@@ -11,6 +12,7 @@ enum SharedServicesIds {
   APP_STATE_STORE,
   BOOKS_HTTP_REPOSITORY,
   BOOKS_APP_STATE_CACHE_REPOSITORY,
+  BOOKS_LANGS_JSON_REPOSITORY,
   I18N,
 }
 
@@ -56,6 +58,14 @@ export class ServicesContainer {
       );
 
       return booksHttpRepository;
+    });
+  }
+
+  get booksLangsRepository(): BooksLanguagesRepository {
+    return sharedService(SharedServicesIds.BOOKS_LANGS_JSON_REPOSITORY, () => {
+      const booksLangsGenereatedJsonRepository = new BooksLanguagesGeneratedJsonRepository();
+
+      return booksLangsGenereatedJsonRepository;
     });
   }
 

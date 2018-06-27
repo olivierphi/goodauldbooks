@@ -64,4 +64,7 @@ const BooksListHOC = (props: BooksByGenreContainerProps & BooksListHOCProps) => 
   );
 };
 
-export const BooksByGenreContainer = connect(mapStateToProps, mapDispatchToProps)(BooksListHOC);
+export const BooksByGenreContainer = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(BooksListHOC);

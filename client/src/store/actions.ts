@@ -3,10 +3,15 @@ import { container } from "../ServicesContainer";
 import { Action } from "./index";
 
 export enum Actions {
+  SET_LANG = "SET_LANG",
   FETCH_FEATURED_BOOKS = "FETCH_FEATURED_BOOKS",
   FETCH_BOOK_WITH_GENRE_STATS = "FETCH_BOOK_WITH_GENRE_STATS",
   FETCH_BOOKS_FOR_GENRE = "FETCH_BOOKS_FOR_GENRE",
   FETCH_BOOKS_FOR_AUTHOR = "FETCH_BOOKS_FOR_AUTHOR",
+}
+
+export function setLang(lang: string): Action {
+  return { type: Actions.SET_LANG, payload: { lang } };
 }
 
 export function fetchFeaturedBooks(): Action {

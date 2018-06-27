@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { AutocompleteSearchContainer } from "../../hoc/AutocompleteSearchContainer";
+import { BooksLangsSelectorContainer } from "../../hoc/Misc/BooksLangsSelectorContainer";
 
 export function Banner() {
   return (
@@ -12,6 +13,7 @@ export function Banner() {
       <div className="search-container">
         <AutocompleteSearchContainer />
       </div>
+      <BooksLangsSelectorContainer />
     </section>
   );
 }

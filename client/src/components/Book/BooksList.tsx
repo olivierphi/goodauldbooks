@@ -25,7 +25,7 @@ export class BooksList extends React.Component<BooksListProps, BooksListState> {
     if (this.state.goToPage) {
       return (
         <Redirect
-          push
+          push={true}
           to={{
             pathname: this.props.baseUrlWithoutPagination,
             search: `?page=${this.state.goToPage}`,

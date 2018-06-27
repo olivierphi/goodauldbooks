@@ -1,7 +1,7 @@
 GUTENBERG_GENERATED_COLLECTION_PATH?=~/gutenberg-mirror/generated-collection
-PSQL?=docker-compose run --rm --no-deps db-cli -v ON_ERROR_STOP=1
+PSQL?=docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) db-cli -v ON_ERROR_STOP=1
 # @link http://petereisentraut.blogspot.co.uk/2010/03/running-sql-scripts-with-psql.html
-PSQL_QUIET?=docker-compose run --rm --no-deps -e PGOPTIONS='--client-min-messages=warning' db-cli -v ON_ERROR_STOP=1
+PSQL_QUIET?=docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) -e PGOPTIONS='--client-min-messages=warning' db-cli -v ON_ERROR_STOP=1
 
 .phony: reset_db_and_import_gutenberg_books import_gutenberg_books build_api_admin dump_data_to_import_db start_dev_api_admin psql
 .phony: db_update_schema start_api_public pg_dump_raw_gutenberg_data pg_restore_raw_gutenberg_data
@@ -78,6 +78,15 @@ pg_dump_raw_gutenberg_data:
 pg_restore_raw_gutenberg_data:
 	${PSQL} --no-psqlrc -q -b \
 		-f /host/gutenberg_raw_data.sql
+
+export_books_langs:
+	${PSQL} --no-psqlrc \
+		-f /host/db/scripts/books-langs.sql \
+		| jq '.' --monochrome-output \
+		> ../client/generated/data/books-langs.json
+	echo "export const json = $$(cat ../client/generated/data/books-langs.json);" > ../client/generated/data/books-langs.json.ts
+	rm ../client/generated/data/books-langs.json
+	@echo "Books languages exported to '\033[36mclient/generated/data/books-langs.json.ts\033[0m'."
 
 .psql-history:
 	touch .psql-history && chmod 777 .psql-history

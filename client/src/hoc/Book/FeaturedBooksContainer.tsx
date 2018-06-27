@@ -41,4 +41,7 @@ const BooksListHOC = (props: BooksListHOCProps) => {
   return <BooksList books={booksToDisplay} />;
 };
 
-export const FeaturedBooksContainer = connect(mapStateToProps, mapDispatchToProps)(BooksListHOC);
+export const FeaturedBooksContainer = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(BooksListHOC);

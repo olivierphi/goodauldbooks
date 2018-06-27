@@ -10,6 +10,9 @@ import {
 import { PaginatedBooksList } from "../domain/queries";
 import { Actions } from "./actions";
 
+interface SetLangAction extends Action {
+  payload: { lang: string };
+}
 interface BooksFetchedAction extends Action {
   payload: BooksById;
 }
@@ -32,6 +35,17 @@ interface BooksByGenreFetchedActionMeta {
 
 interface BooksByAuthorFetchedActionMeta {
   authorId: string;
+}
+
+export function lang(state: string = "all", action: Action): string {
+  let actionRef;
+  switch (action.type) {
+    case `${Actions.SET_LANG}`:
+      actionRef = action as SetLangAction;
+      return actionRef.payload.lang;
+    default:
+      return state;
+  }
 }
 
 export function booksById(state: BooksById = {}, action: Action): BooksById {

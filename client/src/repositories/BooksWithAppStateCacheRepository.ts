@@ -103,7 +103,8 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
     return this.underlyingRepository.getFeaturedBooks();
   }
 
-  public quickSearch(pattern: string): Promise<QuickSearchResult[]> {
-    return this.underlyingRepository.quickSearch(pattern);
+  public quickSearch(pattern: string, lang: string): Promise<QuickSearchResult[]> {
+    // TODO: cache queries into a private cache?
+    return this.underlyingRepository.quickSearch(pattern, lang);
   }
 }

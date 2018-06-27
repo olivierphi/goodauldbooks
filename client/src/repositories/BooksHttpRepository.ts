@@ -9,6 +9,8 @@ import {
 } from "../domain/queries";
 import * as ServerResponse from "./server-responses";
 
+const quickSearchResultsCache: { [cacheKey: string]: QuickSearchResult[] } = {};
+
 /**
  * This module gets a bit messy, we'll probably refactor it at some point :-)
  */
@@ -34,12 +36,19 @@ export class BooksHttpRepository implements BooksRepository {
     return Promise.resolve(bookWithGenreStats);
   }
 
-  public async quickSearch(pattern: string): Promise<QuickSearchResult[]> {
+  public async quickSearch(pattern: string, lang: string): Promise<QuickSearchResult[]> {
+    const cacheKey: string = `${pattern}|${lang}`;
+    const cacheForThisPatternAndLang = quickSearchResultsCache[cacheKey];
+    if (cacheForThisPatternAndLang) {
+      return Promise.resolve(cacheForThisPatternAndLang);
+    }
+
     const response = await axios.get("/rpc/quick_autocompletion", {
-      params: { pattern },
+      params: { pattern, lang },
     });
 
     const matchingBooks = response.data.map(mapQuickAutocompletionDataFromServer);
+    quickSearchResultsCache[cacheKey] = matchingBooks;
 
     return Promise.resolve(matchingBooks);
   }
