@@ -1,10 +1,11 @@
 import * as React from "react";
-import { Redirect } from "react-router";
+import { Redirect } from "react-router-dom";
 import { Async, Option, OptionComponentProps, Options } from "react-select";
 import { QuickSearchResult } from "../domain/queries";
 import { getAuthorPageUrl, getBookPageUrl } from "../utils/routing-utils";
 
 interface AutocompleteSearchProps {
+  currentLang: string;
   searchFunction: (input: string) => Promise<AsyncOptionsResult>;
 }
 
@@ -40,35 +41,45 @@ export class AutocompleteSearch extends React.Component<
       const author = selectedResult.author;
 
       if (selectedResult.book) {
-        this.setState(AutocompleteSearch.emptyState);
+        setTimeout(this.setState.bind(this, AutocompleteSearch.emptyState), 0);
         const book = selectedResult.book;
         const bookUrl = getBookPageUrl(book.lang, author.slug, book.slug, book.id);
         return <Redirect to={bookUrl} push={true} />;
       }
       if (author) {
-        this.setState(AutocompleteSearch.emptyState);
+        setTimeout(this.setState.bind(this, AutocompleteSearch.emptyState), 0);
         const authorUrl = getAuthorPageUrl(author.slug, author.id);
         return <Redirect to={authorUrl} push={true} />;
       }
     }
 
     {
-      /* TODO: i18n :-) */
+      /**
+       * N.B.: Because this <select> input is not the only cache key we must consider for results
+       * (the same input can have different results, depending on the current selected language),
+       * we have to disable the internal cache of the Async select, and implement it ourself in the Books repository
+       * if we want caching.
+       *
+       * TODO: i18n :-)
+       */
     }
     return (
-      <Async
-        name="form-field-name"
-        placeholder="A book title or author name - i.e. 'Dracula', 'Mary Shelley'..."
-        autoload={false}
-        multi={false}
-        autoFocus={true}
-        value=""
-        onSelectResetsInput={false}
-        loadOptions={this.props.searchFunction}
-        filterOptions={AutocompleteSearch.noOpFilterFunction}
-        optionComponent={AutocompleteOption}
-        onChange={this.handleChange}
-      />
+      <div className="autocomplete-search-container">
+        <Async
+          name="form-field-name"
+          placeholder="A book title or author name - i.e. 'Dracula', 'Mary Shelley'..."
+          autoload={false}
+          multi={false}
+          autoFocus={true}
+          value=""
+          onSelectResetsInput={false}
+          loadOptions={this.props.searchFunction}
+          filterOptions={AutocompleteSearch.noOpFilterFunction}
+          optionComponent={AutocompleteOption}
+          onChange={this.handleChange}
+          cache={false}
+        />
+      </div>
     );
   }
 

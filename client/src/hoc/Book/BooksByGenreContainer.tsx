@@ -2,7 +2,11 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Action } from "redux";
 import { BooksList } from "../../components/Book/BooksList";
-import { BooksById, PaginatedBooksIdsList } from "../../domain/core";
+import {
+  BooksById,
+  PaginatedBooksIdsList,
+  PaginatedBooksIdsListByCriteria,
+} from "../../domain/core";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
 import { AppState } from "../../store";
 import { fetchBooksForGenre } from "../../store/actions";
@@ -17,6 +21,7 @@ interface BooksByGenreContainerProps {
 
 const mapStateToProps = (state: AppState, ownProps: BooksByGenreContainerProps) => {
   return {
+    currentBooksLang: state.currentBooksLang,
     allBooks: state.booksById,
     booksIdsByGenre: state.booksIdsByGenre,
     genre: ownProps.genre,
@@ -26,32 +31,34 @@ const mapStateToProps = (state: AppState, ownProps: BooksByGenreContainerProps) 
 
 const mapDispatchToProps = (dispatch: (action: Action) => void) => {
   return {
-    fetchBooksForGenre: (genre: string, pagination: PaginationRequestData) => {
-      dispatch(fetchBooksForGenre(genre, pagination));
+    fetchBooksForGenre: (genre: string, lang: string, pagination: PaginationRequestData) => {
+      dispatch(fetchBooksForGenre(genre, lang, pagination));
     },
   };
 };
 
 interface BooksListHOCProps {
+  currentBooksLang: string;
   allBooks: BooksById;
-  booksIdsByGenre: PaginatedBooksIdsList;
-  fetchBooksForGenre: (genre: string, pagination: PaginationRequestData) => void;
+  booksIdsByGenre: PaginatedBooksIdsListByCriteria;
+  fetchBooksForGenre: (genre: string, lang: string, pagination: PaginationRequestData) => void;
 }
 
 const BooksListHOC = (props: BooksByGenreContainerProps & BooksListHOCProps) => {
+  const criteriaName = `${props.genre}-${props.currentBooksLang}`;
   const booksIdsByGenre = getPaginatedBooksIdsResultsFromCache(
     props.booksIdsByGenre,
-    props.genre,
+    criteriaName,
     props.pagination
   );
   if (!booksIdsByGenre) {
-    props.fetchBooksForGenre(props.genre, props.pagination);
+    props.fetchBooksForGenre(props.genre, props.currentBooksLang, props.pagination);
     return <div className="loading">Loading books for this genre...</div>;
   }
 
   const booksToDisplay = getBooksByIdsFromState(booksIdsByGenre, props.allBooks);
   const paginationResponseData: PaginationResponseData = {
-    nbResultsTotal: props.booksIdsByGenre.nbResultsTotal,
+    nbResultsTotal: props.booksIdsByGenre[criteriaName].nbResultsTotal,
     ...props.pagination,
   };
 
@@ -64,4 +71,7 @@ const BooksListHOC = (props: BooksByGenreContainerProps & BooksListHOCProps) => 
   );
 };
 
-export const BooksByGenreContainer = connect(mapStateToProps, mapDispatchToProps)(BooksListHOC);
+export const BooksByGenreContainer = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(BooksListHOC);

@@ -9,6 +9,7 @@ import { GenresAsTags } from "./GenresAsTags";
 export interface BookFullProps {
   book: BookFull;
   genresWithStats: GenreWithStats[];
+  currentBooksLang: string;
 }
 
 export function BookFull(props: BookFullProps) {
@@ -28,7 +29,10 @@ export function BookFull(props: BookFullProps) {
           <div className="box-content">
             <h3>{book.title}</h3>
             {book.subtitle ? <h4>{book.subtitle}</h4> : ""}
-            <GenresAsTags genresWithStats={props.genresWithStats} />
+            <GenresAsTags
+              currentBooksLang={props.currentBooksLang}
+              genresWithStats={props.genresWithStats}
+            />
             <Author author={book.author} />
             <EbookDownloadLinks book={book} />
             <BookIntroContainer bookId={book.id} />

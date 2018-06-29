@@ -9,6 +9,8 @@ import {
 } from "../domain/queries";
 import * as ServerResponse from "./server-responses";
 
+const quickSearchResultsCache: { [cacheKey: string]: QuickSearchResult[] } = {};
+
 /**
  * This module gets a bit messy, we'll probably refactor it at some point :-)
  */
@@ -34,23 +36,32 @@ export class BooksHttpRepository implements BooksRepository {
     return Promise.resolve(bookWithGenreStats);
   }
 
-  public async quickSearch(pattern: string): Promise<QuickSearchResult[]> {
+  public async quickSearch(pattern: string, lang: string): Promise<QuickSearchResult[]> {
+    const cacheKey: string = `${pattern}|${lang}`;
+    const cacheForThisPatternAndLang = quickSearchResultsCache[cacheKey];
+    if (cacheForThisPatternAndLang) {
+      return Promise.resolve(cacheForThisPatternAndLang);
+    }
+
     const response = await axios.get("/rpc/quick_autocompletion", {
-      params: { pattern },
+      params: { pattern, lang },
     });
 
     const matchingBooks = response.data.map(mapQuickAutocompletionDataFromServer);
+    quickSearchResultsCache[cacheKey] = matchingBooks;
 
     return Promise.resolve(matchingBooks);
   }
 
   public async getBooksByGenre(
     genre: string,
+    lang: string,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const response = await axios.get("/rpc/get_books_by_genre", {
       params: {
         genre,
+        lang,
         page: pagination.page,
         nb_per_page: pagination.nbPerPage,
       },
@@ -62,7 +73,7 @@ export class BooksHttpRepository implements BooksRepository {
       booksWithPagination.pagination
     );
     const booksForThisGenre = getBooksByIdFromBooksArray(
-      booksWithPagination.books.map(mapBookFromServer)
+      (booksWithPagination.books || []).map(mapBookFromServer)
     );
 
     return Promise.resolve({
@@ -73,11 +84,13 @@ export class BooksHttpRepository implements BooksRepository {
 
   public async getBooksByAuthor(
     authorId: string,
+    lang: string,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const response = await axios.get("/rpc/get_books_by_author", {
       params: {
         author_id: authorId,
+        lang,
         page: pagination.page,
         nb_per_page: pagination.nbPerPage,
       },
@@ -89,7 +102,7 @@ export class BooksHttpRepository implements BooksRepository {
       booksWithPagination.pagination
     );
     const booksForThisGenre = getBooksByIdFromBooksArray(
-      booksWithPagination.books.map(mapBookFromServer)
+      (booksWithPagination.books || []).map(mapBookFromServer)
     );
 
     return Promise.resolve({
