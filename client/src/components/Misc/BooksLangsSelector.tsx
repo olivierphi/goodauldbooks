@@ -3,8 +3,8 @@ import * as React from "react";
 import { Option } from "react-select";
 
 export interface BooksLangsSelectorProps {
-  booksLangs: BookLangData[];
-  currentLang: string;
+  currentBooksLang: string;
+  availableBooksLangs: BookLangData[];
   onLangChange: (lang: string) => void;
 }
 
@@ -15,9 +15,13 @@ export function BooksLangsSelector(props: BooksLangsSelectorProps) {
 
   return (
     <div className="books-langs-selector-container select">
-      <select className="books-langs-selector" onChange={onLangChange} value={props.currentLang}>
+      <select
+        className="books-langs-selector"
+        onChange={onLangChange}
+        value={props.currentBooksLang}
+      >
         <option value="all">All languages</option>
-        {props.booksLangs.map((bookLang: BookLangData) => {
+        {props.availableBooksLangs.map((bookLang: BookLangData) => {
           return (
             <option key={bookLang.lang} value={bookLang.lang}>
               {bookLang.lang} - {bookLang.nbBooks} books

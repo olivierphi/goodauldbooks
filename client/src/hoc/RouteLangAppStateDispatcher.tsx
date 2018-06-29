@@ -7,7 +7,7 @@ import { setCurrentBooksLang } from "../store/actions";
 
 const mapStateToProps = (state: AppState, ownProps: { currentBooksLang: string }) => {
   return {
-    currentBooksLangInState: state.currentBooksLang,
+    currentBooksLangInState: state.booksLang,
   };
 };
 

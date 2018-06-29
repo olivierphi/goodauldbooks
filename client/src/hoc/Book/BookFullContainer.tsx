@@ -1,94 +1,115 @@
 import * as React from "react";
-import { connect } from "react-redux";
-import { Action } from "redux";
+import { dispatcher } from "../../ActionsDispatcher";
 import { BookFull as BookFullComponent } from "../../components/Book/BookFull";
-import { Book, BookFull, GenreWithStats, GenreWithStatsByName } from "../../domain/core";
-import { fetchBookWithGenreStats } from "../../store/actions";
-import { AppState } from "../../store/index";
+import { BooksLangContext } from "../../contexts/books-lang";
+import { BookFull, GenreWithStats, GenreWithStatsByName } from "../../domain/core";
+import { EVENTS } from "../../domain/messages";
+import { container } from "../../ServicesContainer";
 import {
   appStateHasGenresWithStats,
   getFullBookDataFromState,
   getGenresWithStatsFromState,
 } from "../../utils/app-state-utils";
 
-const mapStateToProps = (props: AppState, ownProps: { bookId: string }) => {
-  const book: Book | null = props.booksById[ownProps.bookId];
-  return {
-    appState: props,
-    bookId: ownProps.bookId,
-    book,
-  };
-};
-
-const mapDispatchToProps = (dispatch: (action: Action) => void) => {
-  return {
-    fetchBookWithGenreStats: (bookId: string) => {
-      dispatch(fetchBookWithGenreStats(bookId));
-    },
-  };
-};
-
-const getSortedGenresWithStats = (
-  bookGenres: string[],
-  genresWithStatsByName: GenreWithStatsByName
-): GenreWithStats[] => {
-  const genresWithStats: GenreWithStats[] = getGenresWithStatsFromState(
-    bookGenres,
-    genresWithStatsByName
-  );
-  genresWithStats.sort(
-    (genreA: GenreWithStats, genreB: GenreWithStats): number => {
-      if (genreA.nbBooks > genreB.nbBooks) {
-        return -1;
-      }
-      if (genreA.nbBooks < genreB.nbBooks) {
-        return 1;
-      }
-      return 0;
-    }
-  );
-
-  return genresWithStats;
-};
-
-interface BookFullHOCProps {
-  appState: AppState;
+interface BookFullContainerProps {
   bookId: string;
-  book?: Book;
-  fetchBookWithGenreStats: (bookId: string) => void;
 }
 
-const BookFullHOC = (props: BookFullHOCProps) => {
-  if (!props.book || !props.appState.booksAssetsSize[props.bookId]) {
-    props.fetchBookWithGenreStats(props.bookId);
-    return <div className="loading">Loading full book...</div>;
+interface BookFullContainerState {
+  bookFull: BookFull | null;
+}
+
+export class BookFullContainer extends React.Component<
+  BookFullContainerProps,
+  BookFullContainerState
+> {
+  constructor(props: BookFullContainerProps) {
+    super(props);
+    console.log("new BookFullContainer()");
+    this.onBookDataFetched = this.onBookDataFetched.bind(this);
+    // this.state = this.getUpdatedState();
   }
-  if (!appStateHasGenresWithStats(props.book.genres, props.appState.genresWithStats)) {
-    props.fetchBookWithGenreStats(props.bookId);
-    return <div className="loading">Loading book genre stats...</div>;
+
+  public render() {
+    console.log("BookFullContainer::render()");
+    if (!this.state || !this.state.bookFull) {
+      container.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      dispatcher.fetchBookWithGenreStats(this.props.bookId);
+      return <div className="loading">Loading full book...</div>;
+    }
+
+    const bookFull: BookFull = this.state.bookFull;
+    const appState = container.appStateStore.getState();
+
+    const genresWithStats = this.getSortedGenresWithStats(
+      bookFull.genres,
+      appState.genresWithStats
+    );
+
+    return (
+      <BooksLangContext.Consumer>
+        {(currentBooksLang: string) => (
+          <BookFullComponent
+            book={bookFull}
+            genresWithStats={genresWithStats}
+            currentBooksLang={currentBooksLang}
+          />
+        )}
+      </BooksLangContext.Consumer>
+    );
   }
 
-  const currentBooksLang = props.appState.currentBooksLang;
-  const genresWithStats = getSortedGenresWithStats(
-    props.book.genres,
-    props.appState.genresWithStats
-  );
-  const bookFull: BookFull = getFullBookDataFromState(
-    props.bookId,
-    props.appState.booksById,
-    props.appState.booksAssetsSize
-  );
+  private onBookDataFetched(): void {
+    const newState = this.getUpdatedState();
+    if (newState.bookFull) {
+      container.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      this.setState(newState);
+    }
+  }
 
-  return (
-    <BookFullComponent
-      book={bookFull}
-      genresWithStats={genresWithStats}
-      currentBooksLang={currentBooksLang}
-    />
-  );
-};
+  private getUpdatedState(): BookFullContainerState {
+    const appState = container.appStateStore.getState();
+    const book = appState.booksById[this.props.bookId];
 
-export const BookFullContainer = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(BookFullHOC);
+    if (!book || !appState.booksAssetsSize[this.props.bookId]) {
+      return { bookFull: null };
+    }
+    if (!appStateHasGenresWithStats(book.genres, appState.genresWithStats)) {
+      return { bookFull: null };
+    }
+
+    const bookFull: BookFull = getFullBookDataFromState(
+      this.props.bookId,
+      appState.booksById,
+      appState.booksAssetsSize
+    );
+
+    return {
+      bookFull,
+    };
+  }
+
+  private getSortedGenresWithStats(
+    bookGenres: string[],
+    genresWithStatsByName: GenreWithStatsByName
+  ): GenreWithStats[] {
+    const genresWithStats: GenreWithStats[] = getGenresWithStatsFromState(
+      bookGenres,
+      genresWithStatsByName
+    );
+
+    genresWithStats.sort(
+      (genreA: GenreWithStats, genreB: GenreWithStats): number => {
+        if (genreA.nbBooks > genreB.nbBooks) {
+          return -1;
+        }
+        if (genreA.nbBooks < genreB.nbBooks) {
+          return 1;
+        }
+        return 0;
+      }
+    );
+
+    return genresWithStats;
+  }
+}

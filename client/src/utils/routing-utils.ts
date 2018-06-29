@@ -11,7 +11,7 @@ export function getBookPageUrl(
   bookId: string
 ) {
   return `/library/${
-    appStateStore.getState().currentBooksLang
+    appStateStore.getState().booksLang
   }/book/${bookLang}/${authorSlug}/${bookSlug}/${bookId}`;
 }
 
@@ -20,13 +20,13 @@ export function getAuthorPageUrl(
   authorId: string,
   pageNumber: null | number = null
 ) {
-  return `/library/${appStateStore.getState().currentBooksLang}/author/${authorSlug}/${authorId}${
+  return `/library/${appStateStore.getState().booksLang}/author/${authorSlug}/${authorId}${
     pageNumber ? `&page=${pageNumber}` : ""
   }`;
 }
 
 export function getGenrePageUrl(genre: string, pageNumber: null | number = null) {
-  return `/library/${appStateStore.getState().currentBooksLang}/genre/${genre}${
+  return `/library/${appStateStore.getState().booksLang}/genre/${genre}${
     pageNumber ? `&page=${pageNumber}` : ""
   }`;
 }

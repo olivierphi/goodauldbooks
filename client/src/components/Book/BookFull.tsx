@@ -27,7 +27,9 @@ export function BookFull(props: BookFullProps) {
       <div className="column is-three-quarters">
         <div className="box book-data">
           <div className="box-content">
-            <h3>{book.title}</h3>
+            <h3>
+              {book.title} - {props.currentBooksLang}
+            </h3>
             {book.subtitle ? <h4>{book.subtitle}</h4> : ""}
             <GenresAsTags
               currentBooksLang={props.currentBooksLang}

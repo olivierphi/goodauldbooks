@@ -1,60 +1,27 @@
 import * as React from "react";
-import { connect } from "react-redux";
-import { Redirect } from "react-router-dom";
 import { BooksLangsSelector } from "../../components/Misc/BooksLangsSelector";
+import { BooksLangContext } from "../../contexts/books-lang";
+import { ACTIONS } from "../../domain/messages";
 import { container } from "../../ServicesContainer";
-import { AppState } from "../../store";
 
-const booksLangsRepository = container.booksLangsRepository;
+export function BooksLangsSelectorContainer() {
+  const booksLangsRepository = container.booksLangsRepository;
+  const messageBus = container.messageBus;
 
-const mapStateToProps = (state: AppState) => {
-  return {
-    currentLang: state.currentBooksLang,
+  const onLangChange = (lang: string) => {
+    const newUrl = location.pathname.replace(/^\/library\/[a-z]{2,3}\//, `/library/${lang}/`);
+    messageBus.emit(ACTIONS.PUSH_URL, newUrl);
   };
-};
 
-interface BooksLangsSelectorContainerHOCProps {
-  currentLang: string;
+  return (
+    <BooksLangContext.Consumer>
+      {(lang: string) => (
+        <BooksLangsSelector
+          currentBooksLang={lang}
+          availableBooksLangs={booksLangsRepository.getAllLangs()}
+          onLangChange={onLangChange}
+        />
+      )}
+    </BooksLangContext.Consumer>
+  );
 }
-
-interface BooksLangsSelectorContainerHOCState {
-  newLang: string | null;
-}
-
-export class BooksLangsSelectorContainerHOC extends React.Component<
-  BooksLangsSelectorContainerHOCProps,
-  BooksLangsSelectorContainerHOCState
-> {
-  constructor(props: BooksLangsSelectorContainerHOCProps) {
-    super(props);
-    this.state = { newLang: null };
-    this.onLangChange = this.onLangChange.bind(this);
-  }
-
-  public render() {
-    if (this.state.newLang && this.state.newLang !== this.props.currentLang) {
-      const newUrl = location.pathname.replace(
-        /^\/library\/[a-z]{2,3}\//,
-        `/library/${this.state.newLang}/`
-      );
-      return <Redirect to={newUrl} push={true} />;
-    }
-
-    return (
-      <BooksLangsSelector
-        currentLang={this.props.currentLang}
-        booksLangs={booksLangsRepository.getAllLangs()}
-        onLangChange={this.onLangChange}
-      />
-    );
-  }
-
-  private onLangChange = (lang: string) => {
-    if (this.props.currentLang === lang) {
-      return;
-    }
-    this.setState({ newLang: lang });
-  }
-}
-
-export const BooksLangsSelectorContainer = connect(mapStateToProps)(BooksLangsSelectorContainerHOC);

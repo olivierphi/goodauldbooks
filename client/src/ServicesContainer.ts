@@ -1,3 +1,5 @@
+import * as EventEmitter from "eventemitter3";
+import { createBrowserHistory, History } from "history";
 import { i18n as i18next } from "i18next";
 import { Store } from "redux";
 import { initI18n } from "./boot/i18n-init";
@@ -8,12 +10,24 @@ import { BooksWithAppStateCacheRepository } from "./repositories/BooksWithAppSta
 import { AppState } from "./store";
 import { initStore } from "./store-init";
 
+export interface ServicesContainer {
+  appStateStore: Store<AppState>;
+  booksRepository: BooksRepository;
+  booksLangsRepository: BooksLanguagesRepository;
+  i18n: i18next;
+  messageBus: EventEmitter;
+  history: History;
+  boot(): Promise<boolean>;
+}
+
 enum SharedServicesIds {
   APP_STATE_STORE,
   BOOKS_HTTP_REPOSITORY,
   BOOKS_APP_STATE_CACHE_REPOSITORY,
   BOOKS_LANGS_JSON_REPOSITORY,
   I18N,
+  MESSAGE_BUS,
+  HISTORY,
 }
 
 type SharedServicesRegistry = Map<SharedServicesIds, any>;
@@ -28,7 +42,7 @@ function sharedService(serviceId: SharedServicesIds, serviceFactory: () => any) 
   return serviceSharedInstance;
 }
 
-export class ServicesContainer {
+class ServicesContainerImpl implements ServicesContainer {
   private booted: boolean = false;
 
   public async boot(): Promise<boolean> {
@@ -76,6 +90,22 @@ export class ServicesContainer {
     return sharedServicesRegistry.get(SharedServicesIds.I18N);
   }
 
+  get messageBus(): EventEmitter {
+    return sharedService(SharedServicesIds.MESSAGE_BUS, () => {
+      const eventEmitter = new EventEmitter();
+
+      return eventEmitter;
+    });
+  }
+
+  get history(): History {
+    return sharedService(SharedServicesIds.HISTORY, () => {
+      const history = createBrowserHistory();
+
+      return history;
+    });
+  }
+
   private get booksHttpRepository(): BooksRepository {
     return sharedService(SharedServicesIds.BOOKS_HTTP_REPOSITORY, () => {
       const booksHttpRepository = new BooksHttpRepository();
@@ -97,4 +127,4 @@ export class ServicesContainer {
   }
 }
 
-export const container = new ServicesContainer();
+export const container: ServicesContainer = new ServicesContainerImpl();

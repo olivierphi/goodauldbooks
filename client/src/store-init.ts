@@ -1,6 +1,7 @@
 import { Store } from "react-redux";
-import { applyMiddleware, combineReducers, compose, createStore } from "redux";
+import { applyMiddleware, combineReducers, compose, createStore, Middleware } from "redux";
 import promiseMiddleware from "redux-promise-middleware";
+import * as appMiddlewares from "./redux/middlewares";
 import { AppState } from "./store";
 import * as reducers from "./store/reducers";
 
@@ -13,9 +14,13 @@ export function initStore(): Store<AppState> {
       ? windowRef.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
       : compose;
 
+  const middlewares: Middleware[] = [
+    promiseMiddleware(),
+    appMiddlewares.StoreActionsToMessageBusEvents,
+  ];
   const store = createStore(
     booksApp,
-    composeEnhancers(applyMiddleware(promiseMiddleware()))
+    composeEnhancers(applyMiddleware.apply(null, middlewares))
   ) as Store<AppState>;
 
   return store;

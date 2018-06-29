@@ -21,7 +21,7 @@ interface BooksByGenreContainerProps {
 
 const mapStateToProps = (state: AppState, ownProps: BooksByGenreContainerProps) => {
   return {
-    currentBooksLang: state.currentBooksLang,
+    currentBooksLang: state.booksLang,
     allBooks: state.booksById,
     booksIdsByGenre: state.booksIdsByGenre,
     genre: ownProps.genre,

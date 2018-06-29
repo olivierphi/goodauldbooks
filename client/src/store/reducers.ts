@@ -39,7 +39,7 @@ interface BooksByAuthorFetchedActionMeta {
   lang: string;
 }
 
-export function currentBooksLang(state: string = "all", action: Action): string {
+export function booksLang(state: string = "all", action: Action): string {
   let actionRef;
   switch (action.type) {
     case `${Actions.SET_CURRENT_BOOKS_LANG}`:
