@@ -12,8 +12,8 @@ export function Banner() {
       <p>Find a book amongst a collection of 60.000 by using the search field below</p>
       <div className="search-container">
         <AutocompleteSearchContainer />
+        <BooksLangsSelectorContainer />
       </div>
-      <BooksLangsSelectorContainer />
     </section>
   );
 }

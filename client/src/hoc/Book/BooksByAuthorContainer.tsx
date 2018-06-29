@@ -17,7 +17,7 @@ interface BooksByAuthorContainerProps {
 
 const mapStateToProps = (state: AppState, ownProps: BooksByAuthorContainerProps) => {
   return {
-    currentBooksLang: state.lang,
+    currentBooksLang: state.currentBooksLang,
     allBooks: state.booksById,
     booksIdsByAuthor: state.booksIdsByAuthor,
     authorId: ownProps.authorId,

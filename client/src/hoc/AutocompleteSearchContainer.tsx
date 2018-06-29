@@ -10,7 +10,7 @@ const booksRepository = container.booksRepository;
 
 const mapStateToProps = (state: AppState) => {
   return {
-    currentLang: state.lang,
+    currentLang: state.currentBooksLang,
   };
 };
 

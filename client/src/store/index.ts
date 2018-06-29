@@ -6,7 +6,7 @@ import {
 } from "../domain/core";
 
 export interface AppState {
-  lang: string;
+  currentBooksLang: string;
   booksById: BooksById;
   genresWithStats: GenreWithStatsByName;
   featuredBooksIds: string[];

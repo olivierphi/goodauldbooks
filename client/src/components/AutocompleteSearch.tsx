@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Redirect } from "react-router";
+import { Redirect } from "react-router-dom";
 import { Async, Option, OptionComponentProps, Options } from "react-select";
 import { QuickSearchResult } from "../domain/queries";
 import { getAuthorPageUrl, getBookPageUrl } from "../utils/routing-utils";
@@ -64,20 +64,22 @@ export class AutocompleteSearch extends React.Component<
        */
     }
     return (
-      <Async
-        name="form-field-name"
-        placeholder="A book title or author name - i.e. 'Dracula', 'Mary Shelley'..."
-        autoload={false}
-        multi={false}
-        autoFocus={true}
-        value=""
-        onSelectResetsInput={false}
-        loadOptions={this.props.searchFunction}
-        filterOptions={AutocompleteSearch.noOpFilterFunction}
-        optionComponent={AutocompleteOption}
-        onChange={this.handleChange}
-        cache={false}
-      />
+      <div className="autocomplete-search-container">
+        <Async
+          name="form-field-name"
+          placeholder="A book title or author name - i.e. 'Dracula', 'Mary Shelley'..."
+          autoload={false}
+          multi={false}
+          autoFocus={true}
+          value=""
+          onSelectResetsInput={false}
+          loadOptions={this.props.searchFunction}
+          filterOptions={AutocompleteSearch.noOpFilterFunction}
+          optionComponent={AutocompleteOption}
+          onChange={this.handleChange}
+          cache={false}
+        />
+      </div>
     );
   }
 

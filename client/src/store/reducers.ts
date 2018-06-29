@@ -10,7 +10,7 @@ import {
 import { PaginatedBooksList } from "../domain/queries";
 import { Actions } from "./actions";
 
-interface SetLangAction extends Action {
+interface SetCurrentBooksLangAction extends Action {
   payload: { lang: string };
 }
 interface BooksFetchedAction extends Action {
@@ -39,11 +39,11 @@ interface BooksByAuthorFetchedActionMeta {
   lang: string;
 }
 
-export function lang(state: string = "all", action: Action): string {
+export function currentBooksLang(state: string = "all", action: Action): string {
   let actionRef;
   switch (action.type) {
-    case `${Actions.SET_LANG}`:
-      actionRef = action as SetLangAction;
+    case `${Actions.SET_CURRENT_BOOKS_LANG}`:
+      actionRef = action as SetCurrentBooksLangAction;
       return actionRef.payload.lang;
     default:
       return state;

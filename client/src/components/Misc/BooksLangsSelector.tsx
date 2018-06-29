@@ -14,15 +14,17 @@ export function BooksLangsSelector(props: BooksLangsSelectorProps) {
   };
 
   return (
-    <select className="books-langs-selector" onChange={onLangChange} value={props.currentLang}>
-      <option value="all">ALL</option>
-      {props.booksLangs.map((bookLang: BookLangData) => {
-        return (
-          <option key={bookLang.lang} value={bookLang.lang}>
-            {bookLang.lang} - {bookLang.nbBooks}
-          </option>
-        );
-      })}
-    </select>
+    <div className="books-langs-selector-container select">
+      <select className="books-langs-selector" onChange={onLangChange} value={props.currentLang}>
+        <option value="all">All languages</option>
+        {props.booksLangs.map((bookLang: BookLangData) => {
+          return (
+            <option key={bookLang.lang} value={bookLang.lang}>
+              {bookLang.lang} - {bookLang.nbBooks} books
+            </option>
+          );
+        })}
+      </select>
+    </div>
   );
 }

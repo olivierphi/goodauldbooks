@@ -4,6 +4,7 @@ import { GenreWithStats } from "../../domain/core";
 import { getGenrePageUrl } from "../../utils/routing-utils";
 
 export interface GenresAsTagsProps {
+  currentBooksLang: string;
   genresWithStats: GenreWithStats[];
 }
 
@@ -17,7 +18,11 @@ export function GenresAsTags(props: GenresAsTagsProps) {
               <span className="tag is-dark">
                 <Link to={getGenrePageUrl(genre.title)}>{genre.title}</Link>
               </span>
-              <span className="tag is-info">{genre.nbBooks}</span>
+              <span className="tag is-info">
+                {"all" === props.currentBooksLang
+                  ? genre.nbBooks
+                  : genre.nbBooksByLang[props.currentBooksLang] || 0}
+              </span>
             </div>
           </li>
         );
