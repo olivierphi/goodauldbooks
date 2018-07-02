@@ -2,7 +2,7 @@ import * as React from "react";
 import { storeActionsDispatcher } from "../../ActionsDispatcher";
 import { BookFull as BookFullComponent } from "../../components/Book/BookFull";
 import { BooksLangContext } from "../../contexts/books-lang";
-import { BookFull, GenreWithStats, GenreWithStatsByName } from "../../domain/core";
+import { BookFull, GenreWithStats, GenreWithStatsByName, Lang } from "../../domain/core";
 import { EVENTS } from "../../domain/messages";
 import { container } from "../../ServicesContainer";
 import {
@@ -46,7 +46,7 @@ export class BookFullContainer extends React.Component<
 
     return (
       <BooksLangContext.Consumer>
-        {(currentBooksLang: string) => (
+        {(currentBooksLang: Lang) => (
           <BookFullComponent
             book={bookFull}
             genresWithStats={genresWithStats}

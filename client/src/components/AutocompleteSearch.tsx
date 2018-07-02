@@ -1,17 +1,12 @@
-import { Lang } from "domain/core";
 import * as React from "react";
-import { Redirect } from "react-router-dom";
 import { Async, Option, OptionComponentProps, Options } from "react-select";
+import { Lang } from "../domain/core";
 import { QuickSearchResult } from "../domain/queries";
-import { getAuthorPageUrl, getBookPageUrl } from "../utils/routing-utils";
 
 interface AutocompleteSearchProps {
-  currentLang: Lang;
-  searchFunction: (input: string) => Promise<AsyncOptionsResult>;
-}
-
-interface AutocompleteSearchState {
-  selectedResult: QuickSearchResult | null;
+  booksLang: Lang;
+  searchFunction: (input: string, booksLang: Lang) => Promise<AsyncOptionsResult>;
+  redirectToSelectedSearchResultPageFunction: (selectedSearchResult: QuickSearchResult) => void;
 }
 
 export interface AsyncOptionsResult {
@@ -19,41 +14,18 @@ export interface AsyncOptionsResult {
   complete?: boolean;
 }
 
-export class AutocompleteSearch extends React.Component<
-  AutocompleteSearchProps,
-  AutocompleteSearchState
-> {
-  private static emptyState: AutocompleteSearchState = {
-    selectedResult: null,
-  };
+export class AutocompleteSearch extends React.Component<AutocompleteSearchProps> {
   private static noOpFilterFunction = (options: Options): Options => {
     return options;
   }
 
   constructor(props: AutocompleteSearchProps) {
     super(props);
-    this.state = AutocompleteSearch.emptyState;
     this.handleChange = this.handleChange.bind(this);
+    this.loadOptions = this.loadOptions.bind(this);
   }
 
   public render() {
-    if (this.state.selectedResult) {
-      const selectedResult: QuickSearchResult = this.state.selectedResult;
-      const author = selectedResult.author;
-
-      if (selectedResult.book) {
-        setTimeout(this.setState.bind(this, AutocompleteSearch.emptyState), 0);
-        const book = selectedResult.book;
-        const bookUrl = getBookPageUrl(book.lang, author.slug, book.slug, book.id);
-        return <Redirect to={bookUrl} push={true} />;
-      }
-      if (author) {
-        setTimeout(this.setState.bind(this, AutocompleteSearch.emptyState), 0);
-        const authorUrl = getAuthorPageUrl(author.slug, author.id);
-        return <Redirect to={authorUrl} push={true} />;
-      }
-    }
-
     {
       /**
        * N.B.: Because this <select> input is not the only cache key we must consider for results
@@ -74,7 +46,7 @@ export class AutocompleteSearch extends React.Component<
           autoFocus={true}
           value=""
           onSelectResetsInput={false}
-          loadOptions={this.props.searchFunction}
+          loadOptions={this.loadOptions}
           filterOptions={AutocompleteSearch.noOpFilterFunction}
           optionComponent={AutocompleteOption}
           onChange={this.handleChange}
@@ -84,13 +56,17 @@ export class AutocompleteSearch extends React.Component<
     );
   }
 
-  public handleChange(selectedOption: Option): void {
+  private loadOptions(input: string): Promise<AsyncOptionsResult> {
+    return this.props.searchFunction(input, this.props.booksLang);
+  }
+
+  private handleChange(selectedOption: Option): void {
     const selectedOptionValue = selectedOption.value;
     if (!selectedOptionValue) {
       return;
     }
     const searchResult: QuickSearchResult = JSON.parse(selectedOptionValue as string);
-    this.setState({ selectedResult: searchResult });
+    this.props.redirectToSelectedSearchResultPageFunction(searchResult);
   }
 }
 

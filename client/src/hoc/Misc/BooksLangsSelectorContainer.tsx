@@ -1,3 +1,4 @@
+import { Lang } from "domain/core";
 import * as React from "react";
 import { BooksLangsSelector } from "../../components/Misc/BooksLangsSelector";
 import { BooksLangContext } from "../../contexts/books-lang";
@@ -17,9 +18,9 @@ export function BooksLangsSelectorContainer() {
 
   return (
     <BooksLangContext.Consumer>
-      {(lang: string) => (
+      {(currentBooksLang: Lang) => (
         <BooksLangsSelector
-          currentBooksLang={lang}
+          currentBooksLang={currentBooksLang}
           availableBooksLangs={booksLangsRepository.getAllLangs()}
           onLangChange={onLangChange}
         />
