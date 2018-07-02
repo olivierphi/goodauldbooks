@@ -62,7 +62,7 @@ class ServicesLocatorImpl implements ServicesLocator {
         booksHttpRepository
       );
 
-      return booksHttpRepository;
+      return bookWithCacheRepository;
     });
   }
 
