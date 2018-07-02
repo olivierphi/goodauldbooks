@@ -1,5 +1,7 @@
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
+import { BooksLangContext } from "../contexts/books-lang";
+import { Lang } from "../domain/core";
 import { BooksByGenreContainer } from "../hoc/Book/BooksByGenreContainer";
 
 export function GenrePage(routeProps: RouteComponentProps<{ genre: string }>): JSX.Element {
@@ -9,10 +11,15 @@ export function GenrePage(routeProps: RouteComponentProps<{ genre: string }>): J
 
   return (
     <section>
-      <BooksByGenreContainer
-        genre={routeProps.match.params.genre}
-        pagination={{ page: pageNumber, nbPerPage: 6 }}
-      />
+      <BooksLangContext.Consumer>
+        {(currentBooksLang: Lang) => (
+          <BooksByGenreContainer
+            genre={routeProps.match.params.genre}
+            pagination={{ page: pageNumber, nbPerPage: 6 }}
+            currentBooksLang={currentBooksLang}
+          />
+        )}
+      </BooksLangContext.Consumer>
     </section>
   );
 }

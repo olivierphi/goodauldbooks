@@ -1,7 +1,7 @@
 import { Lang } from "domain/core";
-import { container } from "../ServicesContainer";
+import { servicesLocator } from "../ServicesLocator";
 
-const appStateStore = container.appStateStore;
+const appStateStore = servicesLocator.appStateStore;
 
 // @see Main.tsx for the definitions of those routes
 

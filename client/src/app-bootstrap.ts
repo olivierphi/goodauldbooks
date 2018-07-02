@@ -2,14 +2,14 @@ import axios from "axios";
 import { AppConfig } from "./app-config";
 import { registerEventsListeners } from "./boot/events-listeners-init";
 import { initLangFromUrl } from "./boot/init-lang-from-url";
-import { container } from "./ServicesContainer";
+import { servicesLocator } from "./ServicesLocator";
 
 export async function bootApp() {
   axios.defaults.baseURL = AppConfig.apiBaseURL;
 
-  await container.boot();
+  await servicesLocator.boot();
 
-  registerEventsListeners(container);
+  registerEventsListeners(servicesLocator);
 
-  initLangFromUrl(container.history, container.messageBus);
+  initLangFromUrl(servicesLocator.history, servicesLocator.messageBus);
 }

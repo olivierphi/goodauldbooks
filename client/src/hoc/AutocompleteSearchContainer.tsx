@@ -5,14 +5,14 @@ import { BooksLangContext } from "../contexts/books-lang";
 import { Lang } from "../domain/core";
 import { ACTIONS, GoToAuthorPageAction, GoToBookPageAction } from "../domain/messages";
 import { BooksRepository, QuickSearchResult } from "../domain/queries";
-import { container } from "../ServicesContainer";
+import { servicesLocator } from "../ServicesLocator";
 
 export class AutocompleteSearchContainer extends React.Component<{}> {
   private booksRepository: BooksRepository;
 
   constructor(props: {}) {
     super(props);
-    this.booksRepository = container.booksRepository;
+    this.booksRepository = servicesLocator.booksRepository;
     this.searchFunction = this.searchFunction.bind(this);
     this.redirectToSelectedSearchResultPage = this.redirectToSelectedSearchResultPage.bind(this);
   }
@@ -56,6 +56,7 @@ export class AutocompleteSearchContainer extends React.Component<{}> {
 
   private redirectToSelectedSearchResultPage(selectedResult: QuickSearchResult): void {
     const author = selectedResult.author;
+
     if (selectedResult.book) {
       const book = selectedResult.book;
       const goToBookPageActionPayload: GoToBookPageAction = {
@@ -64,7 +65,7 @@ export class AutocompleteSearchContainer extends React.Component<{}> {
         bookLang: book.lang,
         authorSlug: author.slug,
       };
-      container.messageBus.emit(ACTIONS.GO_TO_BOOK_PAGE, goToBookPageActionPayload);
+      servicesLocator.messageBus.emit(ACTIONS.GO_TO_BOOK_PAGE, goToBookPageActionPayload);
       return;
     }
 
@@ -73,7 +74,7 @@ export class AutocompleteSearchContainer extends React.Component<{}> {
         authorId: author.id,
         authorSlug: author.slug,
       };
-      container.messageBus.emit(ACTIONS.GO_TO_AUTHOR_PAGE, goToAuthorPageActionPayload);
+      servicesLocator.messageBus.emit(ACTIONS.GO_TO_AUTHOR_PAGE, goToAuthorPageActionPayload);
       return;
     }
   }

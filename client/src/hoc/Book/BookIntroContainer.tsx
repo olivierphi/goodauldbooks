@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BookIntro } from "../../components/Book/BookIntro";
-import { container } from "../../ServicesContainer";
+import { servicesLocator } from "../../ServicesLocator";
 
 /**
  * We don't store the books intros in the global app state, as they
@@ -19,33 +19,50 @@ export interface BookIntroContainerProps {
 }
 
 export interface BookIntroContainerState {
-  bookIntro: string | null | undefined;
+  loading: false;
+  bookIntro: string | null;
+}
+
+interface BookIntroContainerLoadingState {
+  loading: true;
 }
 
 export class BookIntroContainer extends React.Component<
   BookIntroContainerProps,
-  BookIntroContainerState
+  BookIntroContainerState | BookIntroContainerLoadingState
 > {
   public constructor(props: BookIntroContainerProps) {
     super(props);
-    this.state = {
-      bookIntro: booksIntrosCache[props.bookId],
-    };
+    this.state = this.getDerivedStateFromPropsAndAppState();
   }
 
   public render() {
-    if (this.state.bookIntro === undefined) {
-      this.loadBookIntro(this.props.bookId);
+    if (this.state.loading) {
+      this.fetchData();
       return <div className="book-intro loading">Loading...</div>;
     }
 
     return <BookIntro bookId={this.props.bookId} bookIntro={this.state.bookIntro} />;
   }
 
+  private fetchData(): void {
+    this.loadBookIntro(this.props.bookId);
+  }
+
+  private getDerivedStateFromPropsAndAppState():
+    | BookIntroContainerState
+    | BookIntroContainerLoadingState {
+    if (!booksIntrosCache[this.props.bookId]) {
+      return { loading: true };
+    }
+
+    return { loading: false, bookIntro: booksIntrosCache[this.props.bookId] };
+  }
+
   private async loadBookIntro(bookId: string): Promise<null> {
-    const bookIntro = await container.booksRepository.getBookIntro(bookId);
+    const bookIntro = await servicesLocator.booksRepository.getBookIntro(bookId);
     booksIntrosCache[bookId] = bookIntro;
-    this.setState({ bookIntro });
+    this.setState({ loading: false, bookIntro });
     return Promise.resolve(null);
   }
 }

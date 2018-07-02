@@ -1,12 +1,5 @@
 import { Store } from "redux";
-import {
-  Book,
-  BooksById,
-  BooksIdsByGenre,
-  BookWithGenreStats,
-  Lang,
-  PaginatedBooksIdsListByCriteria,
-} from "../domain/core";
+import { Book, BooksById, BookWithGenreStats, Lang } from "../domain/core";
 import {
   BooksRepository,
   PaginatedBooksList,
@@ -109,9 +102,9 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
     return this.underlyingRepository.getBooksByGenre(genre, lang, pagination);
   }
 
-  public getFeaturedBooks(): Promise<BooksById> {
+  public getFeaturedBooks(lang: Lang): Promise<BooksById> {
     // TODO: store the featured books ids into the app state, so that we can cache the result
-    return this.underlyingRepository.getFeaturedBooks();
+    return this.underlyingRepository.getFeaturedBooks(lang);
   }
 
   public quickSearch(pattern: string, lang: string): Promise<QuickSearchResult[]> {

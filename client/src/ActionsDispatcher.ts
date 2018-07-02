@@ -1,10 +1,14 @@
 import { Lang } from "domain/core";
+import { PaginationRequestData } from "domain/queries";
 import { Action } from "redux";
 import { ActionsDispatcher } from "./domain/app-state";
-import { container } from "./ServicesContainer";
+import { servicesLocator } from "./ServicesLocator";
 import * as actions from "./store/actions";
 
 class ActionsDispatcherImpl implements ActionsDispatcher {
+  public fetchFeaturedBooksList(lang: Lang): void {
+    this.dispatchToAppStateStore(actions.fetchFeaturedBooks(lang));
+  }
   public setBooksLang(lang: Lang): void {
     this.dispatchToAppStateStore(actions.setCurrentBooksLang(lang));
   }
@@ -13,8 +17,20 @@ class ActionsDispatcherImpl implements ActionsDispatcher {
     this.dispatchToAppStateStore(actions.fetchBookWithGenreStats(bookId));
   }
 
+  public fetchBooksForAuthor(
+    authorId: string,
+    lang: Lang,
+    pagination: PaginationRequestData
+  ): void {
+    this.dispatchToAppStateStore(actions.fetchBooksForAuthor(authorId, lang, pagination));
+  }
+
+  public fetchBooksForGenre(genre: string, lang: Lang, pagination: PaginationRequestData): void {
+    this.dispatchToAppStateStore(actions.fetchBooksForGenre(genre, lang, pagination));
+  }
+
   private dispatchToAppStateStore(action: Action): void {
-    container.appStateStore.dispatch(action);
+    servicesLocator.appStateStore.dispatch(action);
   }
 }
 

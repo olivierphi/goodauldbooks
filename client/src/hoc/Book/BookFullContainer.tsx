@@ -4,7 +4,7 @@ import { BookFull as BookFullComponent } from "../../components/Book/BookFull";
 import { BooksLangContext } from "../../contexts/books-lang";
 import { BookFull, GenreWithStats, GenreWithStatsByName, Lang } from "../../domain/core";
 import { EVENTS } from "../../domain/messages";
-import { container } from "../../ServicesContainer";
+import { servicesLocator } from "../../ServicesLocator";
 import {
   appStateHasGenresWithStats,
   getFullBookDataFromState,
@@ -16,28 +16,32 @@ interface BookFullContainerProps {
 }
 
 interface BookFullContainerState {
-  bookFull: BookFull | null;
+  loading: false;
+  bookFull: BookFull;
+}
+
+interface BookFullContainerLoadingState {
+  loading: true;
 }
 
 export class BookFullContainer extends React.Component<
   BookFullContainerProps,
-  BookFullContainerState
+  BookFullContainerState | BookFullContainerLoadingState
 > {
   constructor(props: BookFullContainerProps) {
     super(props);
+    this.state = this.getDerivedStateFromPropsAndAppState();
     this.onBookDataFetched = this.onBookDataFetched.bind(this);
-    // this.state = this.getUpdatedState();
   }
 
   public render() {
-    if (!this.state || !this.state.bookFull) {
-      container.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
-      storeActionsDispatcher.fetchBookWithGenreStats(this.props.bookId);
+    if (this.state.loading) {
+      this.fetchData();
       return <div className="loading">Loading full book...</div>;
     }
 
     const bookFull: BookFull = this.state.bookFull;
-    const appState = container.appStateStore.getState();
+    const appState = servicesLocator.appStateStore.getState();
 
     const genresWithStats = this.getSortedGenresWithStats(
       bookFull.genres,
@@ -57,25 +61,32 @@ export class BookFullContainer extends React.Component<
     );
   }
 
+  private fetchData(): void {
+    servicesLocator.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+    storeActionsDispatcher.fetchBookWithGenreStats(this.props.bookId);
+  }
+
   private onBookDataFetched(): void {
-    const newState = this.getDerivedStateFromAppState();
-    if (newState.bookFull) {
+    const newState = this.getDerivedStateFromPropsAndAppState();
+    if (!newState.loading) {
       // We now have our full book data!
       // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
-      container.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      servicesLocator.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
       this.setState(newState);
     }
   }
 
-  private getDerivedStateFromAppState(): BookFullContainerState {
-    const appState = container.appStateStore.getState();
+  private getDerivedStateFromPropsAndAppState():
+    | BookFullContainerState
+    | BookFullContainerLoadingState {
+    const appState = servicesLocator.appStateStore.getState();
     const book = appState.booksById[this.props.bookId];
 
     if (!book || !appState.booksAssetsSize[this.props.bookId]) {
-      return { bookFull: null };
+      return { loading: true };
     }
     if (!appStateHasGenresWithStats(book.genres, appState.genresWithStats)) {
-      return { bookFull: null };
+      return { loading: true };
     }
 
     const bookFull: BookFull = getFullBookDataFromState(
@@ -85,6 +96,7 @@ export class BookFullContainer extends React.Component<
     );
 
     return {
+      loading: false,
       bookFull,
     };
   }

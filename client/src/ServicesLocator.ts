@@ -4,21 +4,12 @@ import { i18n as i18next } from "i18next";
 import { Store } from "redux";
 import { initI18n } from "./boot/i18n-init";
 import { BooksLanguagesRepository, BooksRepository } from "./domain/queries";
+import { ServicesLocator } from "./domain/services";
 import { BooksHttpRepository } from "./repositories/BooksHttpRepository";
 import { BooksLanguagesGeneratedJsonRepository } from "./repositories/BooksLanguagesGeneratedJsonRepository";
 import { BooksWithAppStateCacheRepository } from "./repositories/BooksWithAppStateCacheRepository";
 import { AppState } from "./store";
 import { initStore } from "./store-init";
-
-export interface ServicesContainer {
-  appStateStore: Store<AppState>;
-  booksRepository: BooksRepository;
-  booksLangsRepository: BooksLanguagesRepository;
-  i18n: i18next;
-  messageBus: EventEmitter;
-  history: History;
-  boot(): Promise<boolean>;
-}
 
 enum SharedServicesIds {
   APP_STATE_STORE,
@@ -42,7 +33,7 @@ function sharedService(serviceId: SharedServicesIds, serviceFactory: () => any) 
   return serviceSharedInstance;
 }
 
-class ServicesContainerImpl implements ServicesContainer {
+class ServicesLocatorImpl implements ServicesLocator {
   private booted: boolean = false;
 
   public async boot(): Promise<boolean> {
@@ -127,4 +118,4 @@ class ServicesContainerImpl implements ServicesContainer {
   }
 }
 
-export const container: ServicesContainer = new ServicesContainerImpl();
+export const servicesLocator: ServicesLocator = new ServicesLocatorImpl();

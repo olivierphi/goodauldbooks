@@ -1,5 +1,4 @@
-import { Store } from "react-redux";
-import { applyMiddleware, combineReducers, compose, createStore, Middleware } from "redux";
+import { applyMiddleware, combineReducers, compose, createStore, Middleware, Store } from "redux";
 import promiseMiddleware from "redux-promise-middleware";
 import * as appMiddlewares from "./redux/middlewares";
 import { AppState } from "./store";
