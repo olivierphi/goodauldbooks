@@ -4,15 +4,16 @@ import { AsyncOptionsResult, AutocompleteSearch } from "../components/Autocomple
 import { BooksLangContext } from "../contexts/books-lang";
 import { Lang } from "../domain/core";
 import { ACTIONS, GoToAuthorPageAction, GoToBookPageAction } from "../domain/messages";
-import { BooksRepository, QuickSearchResult } from "../domain/queries";
-import { servicesLocator } from "../ServicesLocator";
+import { QuickSearchResult } from "../domain/queries";
+import { OmniponentComponentToolbox } from "./OmnipotentComponentToolbox";
 
-export class AutocompleteSearchContainer extends React.Component<{}> {
-  private booksRepository: BooksRepository;
+export interface AutocompleteSearchContainerProps {
+  hocToolbox: OmniponentComponentToolbox;
+}
 
-  constructor(props: {}) {
+export class AutocompleteSearchContainer extends React.Component<AutocompleteSearchContainerProps> {
+  constructor(props: AutocompleteSearchContainerProps) {
     super(props);
-    this.booksRepository = servicesLocator.booksRepository;
     this.searchFunction = this.searchFunction.bind(this);
     this.redirectToSelectedSearchResultPage = this.redirectToSelectedSearchResultPage.bind(this);
   }
@@ -36,7 +37,8 @@ export class AutocompleteSearchContainer extends React.Component<{}> {
       return Promise.resolve({ options: [] });
     }
 
-    const results = await this.booksRepository.quickSearch(input, booksLang);
+    const booksRepository = this.props.hocToolbox.servicesLocator.booksRepository;
+    const results = await booksRepository.quickSearch(input, booksLang);
     if (!results.length) {
       return { options: [], complete: true };
     }
@@ -65,7 +67,7 @@ export class AutocompleteSearchContainer extends React.Component<{}> {
         bookLang: book.lang,
         authorSlug: author.slug,
       };
-      servicesLocator.messageBus.emit(ACTIONS.GO_TO_BOOK_PAGE, goToBookPageActionPayload);
+      this.props.hocToolbox.messageBus.emit(ACTIONS.GO_TO_BOOK_PAGE, goToBookPageActionPayload);
       return;
     }
 
@@ -74,7 +76,7 @@ export class AutocompleteSearchContainer extends React.Component<{}> {
         authorId: author.id,
         authorSlug: author.slug,
       };
-      servicesLocator.messageBus.emit(ACTIONS.GO_TO_AUTHOR_PAGE, goToAuthorPageActionPayload);
+      this.props.hocToolbox.messageBus.emit(ACTIONS.GO_TO_AUTHOR_PAGE, goToAuthorPageActionPayload);
       return;
     }
   }

@@ -1,18 +1,18 @@
 import * as React from "react";
-import { storeActionsDispatcher } from "../../ActionsDispatcher";
 import { BookFull as BookFullComponent } from "../../components/Book/BookFull";
 import { BooksLangContext } from "../../contexts/books-lang";
 import { BookFull, GenreWithStats, GenreWithStatsByName, Lang } from "../../domain/core";
 import { EVENTS } from "../../domain/messages";
-import { servicesLocator } from "../../ServicesLocator";
 import {
   appStateHasGenresWithStats,
   getFullBookDataFromState,
   getGenresWithStatsFromState,
 } from "../../utils/app-state-utils";
+import { HigherOrderComponentToolbox } from "../HigherOrderComponentToolbox";
 
 interface BookFullContainerProps {
   bookId: string;
+  hocToolbox: HigherOrderComponentToolbox;
 }
 
 interface BookFullContainerState {
@@ -41,7 +41,7 @@ export class BookFullContainer extends React.Component<
     }
 
     const bookFull: BookFull = this.state.bookFull;
-    const appState = servicesLocator.appStateStore.getState();
+    const appState = this.props.hocToolbox.appStateStore.getState();
 
     const genresWithStats = this.getSortedGenresWithStats(
       bookFull.genres,
@@ -62,8 +62,8 @@ export class BookFullContainer extends React.Component<
   }
 
   private fetchData(): void {
-    servicesLocator.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
-    storeActionsDispatcher.fetchBookWithGenreStats(this.props.bookId);
+    this.props.hocToolbox.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+    this.props.hocToolbox.actionsDispatcher.fetchBookWithGenreStats(this.props.bookId);
   }
 
   private onBookDataFetched(): void {
@@ -71,7 +71,7 @@ export class BookFullContainer extends React.Component<
     if (!newState.loading) {
       // We now have our full book data!
       // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
-      servicesLocator.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      this.props.hocToolbox.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
       this.setState(newState);
     }
   }
@@ -79,7 +79,7 @@ export class BookFullContainer extends React.Component<
   private getDerivedStateFromPropsAndAppState():
     | BookFullContainerState
     | BookFullContainerLoadingState {
-    const appState = servicesLocator.appStateStore.getState();
+    const appState = this.props.hocToolbox.appStateStore.getState();
     const book = appState.booksById[this.props.bookId];
 
     if (!book || !appState.booksAssetsSize[this.props.bookId]) {

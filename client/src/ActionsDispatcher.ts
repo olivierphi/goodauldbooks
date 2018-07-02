@@ -1,11 +1,13 @@
 import { Lang } from "domain/core";
 import { PaginationRequestData } from "domain/queries";
-import { Action } from "redux";
+import { Action, Store } from "redux";
 import { ActionsDispatcher } from "./domain/app-state";
-import { servicesLocator } from "./ServicesLocator";
+import { AppState } from "./store";
 import * as actions from "./store/actions";
 
-class ActionsDispatcherImpl implements ActionsDispatcher {
+export class ActionsDispatcherImpl implements ActionsDispatcher {
+  constructor(private appStateStore: Store<AppState>) {}
+
   public fetchFeaturedBooksList(lang: Lang): void {
     this.dispatchToAppStateStore(actions.fetchFeaturedBooks(lang));
   }
@@ -30,8 +32,6 @@ class ActionsDispatcherImpl implements ActionsDispatcher {
   }
 
   private dispatchToAppStateStore(action: Action): void {
-    servicesLocator.appStateStore.dispatch(action);
+    this.appStateStore.dispatch(action);
   }
 }
-
-export const storeActionsDispatcher: ActionsDispatcher = new ActionsDispatcherImpl();

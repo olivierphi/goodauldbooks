@@ -2,7 +2,9 @@ import * as EventEmitter from "eventemitter3";
 import { createBrowserHistory, History } from "history";
 import { i18n as i18next } from "i18next";
 import { Store } from "redux";
+import { ActionsDispatcherImpl } from "./ActionsDispatcher";
 import { initI18n } from "./boot/i18n-init";
+import { ActionsDispatcher } from "./domain/app-state";
 import { BooksLanguagesRepository, BooksRepository } from "./domain/queries";
 import { ServicesLocator } from "./domain/services";
 import { BooksHttpRepository } from "./repositories/BooksHttpRepository";
@@ -19,6 +21,7 @@ enum SharedServicesIds {
   I18N,
   MESSAGE_BUS,
   HISTORY,
+  ACTIONS_DISPATCHER,
 }
 
 type SharedServicesRegistry = Map<SharedServicesIds, any>;
@@ -94,6 +97,14 @@ class ServicesLocatorImpl implements ServicesLocator {
       const history = createBrowserHistory();
 
       return history;
+    });
+  }
+
+  get actionsDispatcher(): ActionsDispatcher {
+    return sharedService(SharedServicesIds.ACTIONS_DISPATCHER, () => {
+      const actionsDispatcher = new ActionsDispatcherImpl(this.appStateStore);
+
+      return actionsDispatcher;
     });
   }
 

@@ -1,18 +1,18 @@
 import * as React from "react";
-import { storeActionsDispatcher } from "../../ActionsDispatcher";
 import { BooksList } from "../../components/Book/BooksList";
 import { BooksById, Lang } from "../../domain/core";
 import { ACTIONS, EVENTS } from "../../domain/messages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
-import { servicesLocator } from "../../ServicesLocator";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
 import { getPaginatedBooksIdsResultsFromCache } from "../../utils/pagination-utils";
 import { getAuthorPageUrl } from "../../utils/routing-utils";
+import { HigherOrderComponentToolbox } from "../HigherOrderComponentToolbox";
 
 interface BooksByAuthorContainerProps {
   authorId: string;
   pagination: PaginationRequestData;
   currentBooksLang: Lang;
+  hocToolbox: HigherOrderComponentToolbox;
 }
 
 interface BooksByAuthorContainerState {
@@ -73,12 +73,12 @@ export class BooksByAuthorContainer extends React.Component<
       ? getAuthorPageUrl(authorSlug, this.props.authorId)
       : null;
     const targetUrl = `${baseUrlWithoutPagination}?page=${pageNum}`;
-    servicesLocator.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
+    this.props.hocToolbox.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
   }
 
   private fetchData(): void {
-    servicesLocator.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
-    storeActionsDispatcher.fetchBooksForAuthor(
+    this.props.hocToolbox.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+    this.props.hocToolbox.actionsDispatcher.fetchBooksForAuthor(
       this.props.authorId,
       this.props.currentBooksLang,
       this.props.pagination
@@ -90,7 +90,7 @@ export class BooksByAuthorContainer extends React.Component<
     if (!newState.loading) {
       // We now have our author books data for the requested page!
       // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
-      servicesLocator.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      this.props.hocToolbox.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
       this.setState(newState);
     }
   }
@@ -98,7 +98,7 @@ export class BooksByAuthorContainer extends React.Component<
   private getDerivedStateFromPropsAndAppState():
     | BooksByAuthorContainerState
     | BooksByAuthorContainerLoadingState {
-    const appState = servicesLocator.appStateStore.getState();
+    const appState = this.props.hocToolbox.appStateStore.getState();
     const criteriaName = `${this.props.authorId}-${this.props.currentBooksLang}`;
     const booksIdsByAuthor = getPaginatedBooksIdsResultsFromCache(
       appState.booksIdsByAuthor,

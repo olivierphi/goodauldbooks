@@ -3,6 +3,7 @@ import { History } from "history";
 import { i18n as i18next } from "i18next";
 import { Store } from "redux";
 import { AppState } from "../store";
+import { ActionsDispatcher } from "./app-state";
 import { BooksLanguagesRepository, BooksRepository } from "./queries";
 
 export interface ServicesLocator {
@@ -12,5 +13,6 @@ export interface ServicesLocator {
   readonly i18n: i18next;
   readonly messageBus: EventEmitter;
   readonly history: History;
+  readonly actionsDispatcher: ActionsDispatcher;
   boot(): Promise<boolean>;
 }
