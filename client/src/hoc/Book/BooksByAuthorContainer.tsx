@@ -2,7 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Action } from "redux";
 import { BooksList } from "../../components/Book/BooksList";
-import { BooksById, PaginatedBooksIdsListByCriteria } from "../../domain/core";
+import { BooksById, Lang, PaginatedBooksIdsListByCriteria } from "../../domain/core";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
 import { AppState } from "../../store";
 import { fetchBooksForAuthor } from "../../store/actions";
@@ -34,7 +34,7 @@ const mapDispatchToProps = (dispatch: (action: Action) => void) => {
 };
 
 interface BooksListHOCProps {
-  currentBooksLang: string;
+  currentBooksLang: Lang;
   allBooks: BooksById;
   booksIdsByAuthor: PaginatedBooksIdsListByCriteria;
   fetchBooksForAuthor: (authorId: string, lang: string, pagination: PaginationRequestData) => void;

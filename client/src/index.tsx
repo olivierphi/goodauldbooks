@@ -4,6 +4,7 @@ import "url-search-params-polyfill";
 import { bootApp } from "./app-bootstrap";
 import { Layout } from "./components/Layout";
 import { AppEnvelope } from "./hoc/AppEnvelope";
+
 async function startApp(): Promise<boolean> {
   await bootApp();
   const appHtmlContainer = document.getElementById("app");

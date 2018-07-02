@@ -5,13 +5,15 @@ import {
   BookWithGenreStats,
   GenreWithStats,
   GenreWithStatsByName,
+  Lang,
+  LANG_ALL,
   PaginatedBooksIdsListByCriteria,
 } from "../domain/core";
 import { PaginatedBooksList } from "../domain/queries";
 import { Actions } from "./actions";
 
 interface SetCurrentBooksLangAction extends Action {
-  payload: { lang: string };
+  payload: { lang: Lang };
 }
 interface BooksFetchedAction extends Action {
   payload: BooksById;
@@ -31,15 +33,15 @@ interface BookFetchedAction extends Action {
 
 interface BooksByGenreFetchedActionMeta {
   genre: string;
-  lang: string;
+  lang: Lang;
 }
 
 interface BooksByAuthorFetchedActionMeta {
   authorId: string;
-  lang: string;
+  lang: Lang;
 }
 
-export function booksLang(state: string = "all", action: Action): string {
+export function booksLang(state: Lang = LANG_ALL, action: Action): Lang {
   let actionRef;
   switch (action.type) {
     case `${Actions.SET_CURRENT_BOOKS_LANG}`:

@@ -1,3 +1,4 @@
+import { Lang } from "domain/core";
 import { PaginationRequestData } from "../domain/queries";
 import { container } from "../ServicesContainer";
 import { Action } from "./index";
@@ -10,7 +11,7 @@ export enum Actions {
   FETCH_BOOKS_FOR_AUTHOR = "FETCH_BOOKS_FOR_AUTHOR",
 }
 
-export function setCurrentBooksLang(lang: string): Action {
+export function setCurrentBooksLang(lang: Lang): Action {
   return { type: Actions.SET_CURRENT_BOOKS_LANG, payload: { lang } };
 }
 

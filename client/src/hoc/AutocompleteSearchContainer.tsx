@@ -1,3 +1,4 @@
+import { Lang } from "domain/core";
 import * as React from "react";
 import { connect } from "react-redux";
 import { Option } from "react-select";
@@ -38,7 +39,7 @@ const searchFunction = async (currentLang: string, input: string): Promise<Async
 };
 
 interface AutocompleteSearchContainerHOCProps {
-  currentLang: string;
+  currentLang: Lang;
 }
 
 export function AutocompleteSearchContainerHOC(

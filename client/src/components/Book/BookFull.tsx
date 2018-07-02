@@ -1,5 +1,5 @@
 import * as React from "react";
-import { BookFull, GenreWithStats } from "../../domain/core";
+import { BookFull, GenreWithStats, Lang } from "../../domain/core";
 import { BookIntroContainer } from "../../hoc/Book/BookIntroContainer";
 import { Author } from "./Author";
 import { BookCover } from "./BookCover";
@@ -9,7 +9,7 @@ import { GenresAsTags } from "./GenresAsTags";
 export interface BookFullProps {
   book: BookFull;
   genresWithStats: GenreWithStats[];
-  currentBooksLang: string;
+  currentBooksLang: Lang;
 }
 
 export function BookFull(props: BookFullProps) {

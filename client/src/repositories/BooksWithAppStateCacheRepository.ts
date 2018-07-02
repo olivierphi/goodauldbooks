@@ -4,6 +4,7 @@ import {
   BooksById,
   BooksIdsByGenre,
   BookWithGenreStats,
+  Lang,
   PaginatedBooksIdsListByCriteria,
 } from "../domain/core";
 import {
@@ -58,7 +59,7 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
 
   public getBooksByAuthor(
     authorId: string,
-    lang: string,
+    lang: Lang,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const appState = this.appStateStore.getState();
@@ -84,7 +85,7 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
 
   public getBooksByGenre(
     genre: string,
-    lang: string,
+    lang: Lang,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const appState = this.appStateStore.getState();

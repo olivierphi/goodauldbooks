@@ -1,16 +1,14 @@
+import { Lang } from "domain/core";
 import { Action } from "redux";
+import { ActionsDispatcher } from "./domain/app-state";
 import { container } from "./ServicesContainer";
 import * as actions from "./store/actions";
 
-/**
- * This class allows us to displatch domain actions with a proper Interface.
- * Such actions can be connected to Redux actions or to MessageBus message emitting.
- */
-export interface ActionsDispatcher {
-  fetchBookWithGenreStats(bookId: string): void;
-}
-
 class ActionsDispatcherImpl implements ActionsDispatcher {
+  public setBooksLang(lang: Lang): void {
+    this.dispatchToAppStateStore(actions.setCurrentBooksLang(lang));
+  }
+
   public fetchBookWithGenreStats(bookId: string): void {
     this.dispatchToAppStateStore(actions.fetchBookWithGenreStats(bookId));
   }
@@ -20,4 +18,4 @@ class ActionsDispatcherImpl implements ActionsDispatcher {
   }
 }
 
-export const dispatcher: ActionsDispatcher = new ActionsDispatcherImpl();
+export const storeActionsDispatcher: ActionsDispatcher = new ActionsDispatcherImpl();

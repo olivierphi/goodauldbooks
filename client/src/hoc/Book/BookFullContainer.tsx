@@ -1,5 +1,5 @@
 import * as React from "react";
-import { dispatcher } from "../../ActionsDispatcher";
+import { storeActionsDispatcher } from "../../ActionsDispatcher";
 import { BookFull as BookFullComponent } from "../../components/Book/BookFull";
 import { BooksLangContext } from "../../contexts/books-lang";
 import { BookFull, GenreWithStats, GenreWithStatsByName } from "../../domain/core";
@@ -25,16 +25,14 @@ export class BookFullContainer extends React.Component<
 > {
   constructor(props: BookFullContainerProps) {
     super(props);
-    console.log("new BookFullContainer()");
     this.onBookDataFetched = this.onBookDataFetched.bind(this);
     // this.state = this.getUpdatedState();
   }
 
   public render() {
-    console.log("BookFullContainer::render()");
     if (!this.state || !this.state.bookFull) {
       container.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
-      dispatcher.fetchBookWithGenreStats(this.props.bookId);
+      storeActionsDispatcher.fetchBookWithGenreStats(this.props.bookId);
       return <div className="loading">Loading full book...</div>;
     }
 
@@ -60,14 +58,16 @@ export class BookFullContainer extends React.Component<
   }
 
   private onBookDataFetched(): void {
-    const newState = this.getUpdatedState();
+    const newState = this.getDerivedStateFromAppState();
     if (newState.bookFull) {
+      // We now have our full book data!
+      // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
       container.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
       this.setState(newState);
     }
   }
 
-  private getUpdatedState(): BookFullContainerState {
+  private getDerivedStateFromAppState(): BookFullContainerState {
     const appState = container.appStateStore.getState();
     const book = appState.booksById[this.props.bookId];
 

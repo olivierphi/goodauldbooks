@@ -1,3 +1,4 @@
+import { Lang } from "domain/core";
 import { container } from "../ServicesContainer";
 
 const appStateStore = container.appStateStore;
@@ -5,7 +6,7 @@ const appStateStore = container.appStateStore;
 // @see Main.tsx for the definitions of those routes
 
 export function getBookPageUrl(
-  bookLang: string,
+  bookLang: Lang,
   authorSlug: string,
   bookSlug: string,
   bookId: string

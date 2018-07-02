@@ -1,6 +1,7 @@
 import { BookLangData } from "domain/queries";
 import * as React from "react";
 import { Option } from "react-select";
+import { LANG_ALL } from "../../domain/core";
 
 export interface BooksLangsSelectorProps {
   currentBooksLang: string;
@@ -20,7 +21,7 @@ export function BooksLangsSelector(props: BooksLangsSelectorProps) {
         onChange={onLangChange}
         value={props.currentBooksLang}
       >
-        <option value="all">All languages</option>
+        <option value={LANG_ALL}>All languages</option>
         {props.availableBooksLangs.map((bookLang: BookLangData) => {
           return (
             <option key={bookLang.lang} value={bookLang.lang}>

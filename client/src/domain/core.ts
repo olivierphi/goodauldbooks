@@ -1,13 +1,12 @@
-export enum Lang {
-  EN = "en",
-}
-
+export type Lang = string;
 export type Genre = string;
 export type BookId = string;
 
+export const LANG_ALL = "all";
+
 export interface Book {
   id: BookId;
-  lang: string;
+  lang: Lang;
   author: Author;
   title: string;
   subtitle: string | null;

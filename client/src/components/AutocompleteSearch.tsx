@@ -1,3 +1,4 @@
+import { Lang } from "domain/core";
 import * as React from "react";
 import { Redirect } from "react-router-dom";
 import { Async, Option, OptionComponentProps, Options } from "react-select";
@@ -5,7 +6,7 @@ import { QuickSearchResult } from "../domain/queries";
 import { getAuthorPageUrl, getBookPageUrl } from "../utils/routing-utils";
 
 interface AutocompleteSearchProps {
-  currentLang: string;
+  currentLang: Lang;
   searchFunction: (input: string) => Promise<AsyncOptionsResult>;
 }
 
@@ -167,7 +168,7 @@ class AutocompleteOption extends React.Component<OptionComponentProps> {
 
 interface BookResultOptionContentProps {
   bookTitle: string;
-  bookLang: string;
+  bookLang: Lang;
   authorFirstName: string;
   authorLastName: string;
 }

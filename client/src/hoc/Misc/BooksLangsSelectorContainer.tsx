@@ -3,13 +3,15 @@ import { BooksLangsSelector } from "../../components/Misc/BooksLangsSelector";
 import { BooksLangContext } from "../../contexts/books-lang";
 import { ACTIONS } from "../../domain/messages";
 import { container } from "../../ServicesContainer";
+import { replaceBooksLangInLocation } from "../../utils/url-utils";
 
 export function BooksLangsSelectorContainer() {
   const booksLangsRepository = container.booksLangsRepository;
   const messageBus = container.messageBus;
+  const history = container.history;
 
   const onLangChange = (lang: string) => {
-    const newUrl = location.pathname.replace(/^\/library\/[a-z]{2,3}\//, `/library/${lang}/`);
+    const newUrl = replaceBooksLangInLocation(history.location, lang);
     messageBus.emit(ACTIONS.PUSH_URL, newUrl);
   };
 

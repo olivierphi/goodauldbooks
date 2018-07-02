@@ -1,3 +1,4 @@
+import { EVENTS } from "domain/messages";
 import { AssetsConfig } from "domain/web";
 import * as React from "react";
 import { I18nextProvider } from "react-i18next";
@@ -18,20 +19,24 @@ interface AppEnvelopeState {
  * This is where we initialise all our global React Context Providers
  */
 export class AppEnvelope extends React.Component<{}, AppEnvelopeState> {
-  private servicesContainer: ServicesContainer;
-
   constructor(props: {}) {
     super(props);
     this.state = {
       booksLang: container.appStateStore.getState().booksLang,
       assetsConfig: { coversBaseUrl: AppConfig.coversBaseURL },
     };
-    this.servicesContainer = container;
-    this.servicesContainer.appStateStore.subscribe(this.onAppStateUpdate.bind(this));
+    this.onBooksLangChanged = this.onBooksLangChanged.bind(this);
+  }
+
+  public componentDidMount() {
+    container.messageBus.on(EVENTS.BOOKS_LANG_CHANGED, this.onBooksLangChanged);
+  }
+
+  public componentWillUnmount() {
+    container.messageBus.off(EVENTS.BOOKS_LANG_CHANGED, this.onBooksLangChanged);
   }
 
   public render() {
-    console.log("AppEnvelope::render()");
     return (
       <ReduxStoreProvider store={container.appStateStore}>
         <MessageBusContext.Provider value={container.messageBus}>
@@ -52,14 +57,9 @@ export class AppEnvelope extends React.Component<{}, AppEnvelopeState> {
     );
   }
 
-  private onAppStateUpdate() {
-    const appReduxState = this.servicesContainer.appStateStore.getState();
-    const newBooksLang = appReduxState.booksLang;
-    if (newBooksLang !== this.state.booksLang) {
-      console.log("newBooksLang=", newBooksLang);
-      this.setState({
-        booksLang: newBooksLang,
-      });
-    }
+  private onBooksLangChanged(newBooksLang: string) {
+    this.setState({
+      booksLang: newBooksLang,
+    });
   }
 }
