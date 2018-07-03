@@ -1,24 +1,24 @@
 import * as React from "react";
 import { InjectedTranslateProps, translate } from "react-i18next";
 import { BooksLangContext } from "../contexts/books-lang";
-import { HigherOrderComponentToolboxContext } from "../contexts/hoc-toolbox";
+import { HigherOrderComponentToolkitContext } from "../contexts/hoc-toolkit";
 import { Lang } from "../domain/core";
 import { FeaturedBooksContainer } from "../hoc/Book/FeaturedBooksContainer";
-import { HigherOrderComponentToolbox } from "../hoc/HigherOrderComponentToolbox";
+import { HigherOrderComponentToolkit } from "../hoc/HigherOrderComponentToolkit";
 
 function TranslatableHomePage(props: InjectedTranslateProps) {
   return (
     <section>
       <h1>{props.t("page.homepage.title")}</h1>
-      <HigherOrderComponentToolboxContext.Consumer>
-        {(hocToolbox: HigherOrderComponentToolbox) => (
+      <HigherOrderComponentToolkitContext.Consumer>
+        {(hocToolkit: HigherOrderComponentToolkit) => (
           <BooksLangContext.Consumer>
             {(currentBooksLang: Lang) => (
-              <FeaturedBooksContainer currentBooksLang={currentBooksLang} hocToolbox={hocToolbox} />
+              <FeaturedBooksContainer currentBooksLang={currentBooksLang} hocToolkit={hocToolkit} />
             )}
           </BooksLangContext.Consumer>
         )}
-      </HigherOrderComponentToolboxContext.Consumer>;
+      </HigherOrderComponentToolkitContext.Consumer>;
     </section>
   );
 }

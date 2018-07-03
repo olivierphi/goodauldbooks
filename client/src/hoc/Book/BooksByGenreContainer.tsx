@@ -6,13 +6,13 @@ import { PaginationRequestData, PaginationResponseData } from "../../domain/quer
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
 import { getPaginatedBooksIdsResultsFromCache } from "../../utils/pagination-utils";
 import { getGenrePageUrl } from "../../utils/routing-utils";
-import { HigherOrderComponentToolbox } from "../HigherOrderComponentToolbox";
+import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
 
 interface BooksByGenreContainerProps {
   genre: string;
   pagination: PaginationRequestData;
   currentBooksLang: Lang;
-  hocToolbox: HigherOrderComponentToolbox;
+  hocToolkit: HigherOrderComponentToolkit;
 }
 
 interface BooksByGenreContainerState {
@@ -63,14 +63,18 @@ export class BooksByGenreContainer extends React.Component<
   }
 
   private navigateToPageNum(pageNum: number): void {
-    const baseUrlWithoutPagination = getGenrePageUrl(this.props.genre);
+    const baseUrlWithoutPagination = getGenrePageUrl(
+      this.props.hocToolkit.appStateStore.getState().booksLang,
+      this.props.genre
+    );
+
     const targetUrl = `${baseUrlWithoutPagination}?page=${pageNum}`;
-    this.props.hocToolbox.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
+    this.props.hocToolkit.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
   }
 
   private fetchData(): void {
-    this.props.hocToolbox.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
-    this.props.hocToolbox.actionsDispatcher.fetchBooksForGenre(
+    this.props.hocToolkit.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+    this.props.hocToolkit.actionsDispatcher.fetchBooksForGenre(
       this.props.genre,
       this.props.currentBooksLang,
       this.props.pagination
@@ -82,7 +86,7 @@ export class BooksByGenreContainer extends React.Component<
     if (!newState.loading) {
       // We now have our genre books data for the requested page!
       // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
-      this.props.hocToolbox.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      this.props.hocToolkit.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
       this.setState(newState);
     }
   }
@@ -90,7 +94,7 @@ export class BooksByGenreContainer extends React.Component<
   private getDerivedStateFromPropsAndAppState():
     | BooksByGenreContainerState
     | BooksByGenreContainerLoadingState {
-    const appState = this.props.hocToolbox.appStateStore.getState();
+    const appState = this.props.hocToolkit.appStateStore.getState();
     const criteriaName = `${this.props.genre}-${this.props.currentBooksLang}`;
     const booksIdsByGenre = getPaginatedBooksIdsResultsFromCache(
       appState.booksIdsByGenre,

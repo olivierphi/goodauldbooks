@@ -3,7 +3,7 @@ import { Store } from "redux";
 import { ActionsDispatcher } from "../domain/app-state";
 import { AppState } from "../store";
 
-export interface HigherOrderComponentToolbox {
+export interface HigherOrderComponentToolkit {
   appStateStore: Store<AppState>;
   actionsDispatcher: ActionsDispatcher;
   messageBus: EventEmitter;

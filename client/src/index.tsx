@@ -5,10 +5,9 @@ import "url-search-params-polyfill";
 import { bootApp } from "./app-bootstrap";
 import { Layout } from "./components/Layout";
 import { AppEnvelope } from "./hoc/AppEnvelope";
-import { servicesLocator } from "./ServicesLocator";
 
 async function startApp(): Promise<boolean> {
-  await bootApp();
+  const servicesLocator = await bootApp();
   const appHtmlContainer = document.getElementById("app");
   if (appHtmlContainer !== null) {
     renderApp(appHtmlContainer, servicesLocator);
@@ -17,7 +16,7 @@ async function startApp(): Promise<boolean> {
   return Promise.resolve(true);
 }
 
-startApp().catch((reason) => {
+startApp().catch(reason => {
   console.error("Can't start app!", reason); // tslint:disable-line
 });
 

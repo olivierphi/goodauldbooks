@@ -1,10 +1,10 @@
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import { BooksLangContext } from "../contexts/books-lang";
-import { HigherOrderComponentToolboxContext } from "../contexts/hoc-toolbox";
+import { HigherOrderComponentToolkitContext } from "../contexts/hoc-toolkit";
 import { Lang } from "../domain/core";
 import { BooksByGenreContainer } from "../hoc/Book/BooksByGenreContainer";
-import { HigherOrderComponentToolbox } from "../hoc/HigherOrderComponentToolbox";
+import { HigherOrderComponentToolkit } from "../hoc/HigherOrderComponentToolkit";
 
 export function GenrePage(routeProps: RouteComponentProps<{ genre: string }>): JSX.Element {
   const search = routeProps.location.search;
@@ -13,20 +13,20 @@ export function GenrePage(routeProps: RouteComponentProps<{ genre: string }>): J
 
   return (
     <section>
-      <HigherOrderComponentToolboxContext.Consumer>
-        {(hocToolbox: HigherOrderComponentToolbox) => (
+      <HigherOrderComponentToolkitContext.Consumer>
+        {(hocToolkit: HigherOrderComponentToolkit) => (
           <BooksLangContext.Consumer>
             {(currentBooksLang: Lang) => (
               <BooksByGenreContainer
                 genre={routeProps.match.params.genre}
                 pagination={{ page: pageNumber, nbPerPage: 6 }}
                 currentBooksLang={currentBooksLang}
-                hocToolbox={hocToolbox}
+                hocToolkit={hocToolkit}
               />
             )}
           </BooksLangContext.Consumer>
         )}
-      </HigherOrderComponentToolboxContext.Consumer>
+      </HigherOrderComponentToolkitContext.Consumer>
     </section>
   );
 }

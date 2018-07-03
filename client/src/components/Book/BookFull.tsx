@@ -1,8 +1,8 @@
 import * as React from "react";
-import { OmnipotentComponentToolboxContext } from "../../contexts/omnipotent-component-toolbox";
+import { OmnipotentComponentToolkitContext } from "../../contexts/omnipotent-component-toolkit";
 import { BookFull, GenreWithStats, Lang } from "../../domain/core";
 import { BookIntroContainer } from "../../hoc/Book/BookIntroContainer";
-import { OmniponentComponentToolbox } from "../../hoc/OmnipotentComponentToolbox";
+import { OmniponentComponentToolkit } from "../../hoc/OmnipotentComponentToolkit";
 import { Author } from "./Author";
 import { BookCover } from "./BookCover";
 import { EbookDownloadLinks } from "./EbookDownloadLinks";
@@ -18,8 +18,8 @@ export function BookFull(props: BookFullProps) {
   const book = props.book;
 
   return (
-    <OmnipotentComponentToolboxContext.Consumer>
-      {(omnipotentToolbox: OmniponentComponentToolbox) => (
+    <OmnipotentComponentToolkitContext.Consumer>
+      {(omnipotentToolkit: OmniponentComponentToolkit) => (
         <div className="columns book-full">
           <div className="column">
             <div className="box">
@@ -41,12 +41,12 @@ export function BookFull(props: BookFullProps) {
                 />
                 <Author author={book.author} />
                 <EbookDownloadLinks book={book} />
-                <BookIntroContainer bookId={book.id} hocToolbox={omnipotentToolbox} />
+                <BookIntroContainer bookId={book.id} hocToolkit={omnipotentToolkit} />
               </div>
             </div>
           </div>
         </div>
       )}
-    </OmnipotentComponentToolboxContext.Consumer>
+    </OmnipotentComponentToolkitContext.Consumer>
   );
 }

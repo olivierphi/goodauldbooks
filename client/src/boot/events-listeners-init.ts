@@ -12,5 +12,5 @@ export function registerEventsListeners(servicesLocator: ServicesLocator): void 
     servicesLocator.messageBus,
     servicesLocator.actionsDispatcher
   );
-  registerGoToPageEventListener(servicesLocator.messageBus);
+  registerGoToPageEventListener(servicesLocator.appStateStore, servicesLocator.messageBus);
 }

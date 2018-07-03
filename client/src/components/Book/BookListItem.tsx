@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { Book } from "../../domain/core";
+import { BooksLangContext } from "../../contexts/books-lang";
+import { Book, Lang } from "../../domain/core";
 import { getAuthorPageUrl, getBookPageUrl } from "../../utils/routing-utils";
 import { BookCover } from "./BookCover";
 
@@ -9,27 +10,39 @@ export interface ListItemProps {
 }
 
 export function BookListItem(props: ListItemProps) {
-  const book = props.book;
-  const bookUrl = getBookPageUrl(book.lang, book.author.slug, book.slug, book.id);
+  const bookUrl = (currentBooksLang: Lang, book: Book) => {
+    return getBookPageUrl(currentBooksLang, book.lang, book.author.slug, book.slug, book.id);
+  };
 
   return (
-    <div className="column is-one-third">
-      <div className="box book-list-item">
-        <div className="box-header">
-          <BookCover book={book} />
+    <BooksLangContext.Consumer>
+      {(currentBooksLang: Lang) => (
+        <div className="column is-one-third">
+          <div className="box book-list-item">
+            <div className="box-header">
+              <BookCover book={props.book} />
+            </div>
+            <div className="box-content">
+              <h3 className="book-title">
+                <Link to={bookUrl(currentBooksLang, props.book)}>{props.book.title}</Link>
+              </h3>
+              {props.book.subtitle ? <p className="book-subtitle">{props.book.subtitle}</p> : ""}
+              <p className="book-author">
+                <Link
+                  to={getAuthorPageUrl(
+                    currentBooksLang,
+                    props.book.author.slug,
+                    props.book.author.id
+                  )}
+                  className="name"
+                >
+                  {props.book.author.firstName} {props.book.author.lastName}
+                </Link>
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="box-content">
-          <h3 className="book-title">
-            <Link to={bookUrl}>{book.title}</Link>
-          </h3>
-          {book.subtitle ? <p className="book-subtitle">{book.subtitle}</p> : ""}
-          <p className="book-author">
-            <Link to={getAuthorPageUrl(book.author.slug, book.author.id)} className="name">
-              {book.author.firstName} {book.author.lastName}
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+      )}
+    </BooksLangContext.Consumer>
   );
 }

@@ -3,11 +3,11 @@ import { BooksList } from "../../components/Book/BooksList";
 import { BooksById, Lang } from "../../domain/core";
 import { EVENTS } from "../../domain/messages";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
-import { HigherOrderComponentToolbox } from "../HigherOrderComponentToolbox";
+import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
 
 interface FeaturedBooksContainerProps {
   currentBooksLang: Lang;
-  hocToolbox: HigherOrderComponentToolbox;
+  hocToolkit: HigherOrderComponentToolkit;
 }
 
 interface FeaturedBooksContainerState {
@@ -40,8 +40,8 @@ export class FeaturedBooksContainer extends React.Component<
   }
 
   private fetchData(): void {
-    this.props.hocToolbox.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
-    this.props.hocToolbox.actionsDispatcher.fetchFeaturedBooksList(this.props.currentBooksLang);
+    this.props.hocToolkit.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+    this.props.hocToolkit.actionsDispatcher.fetchFeaturedBooksList(this.props.currentBooksLang);
   }
 
   private onBookDataFetched(): void {
@@ -49,7 +49,7 @@ export class FeaturedBooksContainer extends React.Component<
     if (!newState.loading) {
       // We now have our freatures books data for the given language!
       // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
-      this.props.hocToolbox.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      this.props.hocToolkit.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
       this.setState(newState);
     }
   }
@@ -57,7 +57,7 @@ export class FeaturedBooksContainer extends React.Component<
   private getDerivedStateFromPropsAndAppState():
     | FeaturedBooksContainerState
     | FeaturedBooksContainerLoadingState {
-    const appState = this.props.hocToolbox.appStateStore.getState();
+    const appState = this.props.hocToolkit.appStateStore.getState();
 
     if (!appState.featuredBooksIds.length) {
       return { loading: true };

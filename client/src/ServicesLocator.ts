@@ -36,7 +36,7 @@ function sharedService(serviceId: SharedServicesIds, serviceFactory: () => any) 
   return serviceSharedInstance;
 }
 
-class ServicesLocatorImpl implements ServicesLocator {
+export class ServicesLocatorImpl implements ServicesLocator {
   private booted: boolean = false;
 
   public async boot(): Promise<boolean> {
@@ -53,7 +53,7 @@ class ServicesLocatorImpl implements ServicesLocator {
 
   get appStateStore(): Store<AppState> {
     return sharedService(SharedServicesIds.APP_STATE_STORE, () => {
-      return initStore();
+      return initStore(this);
     });
   }
 
@@ -102,7 +102,7 @@ class ServicesLocatorImpl implements ServicesLocator {
 
   get actionsDispatcher(): ActionsDispatcher {
     return sharedService(SharedServicesIds.ACTIONS_DISPATCHER, () => {
-      const actionsDispatcher = new ActionsDispatcherImpl(this.appStateStore);
+      const actionsDispatcher = new ActionsDispatcherImpl(this.booksRepository, this.appStateStore);
 
       return actionsDispatcher;
     });
@@ -128,5 +128,3 @@ class ServicesLocatorImpl implements ServicesLocator {
     );
   }
 }
-
-export const servicesLocator: ServicesLocator = new ServicesLocatorImpl();

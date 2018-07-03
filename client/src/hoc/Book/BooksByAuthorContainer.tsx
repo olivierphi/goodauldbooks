@@ -6,13 +6,13 @@ import { PaginationRequestData, PaginationResponseData } from "../../domain/quer
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
 import { getPaginatedBooksIdsResultsFromCache } from "../../utils/pagination-utils";
 import { getAuthorPageUrl } from "../../utils/routing-utils";
-import { HigherOrderComponentToolbox } from "../HigherOrderComponentToolbox";
+import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
 
 interface BooksByAuthorContainerProps {
   authorId: string;
   pagination: PaginationRequestData;
   currentBooksLang: Lang;
-  hocToolbox: HigherOrderComponentToolbox;
+  hocToolkit: HigherOrderComponentToolkit;
 }
 
 interface BooksByAuthorContainerState {
@@ -66,19 +66,28 @@ export class BooksByAuthorContainer extends React.Component<
     if (this.state.loading) {
       return;
     }
-    const authorSlug = this.state.authorBooks.length
-      ? Object.values(this.state.authorBooks)[0].author.slug
+    const authorBooks = Object.values(this.state.authorBooks);
+    const hasBooks = authorBooks.length > 0;
+    if (!hasBooks) {
+      return;
+    }
+
+    const authorSlug = authorBooks[0].author.slug;
+    const targetUrl = authorSlug
+      ? getAuthorPageUrl(
+          this.props.hocToolkit.appStateStore.getState().booksLang,
+          authorSlug,
+          this.props.authorId,
+          pageNum
+        )
       : null;
-    const baseUrlWithoutPagination = authorSlug
-      ? getAuthorPageUrl(authorSlug, this.props.authorId)
-      : null;
-    const targetUrl = `${baseUrlWithoutPagination}?page=${pageNum}`;
-    this.props.hocToolbox.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
+
+    this.props.hocToolkit.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
   }
 
   private fetchData(): void {
-    this.props.hocToolbox.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
-    this.props.hocToolbox.actionsDispatcher.fetchBooksForAuthor(
+    this.props.hocToolkit.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+    this.props.hocToolkit.actionsDispatcher.fetchBooksForAuthor(
       this.props.authorId,
       this.props.currentBooksLang,
       this.props.pagination
@@ -90,7 +99,7 @@ export class BooksByAuthorContainer extends React.Component<
     if (!newState.loading) {
       // We now have our author books data for the requested page!
       // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
-      this.props.hocToolbox.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      this.props.hocToolkit.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
       this.setState(newState);
     }
   }
@@ -98,7 +107,7 @@ export class BooksByAuthorContainer extends React.Component<
   private getDerivedStateFromPropsAndAppState():
     | BooksByAuthorContainerState
     | BooksByAuthorContainerLoadingState {
-    const appState = this.props.hocToolbox.appStateStore.getState();
+    const appState = this.props.hocToolkit.appStateStore.getState();
     const criteriaName = `${this.props.authorId}-${this.props.currentBooksLang}`;
     const booksIdsByAuthor = getPaginatedBooksIdsResultsFromCache(
       appState.booksIdsByAuthor,

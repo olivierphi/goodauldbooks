@@ -1,9 +1,11 @@
 import { EVENTS } from "domain/messages";
 import { Middleware } from "redux";
-import { servicesLocator } from "../ServicesLocator";
+import { ServicesLocator } from "../domain/services";
 import { Actions } from "../store/actions";
 
-export const StoreActionsToMessageBusEvents: Middleware = (api) => (next) => (action) => {
+export const storeActionsToMessageBusEvents = (
+  servicesLocator: ServicesLocator
+): Middleware => api => next => action => {
   console.log("dispatching", action); // tslint:disable-line
   const result = next(action);
   console.log("next state", api.getState()); // tslint:disable-line

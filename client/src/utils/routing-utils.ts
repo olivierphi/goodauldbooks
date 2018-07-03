@@ -1,33 +1,32 @@
 import { Lang } from "domain/core";
-import { servicesLocator } from "../ServicesLocator";
-
-const appStateStore = servicesLocator.appStateStore;
 
 // @see Main.tsx for the definitions of those routes
 
 export function getBookPageUrl(
+  currentBooksLang: Lang,
   bookLang: Lang,
   authorSlug: string,
   bookSlug: string,
   bookId: string
 ) {
-  return `/library/${
-    appStateStore.getState().booksLang
-  }/book/${bookLang}/${authorSlug}/${bookSlug}/${bookId}`;
+  return `/library/${currentBooksLang}/book/${bookLang}/${authorSlug}/${bookSlug}/${bookId}`;
 }
 
 export function getAuthorPageUrl(
+  currentBooksLang: Lang,
   authorSlug: string,
   authorId: string,
   pageNumber: null | number = null
 ) {
-  return `/library/${appStateStore.getState().booksLang}/author/${authorSlug}/${authorId}${
-    pageNumber ? `&page=${pageNumber}` : ""
+  return `/library/${currentBooksLang}/author/${authorSlug}/${authorId}${
+    pageNumber ? `?page=${pageNumber}` : ""
   }`;
 }
 
-export function getGenrePageUrl(genre: string, pageNumber: null | number = null) {
-  return `/library/${appStateStore.getState().booksLang}/genre/${genre}${
-    pageNumber ? `&page=${pageNumber}` : ""
-  }`;
+export function getGenrePageUrl(
+  currentBooksLang: Lang,
+  genre: string,
+  pageNumber: null | number = null
+) {
+  return `/library/${currentBooksLang}/genre/${genre}${pageNumber ? `?page=${pageNumber}` : ""}`;
 }

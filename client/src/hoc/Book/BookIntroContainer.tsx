@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BookIntro } from "../../components/Book/BookIntro";
-import { OmniponentComponentToolbox } from "../OmnipotentComponentToolbox";
+import { OmniponentComponentToolkit } from "../OmnipotentComponentToolkit";
 
 /**
  * We don't store the books intros in the global app state, as they
@@ -16,7 +16,7 @@ const booksIntrosCache: BookIntrosCache = {};
 
 export interface BookIntroContainerProps {
   bookId: string;
-  hocToolbox: OmniponentComponentToolbox;
+  hocToolkit: OmniponentComponentToolkit;
 }
 
 export interface BookIntroContainerState {
@@ -61,7 +61,7 @@ export class BookIntroContainer extends React.Component<
   }
 
   private async loadBookIntro(bookId: string): Promise<null> {
-    const bookIntro = await this.props.hocToolbox.servicesLocator.booksRepository.getBookIntro(
+    const bookIntro = await this.props.hocToolkit.servicesLocator.booksRepository.getBookIntro(
       bookId
     );
     booksIntrosCache[bookId] = bookIntro;

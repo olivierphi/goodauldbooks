@@ -1,10 +1,11 @@
 import { applyMiddleware, combineReducers, compose, createStore, Middleware, Store } from "redux";
 import promiseMiddleware from "redux-promise-middleware";
+import { ServicesLocator } from "./domain/services";
 import * as appMiddlewares from "./redux/middlewares";
 import { AppState } from "./store";
 import * as reducers from "./store/reducers";
 
-export function initStore(): Store<AppState> {
+export function initStore(servicesLocator: ServicesLocator): Store<AppState> {
   const booksApp = combineReducers(reducers);
 
   const windowRef: any = window || null;
@@ -15,7 +16,7 @@ export function initStore(): Store<AppState> {
 
   const middlewares: Middleware[] = [
     promiseMiddleware(),
-    appMiddlewares.StoreActionsToMessageBusEvents,
+    appMiddlewares.storeActionsToMessageBusEvents(servicesLocator),
   ];
   const store = createStore(
     booksApp,

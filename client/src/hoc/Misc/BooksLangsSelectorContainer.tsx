@@ -4,20 +4,20 @@ import { BooksLangsSelector } from "../../components/Misc/BooksLangsSelector";
 import { BooksLangContext } from "../../contexts/books-lang";
 import { ACTIONS } from "../../domain/messages";
 import { replaceBooksLangInLocation } from "../../utils/url-utils";
-import { OmniponentComponentToolbox } from "../OmnipotentComponentToolbox";
+import { OmniponentComponentToolkit } from "../OmnipotentComponentToolkit";
 
 interface BooksLangsSelectorContainerProps {
-  hocToolbox: OmniponentComponentToolbox;
+  hocToolkit: OmniponentComponentToolkit;
 }
 
 export function BooksLangsSelectorContainer(props: BooksLangsSelectorContainerProps) {
-  const servicesLocator = props.hocToolbox.servicesLocator;
+  const servicesLocator = props.hocToolkit.servicesLocator;
 
   const availableBooksLangs = servicesLocator.booksLangsRepository.getAllLangs();
 
   const onLangChange = (lang: string) => {
     const newUrl = replaceBooksLangInLocation(servicesLocator.history.location, lang);
-    props.hocToolbox.messageBus.emit(ACTIONS.PUSH_URL, newUrl);
+    props.hocToolkit.messageBus.emit(ACTIONS.PUSH_URL, newUrl);
   };
 
   return (

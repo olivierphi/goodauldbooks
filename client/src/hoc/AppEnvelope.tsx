@@ -7,19 +7,19 @@ import { Router } from "react-router-dom";
 import { AppConfig } from "../app-config";
 import { AssetsConfigContext } from "../contexts/assets-config";
 import { BooksLangContext } from "../contexts/books-lang";
-import { HigherOrderComponentToolboxContext } from "../contexts/hoc-toolbox";
+import { HigherOrderComponentToolkitContext } from "../contexts/hoc-toolkit";
 import { MessageBusContext } from "../contexts/message-bus";
-import { OmnipotentComponentToolboxContext } from "../contexts/omnipotent-component-toolbox";
-import { HigherOrderComponentToolbox } from "./HigherOrderComponentToolbox";
-import { OmniponentComponentToolbox } from "./OmnipotentComponentToolbox";
+import { OmnipotentComponentToolkitContext } from "../contexts/omnipotent-component-toolkit";
+import { HigherOrderComponentToolkit } from "./HigherOrderComponentToolkit";
+import { OmniponentComponentToolkit } from "./OmnipotentComponentToolkit";
 
 interface AppEnvelopeProps {
   servicesLocator: ServicesLocator;
 }
 
 interface AppEnvelopeState {
-  hocToolbox: HigherOrderComponentToolbox;
-  omnipotentComponentToolbox: OmniponentComponentToolbox;
+  hocToolkit: HigherOrderComponentToolkit;
+  omnipotentComponentToolkit: OmniponentComponentToolkit;
   assetsConfig: AssetsConfig;
   booksLang: string;
 }
@@ -46,8 +46,8 @@ export class AppEnvelope extends React.Component<AppEnvelopeProps, AppEnvelopeSt
   public render() {
     // Hope you like "Context.Provider Hell"... :-P
     return (
-      <OmnipotentComponentToolboxContext.Provider value={this.state.omnipotentComponentToolbox}>
-        <HigherOrderComponentToolboxContext.Provider value={this.state.hocToolbox}>
+      <OmnipotentComponentToolkitContext.Provider value={this.state.omnipotentComponentToolkit}>
+        <HigherOrderComponentToolkitContext.Provider value={this.state.hocToolkit}>
           <MessageBusContext.Provider value={this.props.servicesLocator.messageBus}>
             <BooksLangContext.Provider value={this.state.booksLang}>
               <I18nextProvider i18n={this.props.servicesLocator.i18n}>
@@ -62,25 +62,25 @@ export class AppEnvelope extends React.Component<AppEnvelopeProps, AppEnvelopeSt
               </I18nextProvider>
             </BooksLangContext.Provider>
           </MessageBusContext.Provider>
-        </HigherOrderComponentToolboxContext.Provider>
-      </OmnipotentComponentToolboxContext.Provider>
+        </HigherOrderComponentToolkitContext.Provider>
+      </OmnipotentComponentToolkitContext.Provider>
     );
   }
 
   private getInitialState(): AppEnvelopeState {
-    const hocToolbox = {
+    const hocToolkit = {
       appStateStore: this.props.servicesLocator.appStateStore,
       actionsDispatcher: this.props.servicesLocator.actionsDispatcher,
       messageBus: this.props.servicesLocator.messageBus,
     };
-    const omnipotentComponentToolbox = {
-      ...hocToolbox,
+    const omnipotentComponentToolkit = {
+      ...hocToolkit,
       servicesLocator: this.props.servicesLocator,
     };
 
     return {
-      hocToolbox,
-      omnipotentComponentToolbox,
+      hocToolkit,
+      omnipotentComponentToolkit,
       booksLang: this.props.servicesLocator.appStateStore.getState().booksLang,
       assetsConfig: { coversBaseUrl: AppConfig.coversBaseURL },
     };

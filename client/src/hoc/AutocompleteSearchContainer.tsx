@@ -5,10 +5,10 @@ import { BooksLangContext } from "../contexts/books-lang";
 import { Lang } from "../domain/core";
 import { ACTIONS, GoToAuthorPageAction, GoToBookPageAction } from "../domain/messages";
 import { QuickSearchResult } from "../domain/queries";
-import { OmniponentComponentToolbox } from "./OmnipotentComponentToolbox";
+import { OmniponentComponentToolkit } from "./OmnipotentComponentToolkit";
 
 export interface AutocompleteSearchContainerProps {
-  hocToolbox: OmniponentComponentToolbox;
+  hocToolkit: OmniponentComponentToolkit;
 }
 
 export class AutocompleteSearchContainer extends React.Component<AutocompleteSearchContainerProps> {
@@ -37,7 +37,7 @@ export class AutocompleteSearchContainer extends React.Component<AutocompleteSea
       return Promise.resolve({ options: [] });
     }
 
-    const booksRepository = this.props.hocToolbox.servicesLocator.booksRepository;
+    const booksRepository = this.props.hocToolkit.servicesLocator.booksRepository;
     const results = await booksRepository.quickSearch(input, booksLang);
     if (!results.length) {
       return { options: [], complete: true };
@@ -67,7 +67,7 @@ export class AutocompleteSearchContainer extends React.Component<AutocompleteSea
         bookLang: book.lang,
         authorSlug: author.slug,
       };
-      this.props.hocToolbox.messageBus.emit(ACTIONS.GO_TO_BOOK_PAGE, goToBookPageActionPayload);
+      this.props.hocToolkit.messageBus.emit(ACTIONS.GO_TO_BOOK_PAGE, goToBookPageActionPayload);
       return;
     }
 
@@ -76,7 +76,7 @@ export class AutocompleteSearchContainer extends React.Component<AutocompleteSea
         authorId: author.id,
         authorSlug: author.slug,
       };
-      this.props.hocToolbox.messageBus.emit(ACTIONS.GO_TO_AUTHOR_PAGE, goToAuthorPageActionPayload);
+      this.props.hocToolkit.messageBus.emit(ACTIONS.GO_TO_AUTHOR_PAGE, goToAuthorPageActionPayload);
       return;
     }
   }
