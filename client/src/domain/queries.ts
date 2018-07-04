@@ -1,17 +1,17 @@
-import { BooksById, BookWithGenreStats } from "./core";
+import { BooksById, BookWithGenreStats, Lang } from "./core";
 
 export interface BooksRepository {
-  getFeaturedBooks(): Promise<BooksById>;
+  getFeaturedBooks(lang: Lang): Promise<BooksById>;
   getBookById(bookId: string): Promise<BookWithGenreStats | null>;
-  quickSearch(pattern: string, lang: string): Promise<QuickSearchResult[]>;
+  quickSearch(pattern: string, lang: Lang): Promise<QuickSearchResult[]>;
   getBooksByGenre(
     genre: string,
-    lang: string,
+    lang: Lang,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList>;
   getBooksByAuthor(
     authorId: string,
-    lang: string,
+    lang: Lang,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList>;
   getBookIntro(bookId: string): Promise<string | null>;

@@ -1,7 +1,12 @@
+import * as EventEmitter from "eventemitter3";
+import { createBrowserHistory, History } from "history";
 import { i18n as i18next } from "i18next";
 import { Store } from "redux";
+import { ActionsDispatcherImpl } from "./ActionsDispatcher";
 import { initI18n } from "./boot/i18n-init";
+import { ActionsDispatcher } from "./domain/app-state";
 import { BooksLanguagesRepository, BooksRepository } from "./domain/queries";
+import { ServicesLocator } from "./domain/services";
 import { BooksHttpRepository } from "./repositories/BooksHttpRepository";
 import { BooksLanguagesGeneratedJsonRepository } from "./repositories/BooksLanguagesGeneratedJsonRepository";
 import { BooksWithAppStateCacheRepository } from "./repositories/BooksWithAppStateCacheRepository";
@@ -14,6 +19,9 @@ enum SharedServicesIds {
   BOOKS_APP_STATE_CACHE_REPOSITORY,
   BOOKS_LANGS_JSON_REPOSITORY,
   I18N,
+  MESSAGE_BUS,
+  HISTORY,
+  ACTIONS_DISPATCHER,
 }
 
 type SharedServicesRegistry = Map<SharedServicesIds, any>;
@@ -28,7 +36,7 @@ function sharedService(serviceId: SharedServicesIds, serviceFactory: () => any) 
   return serviceSharedInstance;
 }
 
-export class ServicesContainer {
+export class ServicesLocatorImpl implements ServicesLocator {
   private booted: boolean = false;
 
   public async boot(): Promise<boolean> {
@@ -45,7 +53,7 @@ export class ServicesContainer {
 
   get appStateStore(): Store<AppState> {
     return sharedService(SharedServicesIds.APP_STATE_STORE, () => {
-      return initStore();
+      return initStore(this);
     });
   }
 
@@ -57,7 +65,7 @@ export class ServicesContainer {
         booksHttpRepository
       );
 
-      return booksHttpRepository;
+      return bookWithCacheRepository;
     });
   }
 
@@ -74,6 +82,34 @@ export class ServicesContainer {
       this.throwNotBootedError("i18n");
     }
     return sharedServicesRegistry.get(SharedServicesIds.I18N);
+  }
+
+  get messageBus(): EventEmitter {
+    return sharedService(SharedServicesIds.MESSAGE_BUS, () => {
+      const eventEmitter = new EventEmitter();
+
+      return eventEmitter;
+    });
+  }
+
+  get history(): History {
+    return sharedService(SharedServicesIds.HISTORY, () => {
+      const history = createBrowserHistory();
+
+      return history;
+    });
+  }
+
+  get actionsDispatcher(): ActionsDispatcher {
+    return sharedService(SharedServicesIds.ACTIONS_DISPATCHER, () => {
+      const actionsDispatcher = new ActionsDispatcherImpl(
+        this.booksRepository,
+        this.messageBus,
+        this.appStateStore
+      );
+
+      return actionsDispatcher;
+    });
   }
 
   private get booksHttpRepository(): BooksRepository {
@@ -96,5 +132,3 @@ export class ServicesContainer {
     );
   }
 }
-
-export const container = new ServicesContainer();

@@ -1,75 +1,134 @@
 import * as React from "react";
-import { connect } from "react-redux";
-import { Action } from "redux";
 import { BooksList } from "../../components/Book/BooksList";
-import { BooksById, PaginatedBooksIdsListByCriteria } from "../../domain/core";
+import { BooksById, Lang } from "../../domain/core";
+import { ACTIONS, EVENTS } from "../../domain/messages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
-import { AppState } from "../../store";
-import { fetchBooksForAuthor } from "../../store/actions";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
 import { getPaginatedBooksIdsResultsFromCache } from "../../utils/pagination-utils";
 import { getAuthorPageUrl } from "../../utils/routing-utils";
+import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
 
 interface BooksByAuthorContainerProps {
   authorId: string;
   pagination: PaginationRequestData;
+  currentBooksLang: Lang;
+  hocToolkit: HigherOrderComponentToolkit;
 }
 
-const mapStateToProps = (state: AppState, ownProps: BooksByAuthorContainerProps) => {
-  return {
-    currentBooksLang: state.currentBooksLang,
-    allBooks: state.booksById,
-    booksIdsByAuthor: state.booksIdsByAuthor,
-    authorId: ownProps.authorId,
-    pagination: ownProps.pagination,
-  };
-};
-
-const mapDispatchToProps = (dispatch: (action: Action) => void) => {
-  return {
-    fetchBooksForAuthor: (authorId: string, lang: string, pagination: PaginationRequestData) => {
-      dispatch(fetchBooksForAuthor(authorId, lang, pagination));
-    },
-  };
-};
-
-interface BooksListHOCProps {
-  currentBooksLang: string;
-  allBooks: BooksById;
-  booksIdsByAuthor: PaginatedBooksIdsListByCriteria;
-  fetchBooksForAuthor: (authorId: string, lang: string, pagination: PaginationRequestData) => void;
+interface BooksByAuthorContainerState {
+  loading: false;
+  authorBooks: BooksById;
+  paginationResponseData: PaginationResponseData;
 }
 
-const BooksListHOC = (props: BooksByAuthorContainerProps & BooksListHOCProps) => {
-  const criteriaName = `${props.authorId}-${props.currentBooksLang}`;
-  const booksIdsByAuthor = getPaginatedBooksIdsResultsFromCache(
-    props.booksIdsByAuthor,
-    criteriaName,
-    props.pagination
-  );
-  if (!booksIdsByAuthor) {
-    props.fetchBooksForAuthor(props.authorId, props.currentBooksLang, props.pagination);
-    return <div className="loading">Loading books for this author...</div>;
+interface BooksByAuthorContainerLoadingState {
+  loading: true;
+}
+
+export class BooksByAuthorContainer extends React.Component<
+  BooksByAuthorContainerProps,
+  BooksByAuthorContainerState | BooksByAuthorContainerLoadingState
+> {
+  constructor(props: BooksByAuthorContainerProps) {
+    super(props);
+    this.state = this.getDerivedStateFromPropsAndAppState();
+    this.onBookDataFetched = this.onBookDataFetched.bind(this);
+    this.navigateToPageNum = this.navigateToPageNum.bind(this);
   }
 
-  const booksToDisplay = getBooksByIdsFromState(booksIdsByAuthor, props.allBooks);
-  const paginationResponseData: PaginationResponseData = {
-    nbResultsTotal: props.booksIdsByAuthor[criteriaName].nbResultsTotal,
-    ...props.pagination,
-  };
+  public componentDidUpdate(prevProps: BooksByAuthorContainerProps): void {
+    if (
+      prevProps.currentBooksLang !== this.props.currentBooksLang ||
+      prevProps.pagination.page !== this.props.pagination.page ||
+      prevProps.authorId !== this.props.authorId
+    ) {
+      const newState = this.getDerivedStateFromPropsAndAppState();
+      this.setState(newState);
+    }
+  }
 
-  const authorSlug = Object.values(props.allBooks)[0].author.slug;
+  public render() {
+    if (this.state.loading) {
+      this.fetchData();
+      return <div className="loading">Loading books for this author...</div>;
+    }
 
-  return (
-    <BooksList
-      books={booksToDisplay}
-      pagination={paginationResponseData}
-      baseUrlWithoutPagination={getAuthorPageUrl(authorSlug, props.authorId)}
-    />
-  );
-};
+    return (
+      <BooksList
+        books={this.state.authorBooks}
+        pagination={this.state.paginationResponseData}
+        navigateToPageNum={this.navigateToPageNum}
+      />
+    );
+  }
 
-export const BooksByAuthorContainer = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(BooksListHOC);
+  private navigateToPageNum(pageNum: number): void {
+    if (this.state.loading) {
+      return;
+    }
+    const authorBooks = Object.values(this.state.authorBooks);
+    const hasBooks = authorBooks.length > 0;
+    if (!hasBooks) {
+      return;
+    }
+
+    const authorSlug = authorBooks[0].author.slug;
+    const targetUrl = authorSlug
+      ? getAuthorPageUrl(
+          this.props.hocToolkit.appStateStore.getState().booksLang,
+          authorSlug,
+          this.props.authorId,
+          pageNum
+        )
+      : null;
+
+    this.props.hocToolkit.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
+  }
+
+  private fetchData(): void {
+    this.props.hocToolkit.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+    this.props.hocToolkit.actionsDispatcher.fetchBooksForAuthor(
+      this.props.authorId,
+      this.props.currentBooksLang,
+      this.props.pagination
+    );
+  }
+
+  private onBookDataFetched(): void {
+    const newState = this.getDerivedStateFromPropsAndAppState();
+    if (!newState.loading) {
+      // We now have our author books data for the requested page!
+      // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
+      this.props.hocToolkit.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      this.setState(newState);
+    }
+  }
+
+  private getDerivedStateFromPropsAndAppState():
+    | BooksByAuthorContainerState
+    | BooksByAuthorContainerLoadingState {
+    const appState = this.props.hocToolkit.appStateStore.getState();
+    const criteriaName = `${this.props.authorId}-${this.props.currentBooksLang}`;
+    const booksIdsByAuthor = getPaginatedBooksIdsResultsFromCache(
+      appState.booksIdsByAuthor,
+      criteriaName,
+      this.props.pagination
+    );
+
+    if (!booksIdsByAuthor) {
+      return { loading: true };
+    }
+
+    const authorBooks = getBooksByIdsFromState(booksIdsByAuthor, appState.booksById);
+    const paginationResponseData: PaginationResponseData = {
+      nbResultsTotal: appState.booksIdsByAuthor[criteriaName].nbResultsTotal,
+      ...this.props.pagination,
+    };
+
+    return {
+      loading: false,
+      authorBooks,
+      paginationResponseData,
+    };
+  }
+}

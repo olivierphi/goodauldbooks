@@ -1,94 +1,127 @@
 import * as React from "react";
-import { connect } from "react-redux";
-import { Action } from "redux";
 import { BookFull as BookFullComponent } from "../../components/Book/BookFull";
-import { Book, BookFull, GenreWithStats, GenreWithStatsByName } from "../../domain/core";
-import { fetchBookWithGenreStats } from "../../store/actions";
-import { AppState } from "../../store/index";
+import { BooksLangContext } from "../../contexts/books-lang";
+import { BookFull, GenreWithStats, GenreWithStatsByName, Lang } from "../../domain/core";
+import { EVENTS } from "../../domain/messages";
 import {
   appStateHasGenresWithStats,
   getFullBookDataFromState,
   getGenresWithStatsFromState,
 } from "../../utils/app-state-utils";
+import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
 
-const mapStateToProps = (props: AppState, ownProps: { bookId: string }) => {
-  const book: Book | null = props.booksById[ownProps.bookId];
-  return {
-    appState: props,
-    bookId: ownProps.bookId,
-    book,
-  };
-};
-
-const mapDispatchToProps = (dispatch: (action: Action) => void) => {
-  return {
-    fetchBookWithGenreStats: (bookId: string) => {
-      dispatch(fetchBookWithGenreStats(bookId));
-    },
-  };
-};
-
-const getSortedGenresWithStats = (
-  bookGenres: string[],
-  genresWithStatsByName: GenreWithStatsByName
-): GenreWithStats[] => {
-  const genresWithStats: GenreWithStats[] = getGenresWithStatsFromState(
-    bookGenres,
-    genresWithStatsByName
-  );
-  genresWithStats.sort(
-    (genreA: GenreWithStats, genreB: GenreWithStats): number => {
-      if (genreA.nbBooks > genreB.nbBooks) {
-        return -1;
-      }
-      if (genreA.nbBooks < genreB.nbBooks) {
-        return 1;
-      }
-      return 0;
-    }
-  );
-
-  return genresWithStats;
-};
-
-interface BookFullHOCProps {
-  appState: AppState;
+interface BookFullContainerProps {
   bookId: string;
-  book?: Book;
-  fetchBookWithGenreStats: (bookId: string) => void;
+  hocToolkit: HigherOrderComponentToolkit;
 }
 
-const BookFullHOC = (props: BookFullHOCProps) => {
-  if (!props.book || !props.appState.booksAssetsSize[props.bookId]) {
-    props.fetchBookWithGenreStats(props.bookId);
-    return <div className="loading">Loading full book...</div>;
+interface BookFullContainerState {
+  loading: false;
+  bookFull: BookFull;
+}
+
+interface BookFullContainerLoadingState {
+  loading: true;
+}
+
+export class BookFullContainer extends React.Component<
+  BookFullContainerProps,
+  BookFullContainerState | BookFullContainerLoadingState
+> {
+  constructor(props: BookFullContainerProps) {
+    super(props);
+    this.state = this.getDerivedStateFromPropsAndAppState();
+    this.onBookDataFetched = this.onBookDataFetched.bind(this);
   }
-  if (!appStateHasGenresWithStats(props.book.genres, props.appState.genresWithStats)) {
-    props.fetchBookWithGenreStats(props.bookId);
-    return <div className="loading">Loading book genre stats...</div>;
+
+  public render() {
+    if (this.state.loading) {
+      this.fetchData();
+      return <div className="loading">Loading full book...</div>;
+    }
+
+    const bookFull: BookFull = this.state.bookFull;
+    const appState = this.props.hocToolkit.appStateStore.getState();
+
+    const genresWithStats = this.getSortedGenresWithStats(
+      bookFull.genres,
+      appState.genresWithStats
+    );
+
+    return (
+      <BooksLangContext.Consumer>
+        {(currentBooksLang: Lang) => (
+          <BookFullComponent
+            book={bookFull}
+            genresWithStats={genresWithStats}
+            currentBooksLang={currentBooksLang}
+          />
+        )}
+      </BooksLangContext.Consumer>
+    );
   }
 
-  const currentBooksLang = props.appState.currentBooksLang;
-  const genresWithStats = getSortedGenresWithStats(
-    props.book.genres,
-    props.appState.genresWithStats
-  );
-  const bookFull: BookFull = getFullBookDataFromState(
-    props.bookId,
-    props.appState.booksById,
-    props.appState.booksAssetsSize
-  );
+  private fetchData(): void {
+    this.props.hocToolkit.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+    this.props.hocToolkit.actionsDispatcher.fetchBookWithGenreStats(this.props.bookId);
+  }
 
-  return (
-    <BookFullComponent
-      book={bookFull}
-      genresWithStats={genresWithStats}
-      currentBooksLang={currentBooksLang}
-    />
-  );
-};
+  private onBookDataFetched(): void {
+    const newState = this.getDerivedStateFromPropsAndAppState();
+    if (!newState.loading) {
+      // We now have our full book data!
+      // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
+      this.props.hocToolkit.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      this.setState(newState);
+    }
+  }
 
-export const BookFullContainer = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(BookFullHOC);
+  private getDerivedStateFromPropsAndAppState():
+    | BookFullContainerState
+    | BookFullContainerLoadingState {
+    const appState = this.props.hocToolkit.appStateStore.getState();
+    const book = appState.booksById[this.props.bookId];
+
+    if (!book || !appState.booksAssetsSize[this.props.bookId]) {
+      return { loading: true };
+    }
+    if (!appStateHasGenresWithStats(book.genres, appState.genresWithStats)) {
+      return { loading: true };
+    }
+
+    const bookFull: BookFull = getFullBookDataFromState(
+      this.props.bookId,
+      appState.booksById,
+      appState.booksAssetsSize
+    );
+
+    return {
+      loading: false,
+      bookFull,
+    };
+  }
+
+  private getSortedGenresWithStats(
+    bookGenres: string[],
+    genresWithStatsByName: GenreWithStatsByName
+  ): GenreWithStats[] {
+    const genresWithStats: GenreWithStats[] = getGenresWithStatsFromState(
+      bookGenres,
+      genresWithStatsByName
+    );
+
+    genresWithStats.sort(
+      (genreA: GenreWithStats, genreB: GenreWithStats): number => {
+        if (genreA.nbBooks > genreB.nbBooks) {
+          return -1;
+        }
+        if (genreA.nbBooks < genreB.nbBooks) {
+          return 1;
+        }
+        return 0;
+      }
+    );
+
+    return genresWithStats;
+  }
+}

@@ -1,77 +1,121 @@
 import * as React from "react";
-import { connect } from "react-redux";
-import { Action } from "redux";
 import { BooksList } from "../../components/Book/BooksList";
-import {
-  BooksById,
-  PaginatedBooksIdsList,
-  PaginatedBooksIdsListByCriteria,
-} from "../../domain/core";
+import { BooksById, Lang } from "../../domain/core";
+import { ACTIONS, EVENTS } from "../../domain/messages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
-import { AppState } from "../../store";
-import { fetchBooksForGenre } from "../../store/actions";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
 import { getPaginatedBooksIdsResultsFromCache } from "../../utils/pagination-utils";
 import { getGenrePageUrl } from "../../utils/routing-utils";
+import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
 
 interface BooksByGenreContainerProps {
   genre: string;
   pagination: PaginationRequestData;
+  currentBooksLang: Lang;
+  hocToolkit: HigherOrderComponentToolkit;
 }
 
-const mapStateToProps = (state: AppState, ownProps: BooksByGenreContainerProps) => {
-  return {
-    currentBooksLang: state.currentBooksLang,
-    allBooks: state.booksById,
-    booksIdsByGenre: state.booksIdsByGenre,
-    genre: ownProps.genre,
-    pagination: ownProps.pagination,
-  };
-};
-
-const mapDispatchToProps = (dispatch: (action: Action) => void) => {
-  return {
-    fetchBooksForGenre: (genre: string, lang: string, pagination: PaginationRequestData) => {
-      dispatch(fetchBooksForGenre(genre, lang, pagination));
-    },
-  };
-};
-
-interface BooksListHOCProps {
-  currentBooksLang: string;
-  allBooks: BooksById;
-  booksIdsByGenre: PaginatedBooksIdsListByCriteria;
-  fetchBooksForGenre: (genre: string, lang: string, pagination: PaginationRequestData) => void;
+interface BooksByGenreContainerState {
+  loading: false;
+  genreBooks: BooksById;
+  paginationResponseData: PaginationResponseData;
 }
 
-const BooksListHOC = (props: BooksByGenreContainerProps & BooksListHOCProps) => {
-  const criteriaName = `${props.genre}-${props.currentBooksLang}`;
-  const booksIdsByGenre = getPaginatedBooksIdsResultsFromCache(
-    props.booksIdsByGenre,
-    criteriaName,
-    props.pagination
-  );
-  if (!booksIdsByGenre) {
-    props.fetchBooksForGenre(props.genre, props.currentBooksLang, props.pagination);
-    return <div className="loading">Loading books for this genre...</div>;
+interface BooksByGenreContainerLoadingState {
+  loading: true;
+}
+
+export class BooksByGenreContainer extends React.Component<
+  BooksByGenreContainerProps,
+  BooksByGenreContainerState | BooksByGenreContainerLoadingState
+> {
+  constructor(props: BooksByGenreContainerProps) {
+    super(props);
+    this.state = this.getDerivedStateFromPropsAndAppState();
+    this.onBookDataFetched = this.onBookDataFetched.bind(this);
+    this.navigateToPageNum = this.navigateToPageNum.bind(this);
   }
 
-  const booksToDisplay = getBooksByIdsFromState(booksIdsByGenre, props.allBooks);
-  const paginationResponseData: PaginationResponseData = {
-    nbResultsTotal: props.booksIdsByGenre[criteriaName].nbResultsTotal,
-    ...props.pagination,
-  };
+  public componentDidUpdate(prevProps: BooksByGenreContainerProps): void {
+    if (
+      prevProps.currentBooksLang !== this.props.currentBooksLang ||
+      prevProps.pagination.page !== this.props.pagination.page ||
+      prevProps.genre !== this.props.genre
+    ) {
+      const newState = this.getDerivedStateFromPropsAndAppState();
+      this.setState(newState);
+    }
+  }
 
-  return (
-    <BooksList
-      books={booksToDisplay}
-      pagination={paginationResponseData}
-      baseUrlWithoutPagination={getGenrePageUrl(props.genre)}
-    />
-  );
-};
+  public render() {
+    if (this.state.loading) {
+      this.fetchData();
+      return <div className="loading">Loading books for this genre...</div>;
+    }
 
-export const BooksByGenreContainer = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(BooksListHOC);
+    return (
+      <BooksList
+        books={this.state.genreBooks}
+        pagination={this.state.paginationResponseData}
+        navigateToPageNum={this.navigateToPageNum}
+      />
+    );
+  }
+
+  private navigateToPageNum(pageNum: number): void {
+    const baseUrlWithoutPagination = getGenrePageUrl(
+      this.props.hocToolkit.appStateStore.getState().booksLang,
+      this.props.genre
+    );
+
+    const targetUrl = `${baseUrlWithoutPagination}?page=${pageNum}`;
+    this.props.hocToolkit.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
+  }
+
+  private fetchData(): void {
+    this.props.hocToolkit.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+    this.props.hocToolkit.actionsDispatcher.fetchBooksForGenre(
+      this.props.genre,
+      this.props.currentBooksLang,
+      this.props.pagination
+    );
+  }
+
+  private onBookDataFetched(): void {
+    const newState = this.getDerivedStateFromPropsAndAppState();
+    if (!newState.loading) {
+      // We now have our genre books data for the requested page!
+      // --> Let's update our state (and re-render), and stop listening to that BOOK_DATA_FETCHED event
+      this.props.hocToolkit.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+      this.setState(newState);
+    }
+  }
+
+  private getDerivedStateFromPropsAndAppState():
+    | BooksByGenreContainerState
+    | BooksByGenreContainerLoadingState {
+    const appState = this.props.hocToolkit.appStateStore.getState();
+    const criteriaName = `${this.props.genre}-${this.props.currentBooksLang}`;
+    const booksIdsByGenre = getPaginatedBooksIdsResultsFromCache(
+      appState.booksIdsByGenre,
+      criteriaName,
+      this.props.pagination
+    );
+
+    if (!booksIdsByGenre) {
+      return { loading: true };
+    }
+
+    const genreBooks = getBooksByIdsFromState(booksIdsByGenre, appState.booksById);
+    const paginationResponseData: PaginationResponseData = {
+      nbResultsTotal: appState.booksIdsByGenre[criteriaName].nbResultsTotal,
+      ...this.props.pagination,
+    };
+
+    return {
+      loading: false,
+      genreBooks,
+      paginationResponseData,
+    };
+  }
+}

@@ -1,6 +1,6 @@
+// tslint:disable: max-line-length
 import * as React from "react";
 import { Route } from "react-router";
-import { RouteLangAppStateDispatcherWithRouter } from "../hoc/RouteLangAppStateDispatcher";
 import { AuthorPage } from "../pages/AuthorPage";
 import { BookPage } from "../pages/BookPage";
 import { GenrePage } from "../pages/GenrePage";
@@ -9,10 +9,6 @@ import { HomePage } from "../pages/HomePage";
 export function Main() {
   return (
     <section id="main" className="container">
-      <Route
-        path="/library/:booksLang([a-z]{2,3})/*"
-        component={RouteLangAppStateDispatcherWithRouter}
-      />
       <Route exact={true} path="/" component={HomePage} />
       <Route
         exact={true}

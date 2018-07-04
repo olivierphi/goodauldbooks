@@ -1,41 +1,20 @@
 import * as React from "react";
 import * as ReactPaginate from "react-paginate";
-import { Redirect } from "react-router-dom";
 import { Book, BooksById } from "../../domain/core";
 import { PaginationResponseData } from "../../domain/queries";
 import { BookListItem } from "./BookListItem";
 
 export interface BooksListProps {
   books: BooksById;
-  baseUrlWithoutPagination?: string;
-  pagination?: PaginationResponseData;
+  pagination: PaginationResponseData | null;
+  navigateToPageNum: ((pageNumber: number) => void) | null;
 }
 
-interface BooksListState {
-  goToPage: number | null;
-}
-
-export class BooksList extends React.Component<BooksListProps, BooksListState> {
-  constructor(props: BooksListProps) {
-    super(props);
-    this.state = { goToPage: null };
-  }
-
+export class BooksList extends React.Component<BooksListProps> {
   public render() {
-    if (this.state.goToPage) {
-      return (
-        <Redirect
-          push={true}
-          to={{
-            pathname: this.props.baseUrlWithoutPagination,
-            search: `?page=${this.state.goToPage}`,
-          }}
-        />
-      );
-    }
-    const componentOnPageChange = (pageObject: { selected: number }) => {
+    const onPageChange = (pageObject: { selected: number }) => {
       const targetPageNum = pageObject.selected + 1;
-      this.setState({ goToPage: targetPageNum });
+      this.props.navigateToPageNum && this.props.navigateToPageNum(targetPageNum);
     };
 
     const pageCount = this.props.pagination
@@ -57,7 +36,7 @@ export class BooksList extends React.Component<BooksListProps, BooksListState> {
               pageRangeDisplayed={pageIndex}
               initialPage={pageIndex}
               marginPagesDisplayed={5}
-              onPageChange={componentOnPageChange}
+              onPageChange={onPageChange}
               disableInitialCallback={true}
             />
           </div>

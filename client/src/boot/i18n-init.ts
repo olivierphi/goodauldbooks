@@ -1,8 +1,8 @@
 import * as i18next from "i18next";
 import * as LngDetector from "i18next-browser-languagedetector";
-import { ServicesContainer } from "../ServicesContainer";
+import { ServicesLocator } from "../domain/services";
 
-export async function initI18n(container: ServicesContainer): Promise<i18next.i18n> {
+export async function initI18n(servicesLocator: ServicesLocator): Promise<i18next.i18n> {
   const newInstance = i18next.createInstance();
   return new Promise<i18next.i18n>((resolve, reject) => {
     newInstance.use(LngDetector).init(

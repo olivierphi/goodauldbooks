@@ -19,6 +19,7 @@
     "jsx-no-multiline-js": false,
     "max-classes-per-file": false,
     "no-conditional-assignment": false,
-    "no-submodule-imports": false
+    "no-submodule-imports": false,
+    "no-unused-expression": [true, "allow-fast-null-checks"]
   }
 }

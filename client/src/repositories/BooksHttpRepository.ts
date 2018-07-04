@@ -1,5 +1,12 @@
 import axios from "axios";
-import { Book, BookFull, BooksById, BookWithGenreStats, GenreWithStats } from "../domain/core";
+import {
+  Book,
+  BookFull,
+  BooksById,
+  BookWithGenreStats,
+  GenreWithStats,
+  Lang,
+} from "../domain/core";
 import {
   BooksRepository,
   PaginatedBooksList,
@@ -15,8 +22,9 @@ const quickSearchResultsCache: { [cacheKey: string]: QuickSearchResult[] } = {};
  * This module gets a bit messy, we'll probably refactor it at some point :-)
  */
 export class BooksHttpRepository implements BooksRepository {
-  public async getFeaturedBooks(): Promise<BooksById> {
+  public async getFeaturedBooks(lang: Lang): Promise<BooksById> {
     // TODO: store the books ids into the app state, so that we can cache the result
+    // TODO: handle the language on server side, and pass it here
     const response = await axios.get("/rpc/featured_books");
     const featuredBooks: Book[] = response.data.map(mapBookFromServer);
 
@@ -36,7 +44,7 @@ export class BooksHttpRepository implements BooksRepository {
     return Promise.resolve(bookWithGenreStats);
   }
 
-  public async quickSearch(pattern: string, lang: string): Promise<QuickSearchResult[]> {
+  public async quickSearch(pattern: string, lang: Lang): Promise<QuickSearchResult[]> {
     const cacheKey: string = `${pattern}|${lang}`;
     const cacheForThisPatternAndLang = quickSearchResultsCache[cacheKey];
     if (cacheForThisPatternAndLang) {
@@ -55,7 +63,7 @@ export class BooksHttpRepository implements BooksRepository {
 
   public async getBooksByGenre(
     genre: string,
-    lang: string,
+    lang: Lang,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const response = await axios.get("/rpc/get_books_by_genre", {
@@ -84,7 +92,7 @@ export class BooksHttpRepository implements BooksRepository {
 
   public async getBooksByAuthor(
     authorId: string,
-    lang: string,
+    lang: Lang,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
     const response = await axios.get("/rpc/get_books_by_author", {

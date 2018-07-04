@@ -1,3 +1,4 @@
+import { ServicesLocator } from "domain/services";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import "url-search-params-polyfill";
@@ -6,24 +7,24 @@ import { Layout } from "./components/Layout";
 import { AppEnvelope } from "./hoc/AppEnvelope";
 
 async function startApp(): Promise<boolean> {
-  await bootApp();
-  const appContainer = document.getElementById("app");
-  if (appContainer !== null) {
-    renderApp(appContainer);
+  const servicesLocator = await bootApp();
+  const appHtmlContainer = document.getElementById("app");
+  if (appHtmlContainer !== null) {
+    renderApp(appHtmlContainer, servicesLocator);
   }
 
   return Promise.resolve(true);
 }
 
-startApp().catch((reason) => {
-  console.error("Can't start app!", reason);
+startApp().catch(reason => {
+  console.error("Can't start app!", reason); // tslint:disable-line
 });
 
-function renderApp(appContainer: HTMLElement): void {
+function renderApp(appHtmlContainer: HTMLElement, services: ServicesLocator): void {
   ReactDOM.render(
-    <AppEnvelope>
+    <AppEnvelope servicesLocator={services}>
       <Layout />
     </AppEnvelope>,
-    appContainer
+    appHtmlContainer
   );
 }
