@@ -1,7 +1,5 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
-import { BooksList } from "../../components/Book/BooksList";
-import { BooksById, Lang, LANG_ALL } from "../../domain/core";
+import { BooksById, Lang } from "../../domain/core";
 import { ACTIONS, EVENTS } from "../../domain/messages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
@@ -11,6 +9,7 @@ import {
 } from "../../utils/pagination-utils";
 import { getAuthorPageUrl } from "../../utils/routing-utils";
 import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
+import { BooksByAuthor } from "../../components/Book/BooksByAuthor";
 
 interface BooksByAuthorContainerProps {
   authorId: string;
@@ -58,26 +57,15 @@ export class BooksByAuthorContainer extends React.Component<
       return <div className="loading">Loading books for this author...</div>;
     }
 
-    // TODO: i18n
     return (
-      <>
-        <h4>
-          {this.state.paginationResponseData.nbResultsTotal} books for this author in this language
-          ({this.props.currentBooksLang})
-        </h4>
-        {this.props.currentBooksLang === LANG_ALL ? (
-          ""
-        ) : (
-          <Link to={this.getAuthorBooksPageUrlForAllLanguages()}>
-            ({this.state.paginationResponseData.nbResultsTotalForAllLangs} for all languages)
-          </Link>
-        )}
-        <BooksList
-          books={this.state.authorBooks}
-          pagination={this.state.paginationResponseData}
-          navigateToPageNum={this.navigateToPageNum}
-        />
-      </>
+      <BooksByAuthor
+        authorId={this.props.authorId}
+        authorSlug={this.props.authorSlug}
+        currentBooksLang={this.props.currentBooksLang}
+        paginationResponseData={this.state.paginationResponseData}
+        authorBooks={this.state.authorBooks}
+        navigateToPageNum={this.navigateToPageNum}
+      />
     );
   }
 
@@ -99,10 +87,6 @@ export class BooksByAuthorContainer extends React.Component<
     );
 
     this.props.hocToolkit.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
-  }
-
-  private getAuthorBooksPageUrlForAllLanguages(): string {
-    return getAuthorPageUrl(LANG_ALL, this.props.authorSlug, this.props.authorId);
   }
 
   private fetchData(): void {
