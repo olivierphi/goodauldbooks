@@ -1,7 +1,6 @@
 import { BookLangData } from "domain/queries";
 import * as React from "react";
 import { Option } from "react-select";
-import { LANG_ALL } from "../../domain/core";
 
 export interface BooksLangsSelectorProps {
   currentBooksLang: string;

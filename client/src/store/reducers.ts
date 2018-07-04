@@ -7,7 +7,6 @@ import {
   GenreWithStatsByName,
   Lang,
   LANG_ALL,
-  PaginatedBooksIdsList,
   PaginatedBooksIdsListByCriteria,
 } from "../domain/core";
 import { PaginatedBooksList, PaginationResponseData } from "../domain/queries";

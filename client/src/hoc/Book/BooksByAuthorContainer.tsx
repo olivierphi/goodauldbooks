@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { BooksList } from "../../components/Book/BooksList";
-import { Author, BooksById, Lang, LANG_ALL } from "../../domain/core";
+import { BooksById, Lang, LANG_ALL } from "../../domain/core";
 import { ACTIONS, EVENTS } from "../../domain/messages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
