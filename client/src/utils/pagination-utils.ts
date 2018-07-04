@@ -25,11 +25,13 @@ export function getPaginatedBooksIdsResultsFromCache(
 
 export function getPaginationResponseDataFromPaginationRequest(
   paginationRequest: PaginationRequestData,
-  nbResultsTotal: number
+  nbResultsTotal: number,
+  nbResultsTotalForAllLangs: number
 ): PaginationResponseData {
   return {
     page: paginationRequest.page,
     nbPerPage: paginationRequest.nbPerPage,
     nbResultsTotal,
+    nbResultsTotalForAllLangs,
   };
 }
