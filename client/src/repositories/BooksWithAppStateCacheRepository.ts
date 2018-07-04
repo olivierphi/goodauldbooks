@@ -1,5 +1,5 @@
 import { Store } from "redux";
-import { Book, BooksById, BookWithGenreStats, Lang } from "../domain/core";
+import { Book, BookIntro, BooksById, BookWithGenreStats, Lang } from "../domain/core";
 import {
   BooksRepository,
   PaginatedBooksList,
@@ -45,9 +45,15 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
     return this.underlyingRepository.getBookById(bookId);
   }
 
-  public getBookIntro(bookId: string): Promise<string | null> {
-    // TODO: store the featured books ids into the app state or a local cache, so that we can cache the result
-    return this.underlyingRepository.getBookIntro(bookId);
+  public async getBookIntro(bookId: string): Promise<string | null> {
+    if (booksIntrosCache.hasOwnProperty(bookId)) {
+      return Promise.resolve(booksIntrosCache[bookId]);
+    }
+
+    const bookIntro = await this.underlyingRepository.getBookIntro(bookId);
+    booksIntrosCache[bookId] = bookIntro;
+
+    return bookIntro;
   }
 
   public getBooksByAuthor(
@@ -112,3 +118,15 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
     return this.underlyingRepository.quickSearch(pattern, lang);
   }
 }
+
+/**
+ * We don't store the books intros in the global app state, as they
+ * are quite heavy and we want to keep this state lightweight for serialisation.
+ *
+ * We do store an internal cache for this data, though.
+ */
+interface BookIntrosCache {
+  [bookId: string]: BookIntro;
+}
+
+const booksIntrosCache: BookIntrosCache = {};

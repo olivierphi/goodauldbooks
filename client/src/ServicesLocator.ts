@@ -102,7 +102,11 @@ export class ServicesLocatorImpl implements ServicesLocator {
 
   get actionsDispatcher(): ActionsDispatcher {
     return sharedService(SharedServicesIds.ACTIONS_DISPATCHER, () => {
-      const actionsDispatcher = new ActionsDispatcherImpl(this.booksRepository, this.appStateStore);
+      const actionsDispatcher = new ActionsDispatcherImpl(
+        this.booksRepository,
+        this.messageBus,
+        this.appStateStore
+      );
 
       return actionsDispatcher;
     });

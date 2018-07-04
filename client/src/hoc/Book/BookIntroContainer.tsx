@@ -1,22 +1,11 @@
 import * as React from "react";
 import { BookIntro } from "../../components/Book/BookIntro";
-import { OmniponentComponentToolkit } from "../OmnipotentComponentToolkit";
-
-/**
- * We don't store the books intros in the global app state, as they
- * are quite heavy and we want to keep this state lightweight for serialisation.
- *
- * We do store an internal cache for this data, though.
- */
-interface BookIntrosCache {
-  [bookId: string]: string | null;
-}
-
-const booksIntrosCache: BookIntrosCache = {};
+import { EVENTS } from "../../domain/messages";
+import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
 
 export interface BookIntroContainerProps {
   bookId: string;
-  hocToolkit: OmniponentComponentToolkit;
+  hocToolkit: HigherOrderComponentToolkit;
 }
 
 export interface BookIntroContainerState {
@@ -34,7 +23,8 @@ export class BookIntroContainer extends React.Component<
 > {
   public constructor(props: BookIntroContainerProps) {
     super(props);
-    this.state = this.getDerivedStateFromPropsAndAppState();
+    this.state = { loading: true };
+    this.onBookIntroFetched = this.onBookIntroFetched.bind(this);
   }
 
   public render() {
@@ -47,25 +37,14 @@ export class BookIntroContainer extends React.Component<
   }
 
   private fetchData(): void {
-    this.loadBookIntro(this.props.bookId);
+    this.props.hocToolkit.messageBus.on(EVENTS.BOOK_INTRO_FETCHED, this.onBookIntroFetched);
+    this.props.hocToolkit.actionsDispatcher.fetchIntroForBook(this.props.bookId);
   }
 
-  private getDerivedStateFromPropsAndAppState():
-    | BookIntroContainerState
-    | BookIntroContainerLoadingState {
-    if (!booksIntrosCache[this.props.bookId]) {
-      return { loading: true };
-    }
-
-    return { loading: false, bookIntro: booksIntrosCache[this.props.bookId] };
-  }
-
-  private async loadBookIntro(bookId: string): Promise<null> {
-    const bookIntro = await this.props.hocToolkit.servicesLocator.booksRepository.getBookIntro(
-      bookId
-    );
-    booksIntrosCache[bookId] = bookIntro;
-    this.setState({ loading: false, bookIntro });
-    return Promise.resolve(null);
+  private onBookIntroFetched(bookIntro: string | null) {
+    this.setState({
+      loading: false,
+      bookIntro,
+    });
   }
 }

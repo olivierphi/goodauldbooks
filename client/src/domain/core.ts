@@ -60,23 +60,6 @@ export interface PaginatedBooksIdsListByCriteria {
   };
 }
 
-export interface PaginatedBooksIdsList {
-  nbResultsTotal: number;
-  results: BooksIdsByCriteria;
-}
-
-export interface BooksIdsByCriteria {
-  [criteriaName: string]: BookId[];
-}
-
-export interface BooksIdsByGenre extends BooksIdsByCriteria {
-  [genreName: string]: BookId[];
-}
-
-export interface BooksIdsByAuthor extends BooksIdsByCriteria {
-  [authorId: string]: BookId[];
-}
-
 export interface BooksAssetsSizeById {
   [bookId: string]: BookAssetsSize;
 }
@@ -85,3 +68,5 @@ export interface BookAssetsSize {
   epub: number;
   mobi: number;
 }
+
+export type BookIntro = string | null;

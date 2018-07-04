@@ -11,4 +11,5 @@ export interface ActionsDispatcher {
   fetchBookWithGenreStats(bookId: string): void;
   fetchBooksForAuthor(authorId: string, lang: Lang, pagination: PaginationRequestData): void;
   fetchBooksForGenre(genre: string, lang: Lang, pagination: PaginationRequestData): void;
+  fetchIntroForBook(bookId: string): void;
 }

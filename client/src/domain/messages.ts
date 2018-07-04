@@ -9,6 +9,7 @@ export enum ACTIONS {
 export enum EVENTS {
   BOOKS_LANG_CHANGED = "BOOKS_LANG_CHANGED",
   BOOK_DATA_FETCHED = "BOOK_DATA_FETCHED",
+  BOOK_INTRO_FETCHED = "BOOK_INTRO_FETCHED",
 }
 
 export interface GoToBookPageAction {

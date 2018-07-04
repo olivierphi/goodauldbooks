@@ -17,7 +17,7 @@ export interface AsyncOptionsResult {
 export class AutocompleteSearch extends React.Component<AutocompleteSearchProps> {
   private static noOpFilterFunction = (options: Options): Options => {
     return options;
-  }
+  };
 
   constructor(props: AutocompleteSearchProps) {
     super(props);
