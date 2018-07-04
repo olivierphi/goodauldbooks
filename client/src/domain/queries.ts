@@ -54,6 +54,7 @@ export interface PaginationResponseData {
   nbPerPage: number;
   page: number;
   nbResultsTotal: number;
+  nbResultsTotalForAllLangs: number;
 }
 
 export interface BookLangData {

@@ -53,11 +53,14 @@ export interface NbBooksByLang {
   [lang: string]: number;
 }
 
+export interface PaginatedBooksIdsList {
+  nbResultsTotal: number;
+  nbResultsTotalForAllLangs: number;
+  results: BookId[];
+}
+
 export interface PaginatedBooksIdsListByCriteria {
-  [criteriaName: string]: {
-    nbResultsTotal: number;
-    results: BookId[];
-  };
+  [criteriaName: string]: PaginatedBooksIdsList;
 }
 
 export interface BooksAssetsSizeById {

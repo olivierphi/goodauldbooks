@@ -10,7 +10,8 @@ create schema api_public;
 create type api_public.pagination_info as (
   page integer,
   nb_per_page integer,
-  nb_results_total integer
+  nb_results_total integer,
+  nb_results_total_for_all_langs integer
 );
 
 create type api_public.book_light as (
@@ -363,6 +364,15 @@ as $function_get_books_by_genre$
         else lang = $2
       end
   ),
+  nb_results_total_for_all_langs as (
+    select
+      case
+        when $2 = 'all' then
+          (select count from nb_results_total)::integer
+        else
+          (select count(*) from library_view.book_with_related_data where genres && array[genre])::integer
+      end as count
+  ),
   results as (
     select
       (
@@ -400,7 +410,8 @@ as $function_get_books_by_genre$
       (
         page,
         nb_per_page,
-        (select count from nb_results_total)::integer
+        (select count from nb_results_total)::integer,
+        (select count from nb_results_total_for_all_langs)::integer
       )::api_public.pagination_info
     )::api_public.books_by_genre_with_pagination
   from
@@ -437,6 +448,15 @@ with
         when $2 = 'all' then true
         else lang = $2
       end
+  ),
+  nb_results_total_for_all_langs as (
+    select
+      case
+        when $2 = 'all' then
+          (select count from nb_results_total)::integer
+        else
+          (select count(*) from library_view.book_with_related_data where author_id = $1)::integer
+      end as count
   ),
   results as (
     select
@@ -475,7 +495,8 @@ with
       (
         page,
         nb_per_page,
-        (select count from nb_results_total)::integer
+        (select count from nb_results_total)::integer,
+        (select count from nb_results_total_for_all_langs)::integer
       )::api_public.pagination_info
     )::api_public.books_by_author_with_pagination
   from

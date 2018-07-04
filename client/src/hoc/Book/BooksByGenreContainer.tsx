@@ -1,10 +1,14 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { BooksList } from "../../components/Book/BooksList";
-import { BooksById, Lang } from "../../domain/core";
+import { BooksById, Lang, LANG_ALL } from "../../domain/core";
 import { ACTIONS, EVENTS } from "../../domain/messages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
-import { getPaginatedBooksIdsResultsFromCache } from "../../utils/pagination-utils";
+import {
+  getPaginatedBooksIdsResultsFromCache,
+  getPaginationResponseDataFromPaginationRequest,
+} from "../../utils/pagination-utils";
 import { getGenrePageUrl } from "../../utils/routing-utils";
 import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
 
@@ -53,12 +57,27 @@ export class BooksByGenreContainer extends React.Component<
       return <div className="loading">Loading books for this genre...</div>;
     }
 
+    // TODO: i18n
     return (
-      <BooksList
-        books={this.state.genreBooks}
-        pagination={this.state.paginationResponseData}
-        navigateToPageNum={this.navigateToPageNum}
-      />
+      <>
+        <h4>
+          {this.state.paginationResponseData.nbResultsTotal} books for this genre in this language ({
+            this.props.currentBooksLang
+          })
+        </h4>
+        {this.props.currentBooksLang === LANG_ALL ? (
+          ""
+        ) : (
+          <Link to={this.getGenreBooksPageUrlForAllLanguages()}>
+            ({this.state.paginationResponseData.nbResultsTotalForAllLangs} for all languages)
+          </Link>
+        )}
+        <BooksList
+          books={this.state.genreBooks}
+          pagination={this.state.paginationResponseData}
+          navigateToPageNum={this.navigateToPageNum}
+        />
+      </>
     );
   }
 
@@ -70,6 +89,10 @@ export class BooksByGenreContainer extends React.Component<
 
     const targetUrl = `${baseUrlWithoutPagination}?page=${pageNum}`;
     this.props.hocToolkit.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
+  }
+
+  private getGenreBooksPageUrlForAllLanguages(): string {
+    return getGenrePageUrl(LANG_ALL, this.props.genre);
   }
 
   private fetchData(): void {
@@ -107,10 +130,12 @@ export class BooksByGenreContainer extends React.Component<
     }
 
     const genreBooks = getBooksByIdsFromState(booksIdsByGenre, appState.booksById);
-    const paginationResponseData: PaginationResponseData = {
-      nbResultsTotal: appState.booksIdsByGenre[criteriaName].nbResultsTotal,
-      ...this.props.pagination,
-    };
+    const genreBooksMetadata = appState.booksIdsByGenre[criteriaName];
+    const paginationResponseData: PaginationResponseData = getPaginationResponseDataFromPaginationRequest(
+      this.props.pagination,
+      genreBooksMetadata.nbResultsTotal,
+      genreBooksMetadata.nbResultsTotalForAllLangs
+    );
 
     return {
       loading: false,

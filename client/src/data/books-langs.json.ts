@@ -4,6 +4,10 @@
 
 export const json = [
   {
+    lang: "all",
+    nb: "10429",
+  },
+  {
     lang: "en",
     nb: "8424",
   },

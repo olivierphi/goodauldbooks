@@ -7,9 +7,10 @@ import {
   GenreWithStatsByName,
   Lang,
   LANG_ALL,
+  PaginatedBooksIdsList,
   PaginatedBooksIdsListByCriteria,
 } from "../domain/core";
-import { PaginatedBooksList } from "../domain/queries";
+import { PaginatedBooksList, PaginationResponseData } from "../domain/queries";
 import { Actions } from "./actions";
 
 interface SetCurrentBooksLangAction extends Action {
@@ -127,27 +128,15 @@ export function booksIdsByGenre(
       actionRef = action as BooksByGenreFetchedAction;
       const genre = actionRef.meta.genre;
       const language = actionRef.meta.lang;
-      const pagination = actionRef.payload.pagination;
-      const nbResultsTotal = pagination.nbResultsTotal;
       const criteriaName: string = `${genre}-${language}`;
-      const booksIdsForThisGenreAndLang: BookId[] = state[criteriaName]
-        ? state[criteriaName].results || []
-        : [];
-      const pageStartIndex = (pagination.page - 1) * pagination.nbPerPage;
-      const fetchedBooks = Object.values(actionRef.payload.books);
-      for (let i = 0; i < pagination.nbPerPage; i++) {
-        if (!fetchedBooks[i]) {
-          break; // this can happen when we display the last page :-)
-        }
-        booksIdsForThisGenreAndLang[pageStartIndex + i] = fetchedBooks[i].id;
-      }
-      return {
-        ...state,
-        [criteriaName]: {
-          nbResultsTotal,
-          results: booksIdsForThisGenreAndLang,
-        },
-      };
+
+      return getPaginatedBooksIdsListByCriteriaFromPreviousStateAndFetchedBooks(
+        state,
+        criteriaName,
+        actionRef.payload.books,
+        actionRef.payload.pagination
+      );
+
     default:
       return state;
   }
@@ -163,27 +152,15 @@ export function booksIdsByAuthor(
       actionRef = action as BooksByAuthorFetchedAction;
       const authorId = actionRef.meta.authorId;
       const language = actionRef.meta.lang;
-      const pagination = actionRef.payload.pagination;
-      const nbResultsTotal = pagination.nbResultsTotal;
       const criteriaName: string = `${authorId}-${language}`;
-      const booksIdsForThisAuthorAndLang: BookId[] = state[criteriaName]
-        ? state[criteriaName].results || []
-        : [];
-      const pageStartIndex = (pagination.page - 1) * pagination.nbPerPage;
-      const fetchedBooks = Object.values(actionRef.payload.books);
-      for (let i = 0; i < pagination.nbPerPage; i++) {
-        if (!fetchedBooks[i]) {
-          break; // this can happen when we display the last page :-)
-        }
-        booksIdsForThisAuthorAndLang[pageStartIndex + i] = fetchedBooks[i].id;
-      }
-      return {
-        ...state,
-        [criteriaName]: {
-          nbResultsTotal,
-          results: booksIdsForThisAuthorAndLang,
-        },
-      };
+
+      return getPaginatedBooksIdsListByCriteriaFromPreviousStateAndFetchedBooks(
+        state,
+        criteriaName,
+        actionRef.payload.books,
+        actionRef.payload.pagination
+      );
+
     default:
       return state;
   }
@@ -206,4 +183,32 @@ export function booksAssetsSize(state: string[] = [], action: Action): string[] 
     default:
       return state;
   }
+}
+
+function getPaginatedBooksIdsListByCriteriaFromPreviousStateAndFetchedBooks(
+  previousState: PaginatedBooksIdsListByCriteria,
+  criteriaName: string,
+  fetchedBooks: BooksById,
+  pagination: PaginationResponseData
+): PaginatedBooksIdsListByCriteria {
+  const booksIdsForThisCriteria: BookId[] = previousState[criteriaName]
+    ? previousState[criteriaName].results || []
+    : [];
+  const pageStartIndex = (pagination.page - 1) * pagination.nbPerPage;
+  const fetchedBooksArray = Object.values(fetchedBooks);
+  for (let i = 0; i < pagination.nbPerPage; i++) {
+    if (!fetchedBooksArray[i]) {
+      break; // this can happen when we display the last page :-)
+    }
+    booksIdsForThisCriteria[pageStartIndex + i] = fetchedBooksArray[i].id;
+  }
+
+  return {
+    ...previousState,
+    [criteriaName]: {
+      nbResultsTotal: pagination.nbResultsTotal,
+      nbResultsTotalForAllLangs: pagination.nbResultsTotalForAllLangs,
+      results: booksIdsForThisCriteria,
+    },
+  };
 }

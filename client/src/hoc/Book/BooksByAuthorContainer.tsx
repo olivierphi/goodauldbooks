@@ -1,15 +1,20 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { BooksList } from "../../components/Book/BooksList";
-import { BooksById, Lang } from "../../domain/core";
+import { Author, BooksById, Lang, LANG_ALL } from "../../domain/core";
 import { ACTIONS, EVENTS } from "../../domain/messages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
-import { getPaginatedBooksIdsResultsFromCache } from "../../utils/pagination-utils";
+import {
+  getPaginatedBooksIdsResultsFromCache,
+  getPaginationResponseDataFromPaginationRequest,
+} from "../../utils/pagination-utils";
 import { getAuthorPageUrl } from "../../utils/routing-utils";
 import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
 
 interface BooksByAuthorContainerProps {
   authorId: string;
+  authorSlug: string;
   pagination: PaginationRequestData;
   currentBooksLang: Lang;
   hocToolkit: HigherOrderComponentToolkit;
@@ -53,12 +58,26 @@ export class BooksByAuthorContainer extends React.Component<
       return <div className="loading">Loading books for this author...</div>;
     }
 
+    // TODO: i18n
     return (
-      <BooksList
-        books={this.state.authorBooks}
-        pagination={this.state.paginationResponseData}
-        navigateToPageNum={this.navigateToPageNum}
-      />
+      <>
+        <h4>
+          {this.state.paginationResponseData.nbResultsTotal} books for this author in this language
+          ({this.props.currentBooksLang})
+        </h4>
+        {this.props.currentBooksLang === LANG_ALL ? (
+          ""
+        ) : (
+          <Link to={this.getAuthorBooksPageUrlForAllLanguages()}>
+            ({this.state.paginationResponseData.nbResultsTotalForAllLangs} for all languages)
+          </Link>
+        )}
+        <BooksList
+          books={this.state.authorBooks}
+          pagination={this.state.paginationResponseData}
+          navigateToPageNum={this.navigateToPageNum}
+        />
+      </>
     );
   }
 
@@ -72,17 +91,18 @@ export class BooksByAuthorContainer extends React.Component<
       return;
     }
 
-    const authorSlug = authorBooks[0].author.slug;
-    const targetUrl = authorSlug
-      ? getAuthorPageUrl(
-          this.props.hocToolkit.appStateStore.getState().booksLang,
-          authorSlug,
-          this.props.authorId,
-          pageNum
-        )
-      : null;
+    const targetUrl = getAuthorPageUrl(
+      this.props.hocToolkit.appStateStore.getState().booksLang,
+      this.props.authorSlug,
+      this.props.authorId,
+      pageNum
+    );
 
     this.props.hocToolkit.messageBus.emit(ACTIONS.PUSH_URL, targetUrl);
+  }
+
+  private getAuthorBooksPageUrlForAllLanguages(): string {
+    return getAuthorPageUrl(LANG_ALL, this.props.authorSlug, this.props.authorId);
   }
 
   private fetchData(): void {
@@ -120,10 +140,12 @@ export class BooksByAuthorContainer extends React.Component<
     }
 
     const authorBooks = getBooksByIdsFromState(booksIdsByAuthor, appState.booksById);
-    const paginationResponseData: PaginationResponseData = {
-      nbResultsTotal: appState.booksIdsByAuthor[criteriaName].nbResultsTotal,
-      ...this.props.pagination,
-    };
+    const authorBooksMetadata = appState.booksIdsByAuthor[criteriaName];
+    const paginationResponseData: PaginationResponseData = getPaginationResponseDataFromPaginationRequest(
+      this.props.pagination,
+      authorBooksMetadata.nbResultsTotal,
+      authorBooksMetadata.nbResultsTotalForAllLangs
+    );
 
     return {
       loading: false,

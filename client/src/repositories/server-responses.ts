@@ -25,8 +25,6 @@ export interface BookWithGenreStats {
   genres: GenreWithStats[];
 }
 
-export interface PinnedBookData extends BookData {}
-
 export interface QuickAutocompletionData {
   type: "book" | "author";
   book_id: string | null;
@@ -60,4 +58,5 @@ export interface PaginationResponseData {
   page: number;
   nb_per_page: number;
   nb_results_total: number;
+  nb_results_total_for_all_langs: number;
 }

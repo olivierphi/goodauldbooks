@@ -21,7 +21,6 @@ export function BooksLangsSelector(props: BooksLangsSelectorProps) {
         onChange={onLangChange}
         value={props.currentBooksLang}
       >
-        <option value={LANG_ALL}>All languages</option>
         {props.availableBooksLangs.map((bookLang: BookLangData) => {
           return (
             <option key={bookLang.lang} value={bookLang.lang}>
