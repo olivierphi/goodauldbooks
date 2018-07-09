@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  python:
+    image: python:3.6
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      PYTHONUSERBASE: /app/vendor

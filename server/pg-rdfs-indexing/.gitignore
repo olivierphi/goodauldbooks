@@ -1,0 +1,5 @@
+# Dependencies shared with the Docker container.
+/vendor
+
+# Compiled python modules.
+*.pyc
