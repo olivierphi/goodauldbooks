@@ -16,7 +16,7 @@ reset_db_and_import_gutenberg_books:
 	) || (\
 		echo "\033[36mScanning rsynced PG collection and copy the raw data in in the 'gutenberg_raw_data' table...\033[0m" && \
 		${MAKE} build_api_admin && \
-		${MAKE} dump_data_to_import_db \
+		${MAKE} dump_data_to_import_db_python \
 	) || exit 1
 	@echo "\033[36mNow converting this raw data from Project Gutenberg into normalised data...\033[0m"
 	@${MAKE} import_gutenberg_books
@@ -31,7 +31,7 @@ import_gutenberg_books:
 	time ${PSQL} --no-psqlrc \
 		-c  "select * from import.create_books_from_raw_rdfs(wipe_previsous_books => true, verbosity => ${VERBOSITY}::integer);"
 
-refresh_materialized_views: VIEWS=library_view.book_with_related_data library_view.genre_with_related_data
+refresh_materialized_views: VIEWS=library_view.book_with_related_data library_view.genre_with_related_data library_view.book_additional_data
 refresh_materialized_views:
 	@echo "\033[36mRefreshing related materilized views...\033[0m"
 	@$(foreach materialized_view,$(VIEWS),\
@@ -47,8 +47,15 @@ build_api_admin:
 		make install && \
 		make build
 
-dump_data_to_import_db:
+dump_data_to_import_db_nodejs:
 	time ./api-admin/dist/cli/store-rsynced-generated-collection-in-db-imports.js ${GUTENBERG_GENERATED_COLLECTION_PATH}
+
+dump_data_to_import_db_python:
+	cd pg-rdfs-indexing && \
+		time docker-compose run --rm --entrypoint python --user $(id -u):$(id -g) \
+			-v ${GUTENBERG_GENERATED_COLLECTION_PATH}:/gutenberg-mirror/generated-collection \
+			python \
+				/app/bin/store-rsynced-generated-collection-in-db-imports.py /gutenberg-mirror/generated-collection
 
 start_dev_api_admin:
 	cd api-admin && make start_dev
