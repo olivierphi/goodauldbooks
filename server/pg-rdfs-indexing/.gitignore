@@ -3,3 +3,6 @@
 
 # Compiled python modules.
 *.pyc
+
+# MyPy cache
+.mypy_cache

@@ -1,8 +1,9 @@
 .PHONY: install install_dev python_shell mypy
 
-PYTHON ?= docker-compose -f ../docker-compose.yml run --rm --entrypoint python --user $$(id -u):$$(id -g) python
-PYTHON_SHELL ?= docker-compose -f ../docker-compose.yml run --rm --entrypoint bash --user $$(id -u):$$(id -g) python
-PIP ?= docker-compose -f ../docker-compose.yml run --rm --entrypoint pip --user $$(id -u):$$(id -g) python
+DC ?= docker-compose -f ../docker-compose.yml run --rm --user $$(id -u):$$(id -g)
+PYTHON ?= ${DC} --entrypoint python -e PYTHONPATH=/app/src python
+PYTHON_SHELL ?=  ${DC} --entrypoint sh -e PYTHONPATH=/app/src python
+PIP ?= ${DC} --entrypoint pip python
 
 install:
 	${PIP} install --user -r requirements.txt
@@ -14,4 +15,4 @@ python_shell:
 	${PYTHON_SHELL}
 
 mypy:
-	${PYTHON} -m mypy bin/
+	${DC} --entrypoint python -e PYTHONPATH=/app/src -e MYPYPATH=/app/src python -m mypy bin/ src/
