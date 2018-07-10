@@ -1,10 +1,10 @@
 import * as React from "react";
-import {Link} from "react-router-dom";
-import {AssetsConfigContext} from "../../contexts/assets-config";
-import {BooksLangContext} from "../../contexts/books-lang";
-import {Book, Lang} from "../../domain/core";
-import {AssetsConfig} from "../../domain/web";
-import {getBookPageUrl} from "../../utils/routing-utils";
+import { Link } from "react-router-dom";
+import { AssetsConfigContext } from "../../contexts/assets-config";
+import { BooksLangContext } from "../../contexts/books-lang";
+import { Book, Lang } from "../../domain/core";
+import { AssetsConfig } from "../../domain/web";
+import { getBookPageUrl } from "../../utils/routing-utils";
 
 interface BookCoverProps {
   book: Book;
@@ -26,8 +26,8 @@ export function BookCover(props: BookCoverProps) {
               <span className={["book-cover", className].join(" ")}>
                 {hasCover ? (
                   <img
-                      src={`${assetsConfig.coversBaseUrl}/${props.book.coverUrl}`}
-                      alt={props.book.title}
+                    src={`${assetsConfig.coversBaseUrl}/${props.book.coverUrl}`}
+                    alt={props.book.title}
                   />
                 ) : (
                   <span className="title">{props.book.title}</span>

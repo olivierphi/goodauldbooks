@@ -1,9 +1,9 @@
 import * as React from "react";
-import { BooksById, Lang, LANG_ALL } from "../../domain/core";
 import { Link } from "react-router-dom";
-import { BooksList } from "./BooksList";
+import { BooksById, Lang, LANG_ALL } from "../../domain/core";
 import { PaginationResponseData } from "../../domain/queries";
 import { getAuthorPageUrl } from "../../utils/routing-utils";
+import { BooksList } from "./BooksList";
 
 interface BooksByAuthorProps {
   authorId: string;

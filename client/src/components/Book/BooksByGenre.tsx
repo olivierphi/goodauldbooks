@@ -1,8 +1,8 @@
 import * as React from "react";
-import { BooksById, Lang, LANG_ALL } from "../../domain/core";
-import { getGenrePageUrl } from "../../utils/routing-utils";
-import { PaginationResponseData } from "../../domain/queries";
 import { Link } from "react-router-dom";
+import { BooksById, Lang, LANG_ALL } from "../../domain/core";
+import { PaginationResponseData } from "../../domain/queries";
+import { getGenrePageUrl } from "../../utils/routing-utils";
 import { BooksList } from "./BooksList";
 
 interface BooksByGenreProps {
