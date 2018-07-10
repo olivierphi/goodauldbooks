@@ -1,11 +1,10 @@
-GUTENBERG_GENERATED_COLLECTION_PATH?=~/gutenberg-mirror/generated-collection
-PSQL?=docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) db-cli -v ON_ERROR_STOP=1
+GUTENBERG_GENERATED_COLLECTION_PATH ?= ~/gutenberg-mirror/generated-collection
+PSQL ?= docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) db-cli -v ON_ERROR_STOP=1
 # @link http://petereisentraut.blogspot.co.uk/2010/03/running-sql-scripts-with-psql.html
-PSQL_QUIET?=docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) -e PGOPTIONS='--client-min-messages=warning' db-cli -v ON_ERROR_STOP=1
+PSQL_QUIET ?= docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) -e PGOPTIONS='--client-min-messages=warning' db-cli -v ON_ERROR_STOP=1
+PYTHON_DC_PREFIX ?= docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) --entrypoint python -e PYTHONPATH=/app/src
 
-.phony: reset_db_and_import_gutenberg_books import_gutenberg_books build_api_admin dump_data_to_import_db start_dev_api_admin psql
-.phony: db_update_schema start_api_public pg_dump_raw_gutenberg_data pg_restore_raw_gutenberg_data
-
+.phony: reset_db_and_import_gutenberg_books
 reset_db_and_import_gutenberg_books:
 	docker-compose up -d db && sleep 2
 	@echo "\033[36mWiping and re-setting the database...\033[0m"
@@ -16,7 +15,7 @@ reset_db_and_import_gutenberg_books:
 	) || (\
 		echo "\033[36mScanning rsynced PG collection and copy the raw data in in the 'gutenberg_raw_data' table...\033[0m" && \
 		${MAKE} build_api_admin && \
-		${MAKE} dump_data_to_import_db \
+		${MAKE} dump_data_to_import_db_python \
 	) || exit 1
 	@echo "\033[36mNow converting this raw data from Project Gutenberg into normalised data...\033[0m"
 	@${MAKE} import_gutenberg_books
@@ -25,13 +24,15 @@ reset_db_and_import_gutenberg_books:
 	@echo "\033[36mLast but not least, we project this normalised data into some materialized views...\033[0m"
 	@${MAKE} refresh_materialized_views
 
+.phony: import_gutenberg_books
 import_gutenberg_books: VERBOSITY?=1
 import_gutenberg_books:
 	@echo "\033[36mPopulating 'library' tables from 'import.gutenberg_raw_data' content...\033[0m"
 	time ${PSQL} --no-psqlrc \
 		-c  "select * from import.create_books_from_raw_rdfs(wipe_previsous_books => true, verbosity => ${VERBOSITY}::integer);"
 
-refresh_materialized_views: VIEWS=library_view.book_with_related_data library_view.genre_with_related_data
+.phony: refresh_materialized_views
+refresh_materialized_views: VIEWS=library_view.book_with_related_data library_view.genre_with_related_data library_view.book_additional_data
 refresh_materialized_views:
 	@echo "\033[36mRefreshing related materilized views...\033[0m"
 	@$(foreach materialized_view,$(VIEWS),\
@@ -39,23 +40,44 @@ refresh_materialized_views:
 		time ${PSQL} --no-psqlrc -q -b -c "refresh materialized view concurrently $(materialized_view);") || exit 1; \
 	)
 
+.phony: editorial_pass
 editorial_pass:
 	${PSQL_QUIET} --no-psqlrc -q -b -f /host/db/editing.sql
 
+.phony: build_api_admin
 build_api_admin:
 	cd api-admin/ && \
 		make install && \
 		make build
 
-dump_data_to_import_db:
+.phony: dump_data_to_import_db_nodejs
+dump_data_to_import_db_nodejs:
 	time ./api-admin/dist/cli/store-rsynced-generated-collection-in-db-imports.js ${GUTENBERG_GENERATED_COLLECTION_PATH}
 
+.phony: dump_data_to_import_db_python
+dump_data_to_import_db_python:
+	${PYTHON_DC_PREFIX} \
+		-v ${GUTENBERG_GENERATED_COLLECTION_PATH}:/gutenberg-mirror/generated-collection \
+		python \
+		bin/import-books-data.py /gutenberg-mirror/generated-collection
+
+.phony: rsync_and_import_book
+rsync_and_import_book: OPTS=
+rsync_and_import_book:
+	${PYTHON_DC_PREFIX} \
+		-v ${GUTENBERG_GENERATED_COLLECTION_PATH}:/gutenberg-mirror/generated-collection \
+		python \
+		bin/rsync-and-import-book.py ${PG_BOOK_ID} /gutenberg-mirror/generated-collection ${OPTS}
+
+.phony: start_dev_api_admin
 start_dev_api_admin:
 	cd api-admin && make start_dev
 
+.phony: psql
 psql: .psql-history
 	${PSQL}
 
+.phony: db_update_schema
 db_update_schema: SQL_FILES=schema/utils.sql schema/library.sql schema/library_view.sql schema/import.sql schema/webapp.sql schema/api_public.sql
 db_update_schema: .psql-history
 # We could have launched all those SQL files in a single pass via multiple "-f" args to psql,
@@ -65,20 +87,24 @@ db_update_schema: .psql-history
 		${PSQL_QUIET} --no-psqlrc -q -b -f /host/db/$(sql_file)) || exit 1; \
 	)
 
+.phony: start_api_public
 start_api_public:
 	docker-compose up -d nginx
 
+.phony: pg_dump_raw_gutenberg_data
 pg_dump_raw_gutenberg_data:
-	docker-compose run --rm --entrypoint pg_dump db-cli \
+	docker-compose run --rm --user $$(id -u):$$(id -g) --entrypoint pg_dump db-cli \
 		--data-only \
 		-t 'import.gutenberg_raw_data' \
 		--format=plain \
 		--file=/host/gutenberg_raw_data.sql
 
+.phony: pg_restore_raw_gutenberg_data
 pg_restore_raw_gutenberg_data:
 	${PSQL} --no-psqlrc -q -b \
 		-f /host/gutenberg_raw_data.sql
 
+.phony: export_books_langs
 export_books_langs:
 	${PSQL} --no-psqlrc \
 		-f /host/db/scripts/books-langs.sql \

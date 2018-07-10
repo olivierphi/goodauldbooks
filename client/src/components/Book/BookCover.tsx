@@ -26,7 +26,7 @@ export function BookCover(props: BookCoverProps) {
               <span className={["book-cover", className].join(" ")}>
                 {hasCover ? (
                   <img
-                    src={`${assetsConfig.coversBaseUrl}${props.book.coverUrl}`}
+                    src={`${assetsConfig.coversBaseUrl}/${props.book.coverUrl}`}
                     alt={props.book.title}
                   />
                 ) : (

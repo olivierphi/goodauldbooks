@@ -1,0 +1,8 @@
+# Dependencies shared with the Docker container.
+/vendor
+
+# Compiled python modules.
+*.pyc
+
+# MyPy cache
+.mypy_cache

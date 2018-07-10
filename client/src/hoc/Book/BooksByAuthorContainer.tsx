@@ -1,4 +1,5 @@
 import * as React from "react";
+import { BooksByAuthor } from "../../components/Book/BooksByAuthor";
 import { BooksById, Lang } from "../../domain/core";
 import { ACTIONS, EVENTS } from "../../domain/messages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
@@ -9,7 +10,6 @@ import {
 } from "../../utils/pagination-utils";
 import { getAuthorPageUrl } from "../../utils/routing-utils";
 import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
-import { BooksByAuthor } from "../../components/Book/BooksByAuthor";
 
 interface BooksByAuthorContainerProps {
   authorId: string;

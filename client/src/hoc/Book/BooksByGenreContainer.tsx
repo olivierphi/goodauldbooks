@@ -1,4 +1,5 @@
 import * as React from "react";
+import { BooksByGenre } from "../../components/Book/BooksByGenre";
 import { BooksById, Lang } from "../../domain/core";
 import { ACTIONS, EVENTS } from "../../domain/messages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
@@ -9,7 +10,6 @@ import {
 } from "../../utils/pagination-utils";
 import { getGenrePageUrl } from "../../utils/routing-utils";
 import { HigherOrderComponentToolkit } from "../HigherOrderComponentToolkit";
-import { BooksByGenre } from "../../components/Book/BooksByGenre";
 
 interface BooksByGenreContainerProps {
   genre: string;
