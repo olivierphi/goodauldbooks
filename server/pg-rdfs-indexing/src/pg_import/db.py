@@ -22,23 +22,28 @@ def execute_books_storage_in_db_batch(books_to_store_cur_batch: t.List) -> None:
     if len(books_to_store_cur_batch) == 0:
         return
 
-    db_conn, db_cursor = DbConnection.get_db()
+    db_conn = DbConnection.get_db()
+    db_cursor = db_conn.cursor()
+
     psycopgextras.execute_batch(
         db_cursor,
         _BOOK_STORAGE_SQL,
         books_to_store_cur_batch
     )
     db_conn.commit()
+    db_cursor.close()
 
 
 def store_single_book_in_db(books_root_path: str, book: parsing.BookProcessingResult, commit: bool = True) -> None:
-    db_conn, db_cursor = DbConnection.get_db()
+    db_conn = DbConnection.get_db()
+    db_cursor = db_conn.cursor()
 
     book_as_dict_for_db = _book_to_dict_for_db(books_root_path, book)
     db_cursor.execute(_BOOK_STORAGE_SQL, book_as_dict_for_db)
 
     if commit:
         db_conn.commit()
+        db_cursor.close()
 
 
 def _book_to_dict_for_db(books_root_path: str, book: parsing.BookProcessingResult) -> t.Dict:
@@ -52,11 +57,10 @@ def _book_to_dict_for_db(books_root_path: str, book: parsing.BookProcessingResul
 
 class DbConnection:
     __connection = None
-    __cursor = None
 
     @staticmethod
     def get_db():
-        # type: () -> t.Tuple[psycopg2.connection, psycopg2.cursor]
+        # type: () -> psycopg2.connection
         if not DbConnection.__connection:
             # TODO: don't hard-code Docker-related stuff :-)
             DbConnection.__connection = psycopg2.connect(
@@ -66,5 +70,4 @@ class DbConnection:
                 user=os.getenv('PGUSER'),
                 password=os.getenv('PGPASSWORD'),
             )
-            DbConnection.__cursor = DbConnection.__connection.cursor()
-        return DbConnection.__connection, DbConnection.__cursor
+        return DbConnection.__connection
