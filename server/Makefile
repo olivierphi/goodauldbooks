@@ -92,16 +92,17 @@ python_shell:
 	${DC_RUN} --entrypoint sh -e PYTHONPATH=/app/src -w /app/django python
 
 python_install:
-	${DC_RUN} --entrypoint pip python install --user ${PKG}
+	${DC_RUN} --entrypoint pip python install --user ${PKG} \
+		&& ${DC_RUN} --entrypoint pip python freeze
 
 django_manage:
-	${DC_RUN} --entrypoint python -e TERM=xterm-256color -w /app/django -p 9000:8000 python manage.py ${MANAGE_CMD}
+	${DC_RUN} --entrypoint python -e TERM=xterm-256color -w /app/django python manage.py ${MANAGE_CMD}
 
 django_shell:
 	${MAKE} django_manage MANAGE_CMD='shell'
 
 django_runserver:
-	${MAKE} django_manage MANAGE_CMD='runserver 0:8000'
+	${DC_RUN} --entrypoint python -e TERM=xterm-256color -w /app/django -p 9000:8000 python manage.py runserver 0:8000
 
 .phony: start_api_public
 start_api_public:

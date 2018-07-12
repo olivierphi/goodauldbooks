@@ -34,4 +34,11 @@ LOGGING = {
     },
 }
 
+# Graphene (GraphQL) configuration
+GRAPHENE = {
+    'MIDDLEWARE': [
+        'graphene_django.debug.DjangoDebugMiddleware',
+    ]
+}
+
 SETTINGS_DEV = True
