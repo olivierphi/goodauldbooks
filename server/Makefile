@@ -1,8 +1,9 @@
 GUTENBERG_GENERATED_COLLECTION_PATH ?= ~/gutenberg-mirror/generated-collection
+DC_RUN ?= docker-compose run --rm --user $$(id -u):$$(id -g)
 PSQL ?= docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) db-cli -v ON_ERROR_STOP=1
 # @link http://petereisentraut.blogspot.co.uk/2010/03/running-sql-scripts-with-psql.html
 PSQL_QUIET ?= docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) -e PGOPTIONS='--client-min-messages=warning' db-cli -v ON_ERROR_STOP=1
-PYTHON_DC_PREFIX ?= docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) --entrypoint python -e PYTHONPATH=/app/src
+PYTHON_DC_PREFIX ?= ${DC_RUN} --entrypoint python -e PYTHONPATH=/app/src
 
 .phony: reset_db_and_import_gutenberg_books
 reset_db_and_import_gutenberg_books:
@@ -86,6 +87,21 @@ db_update_schema: .psql-history
 		(echo "\033[36m*******\nRunning SQL file '$(sql_file)'...\n*******\033[0m" && \
 		${PSQL_QUIET} --no-psqlrc -q -b -f /host/db/$(sql_file)) || exit 1; \
 	)
+
+python_shell:
+	${DC_RUN} --entrypoint sh -e PYTHONPATH=/app/src -w /app/django python
+
+python_install:
+	${DC_RUN} --entrypoint pip python install --user ${PKG}
+
+django_manage:
+	${DC_RUN} --entrypoint python -e TERM=xterm-256color -w /app/django -p 9000:8000 python manage.py ${MANAGE_CMD}
+
+django_shell:
+	${MAKE} django_manage MANAGE_CMD='shell'
+
+django_runserver:
+	${MAKE} django_manage MANAGE_CMD='runserver 0:8000'
 
 .phony: start_api_public
 start_api_public:
