@@ -1,3 +1,4 @@
+import re
 import typing as t
 
 import graphene
@@ -12,6 +13,47 @@ from api_public.models import Book, Author, BookComputedData
 DEFAULT_LIMIT = 10
 MAX_LIMIT = 15
 
+_public_pg_book_id_pattern = re.compile('^pg(\d+)$')
+_public_pg_author_id_pattern = re.compile('^pg(\d+)$')
+
+
+class BookIdCriteria(t.NamedTuple):
+    book_id: int
+    gutenberg_id: int
+
+
+class AuthorIdCriteria(t.NamedTuple):
+    author_id: int
+    gutenberg_id: int
+
+
+def _get_public_book_id(book: Book) -> str:
+    return f'pg{book.gutenberg_id}' if book.gutenberg_id is not None else str(book.book_id)
+
+
+def _get_public_author_id(author: Author) -> str:
+    return f'pg{author.gutenberg_id}' if author.gutenberg_id is not None else str(author.author_id)
+
+
+def _get_author_id_criteria(public_author_id: str) -> AuthorIdCriteria:
+    author_id = 0
+    gutenberg_id = 0
+    pg_public_author_id_pattern_match = _public_pg_book_id_pattern.match(public_author_id)
+    if pg_public_author_id_pattern_match:
+        gutenberg_id = pg_public_author_id_pattern_match[1]
+    else:
+        author_id = int(public_author_id)
+
+    return AuthorIdCriteria(author_id=author_id, gutenberg_id=gutenberg_id)
+
+
+class BookId(graphene.String):
+    pass
+
+
+class AuthorId(graphene.String):
+    pass
+
 
 class BookComputedDataType(DjangoObjectType):
     class Meta:
@@ -19,13 +61,26 @@ class BookComputedDataType(DjangoObjectType):
 
 
 class BookType(DjangoObjectType):
-    computed_data = graphene.Field(BookComputedDataType)
+    book_id = BookId()
+    extra_data = graphene.Field(BookComputedDataType)
+
+    def resolve_book_id(self, info, **kwargs):
+        return _get_public_book_id(self)
+
+    def resolve_extra_data(self, info, **kwargs):
+        return self.computed_data
 
     class Meta:
         model = Book
+        exclude_fields = ('computed_data')
 
 
 class AuthorType(DjangoObjectType):
+    author_id = AuthorId()
+
+    def resolve_author_id(self, info, **kwargs):
+        return _get_public_author_id(self)
+
     class Meta:
         model = Author
 
@@ -45,12 +100,11 @@ class Query():
     all_authors = graphene.List(AuthorType, offset=graphene.Int(), limit=graphene.Int())
     book = graphene.Field(
         BookType,
-        gutenberg_id=graphene.Int(),
         title=graphene.String()
     )
     author = graphene.Field(
         AuthorType,
-        gutenberg_id=graphene.Int(),
+        author_id=AuthorId(),
         first_name=graphene.String(),
         last_name=graphene.String(),
     )
@@ -62,7 +116,7 @@ class Query():
     )
     books_by_author = graphene.Field(
         BooksByCriteria,
-        author_id=graphene.String(required=True),
+        author_id=AuthorId(required=True),
         lang=graphene.String(),
         offset=graphene.Int(), limit=graphene.Int()
     )
@@ -80,38 +134,41 @@ class Query():
         return Author.objects.prefetch_related('books').all()[offset:offset + limit]
 
     def resolve_book(self, info, **kwargs):
-        gutenberg_id = kwargs.get('gutenberg_id')
         title = kwargs.get('title')
 
-        has_something_to_resolve = any((gutenberg_id, title))
+        has_something_to_resolve = any((title,))
 
         if not has_something_to_resolve:
             return None
 
+        books = Book.objects.select_related('author').prefetch_related('computed_data')
+
         criteria = dict()
-        if gutenberg_id is not None:
-            criteria['gutenberg_id'] = gutenberg_id
-        if title is not None:
+        if title:
             criteria['title'] = title
 
-        return Book.objects.select_related('author').get(**criteria)
+        return books.get(**criteria)
 
     def resolve_author(self, info, **kwargs) -> t.Optional[Author]:
-        gutenberg_id = kwargs.get('gutenberg_id')
+        public_author_id = kwargs.get('author_id')
         first_name = kwargs.get('first_name')
         last_name = kwargs.get('last_name')
 
-        has_something_to_resolve = any((gutenberg_id, first_name, last_name))
+        has_something_to_resolve = any((public_author_id, first_name, last_name))
 
         if not has_something_to_resolve:
             return None
 
         criteria = dict()
-        if gutenberg_id is not None:
-            criteria['gutenberg_id'] = gutenberg_id
-        if first_name is not None:
+        if public_author_id:
+            author_id_criteria = _get_author_id_criteria(public_author_id)
+            if author_id_criteria.gutenberg_id:
+                criteria['gutenberg_id'] = author_id_criteria.gutenberg_id
+            else:
+                criteria['author_id'] = author_id_criteria.author_id
+        if first_name:
             criteria['first_name'] = first_name
-        if last_name is not None:
+        if last_name:
             criteria['last_name'] = last_name
 
         return Author.objects.prefetch_related('books').get(**criteria)
@@ -136,18 +193,23 @@ class Query():
         )
 
     def resolve_books_by_author(self, info, **kwargs):
-        author_id = kwargs.get('author_id')
+        public_author_id = kwargs.get('author_id')
         lang = kwargs.get('lang', 'all')
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
-        books = Book.objects.select_related('author').prefetch_related('computed_data') \
-            .filter(author__author_id=author_id)
+        books = Book.objects.select_related('author').prefetch_related('computed_data')
+        author_id_criteria = _get_author_id_criteria(public_author_id)
+        if author_id_criteria.gutenberg_id:
+            books = books.filter(author__gutenberg_id=author_id_criteria.gutenberg_id)
+        else:
+            books = books.filter(author__author_id=author_id_criteria.author_id)
+
         if lang != 'all':
             books = books.filter(lang=lang)
         books = books[offset:offset + limit]
 
-        metadata = _get_books_by_author_metadata(author_id, lang)
+        metadata = _get_books_by_author_metadata(author_id_criteria, lang)
 
         return BooksByCriteria(
             books=list(books),
@@ -213,7 +275,7 @@ def _get_books_by_genre_metadata(genre: str, lang: str) -> BooksByCriteriaMetada
     )
 
 
-def _get_books_by_author_metadata(author_id: int, lang: str) -> BooksByCriteriaMetadata:
+def _get_books_by_author_metadata(author_id: AuthorIdCriteria, lang: str) -> BooksByCriteriaMetadata:
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -221,6 +283,7 @@ def _get_books_by_author_metadata(author_id: int, lang: str) -> BooksByCriteriaM
             input as (
               select
                 %s::integer as author_id,
+                %s::integer as gutenberg_id,
                 %s::varchar(3) as lang
             ),
             nb_results_total as (
@@ -230,7 +293,13 @@ def _get_books_by_author_metadata(author_id: int, lang: str) -> BooksByCriteriaM
                   library.book as book
                   join library.author as author using(author_id)
                 where
-                  author.author_id = (select author_id from input) and
+                  case
+                    when (select gutenberg_id from input) = 0 then 
+                      author.author_id = (select author_id from input)
+                    else 
+                      author.gutenberg_id = (select gutenberg_id from input)
+                  end
+                  and
                   case
                     when (select lang from input) = 'all' then true
                     else lang = (select lang from input)
@@ -249,7 +318,12 @@ def _get_books_by_author_metadata(author_id: int, lang: str) -> BooksByCriteriaM
                           library.book as book
                           join library.author as author using(author_id)
                         where
-                          author.author_id = (select author_id from input)
+                          case
+                            when (select gutenberg_id from input) = 0 then 
+                              author.author_id = (select author_id from input)
+                            else 
+                              author.gutenberg_id = (select gutenberg_id from input)
+                          end
                       )::integer
                   end as count
             )
@@ -258,7 +332,7 @@ def _get_books_by_author_metadata(author_id: int, lang: str) -> BooksByCriteriaM
               (select count from nb_results_total_for_all_langs)::integer as nb_results_total_for_all_langs
             """
             ,
-            [author_id, lang]
+            [author_id.author_id, author_id.gutenberg_id, lang]
         )
         row = cursor.fetchone()
         metadata = {'nb_results_total': row[0], 'nb_results_total_for_all_langs': row[1]}
