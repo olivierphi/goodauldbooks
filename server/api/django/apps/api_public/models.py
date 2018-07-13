@@ -9,6 +9,7 @@ class Book(models.Model):
     lang = models.CharField(max_length=3)
     highlight = models.PositiveIntegerField(default=0)
     author = models.ForeignKey('Author', on_delete=models.DO_NOTHING, related_name='books', db_column='author_id')
+    genres = models.ManyToManyField('Genre', related_name='genres', db_table='library\".\"book_genre')
 
     class Meta:
         db_table = 'library\".\"book'
@@ -25,4 +26,13 @@ class Author(models.Model):
 
     class Meta:
         db_table = 'library\".\"author'
+        managed = False
+
+
+class Genre(models.Model):
+    genre_id = models.PositiveIntegerField(primary_key=True)
+    title = models.CharField(max_length=255, )
+
+    class Meta:
+        db_table = 'library\".\"genre'
         managed = False

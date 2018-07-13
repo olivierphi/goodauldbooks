@@ -57,7 +57,9 @@ django_user;
 
 grant select on table
 library.book,
-library.author
+library.author,
+library.genre,
+library.book_genre
 to
 django_user;
 
