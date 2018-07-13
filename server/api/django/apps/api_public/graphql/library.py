@@ -4,7 +4,7 @@ import graphene
 from django.db import connection
 from graphene_django.types import DjangoObjectType
 
-from api_public.models import Book, Author
+from api_public.models import Book, Author, BookComputedData
 
 # @link http://docs.graphene-python.org/projects/django/en/latest/tutorial-plain/
 # @link http://docs.graphene-python.org/projects/django/en/latest/authorization/
@@ -13,7 +13,14 @@ DEFAULT_LIMIT = 10
 MAX_LIMIT = 15
 
 
+class BookComputedDataType(DjangoObjectType):
+    class Meta:
+        model = BookComputedData
+
+
 class BookType(DjangoObjectType):
+    computed_data = graphene.Field(BookComputedDataType)
+
     class Meta:
         model = Book
 
@@ -30,7 +37,7 @@ class BooksByCriteriaMetadata(graphene.ObjectType):
 
 class BooksByCriteria(graphene.ObjectType):
     books = graphene.List(graphene.NonNull(BookType))
-    meta = graphene.Field(BooksByCriteriaMetadata)
+    meta = graphene.Field(graphene.NonNull(BooksByCriteriaMetadata))
 
 
 class Query():
@@ -115,7 +122,8 @@ class Query():
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
-        books = Book.objects.select_related('author').filter(genres__title=genre)
+        books = Book.objects.select_related('author').prefetch_related('computed_data') \
+            .filter(genres__title=genre)
         if lang != 'all':
             books = books.filter(lang=lang)
         books = books[offset:offset + limit]
@@ -133,7 +141,8 @@ class Query():
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
-        books = Book.objects.select_related('author').filter(author__author_id=author_id)
+        books = Book.objects.select_related('author').prefetch_related('computed_data') \
+            .filter(author__author_id=author_id)
         if lang != 'all':
             books = books.filter(lang=lang)
         books = books[offset:offset + limit]

@@ -36,3 +36,18 @@ class Genre(models.Model):
     class Meta:
         db_table = 'library\".\"genre'
         managed = False
+
+
+class BookComputedData(models.Model):
+    book_id = models.OneToOneField('Book', primary_key=True, on_delete=models.DO_NOTHING, related_name='computed_data',
+                                   db_column='book_id')
+    slug = models.CharField(max_length=50)
+    cover_path = models.CharField(max_length=255, null=True)
+    epub_path = models.CharField(max_length=255)
+    epub_size = models.PositiveIntegerField()
+    mobi_path = models.CharField(max_length=255)
+    mobi_size = models.PositiveIntegerField()
+
+    class Meta:
+        db_table = 'library_view\".\"book_computed_data'
+        managed = False

@@ -10,7 +10,7 @@ begin
      ) > 0
   then
     revoke usage on schema
-    django, library, utils, webapp
+    django, library, library_view, utils, webapp
     from
     django_user
     cascade;
@@ -22,13 +22,13 @@ begin
     cascade;
 
     revoke all privileges on all tables in schema
-    library, utils, webapp
+    library, library_view, utils, webapp
     from
     django_user
     cascade;
 
     revoke all privileges on all functions in schema
-    library, utils, webapp
+    library, library_view, utils, webapp
     from
     django_user
     cascade;
@@ -46,7 +46,7 @@ create role django_user
   password 'django_pass'; -- change that hard-coded password later of course ^_^
 
 grant usage on schema
-django, library, utils, webapp
+django, library, library_view, utils, webapp
 to
 django_user;
 
@@ -59,7 +59,8 @@ grant select on table
 library.book,
 library.author,
 library.genre,
-library.book_genre
+library.book_genre,
+library_view.book_computed_data
 to
 django_user;
 
