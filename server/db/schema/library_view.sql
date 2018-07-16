@@ -19,10 +19,13 @@ create table library_view.book_computed_data (
 
 create table library_view.author_computed_data (
   author_id integer references library.author (author_id) primary key,
+  full_name varchar,
   slug varchar(50),
   nb_books integer,
   highlight integer
 );
+create index author_computed_data_full_name_upper_idx on library_view.author_computed_data
+  using gin((upper(full_name)) exts.gin_trgm_ops);
 
 create or replace function library_view.update_book_computed_data(
   book_id integer
@@ -98,9 +101,18 @@ author_nb_books as (
   where
     book.author_id = $1
 ),
+author_full_name as (
+  select
+    author.first_name || ' ' || author.last_name as full_name
+  from
+    library.author
+  where
+    author_id = $1
+
+),
 author_slug_data as (
   select
-    substring(utils.slugify(author.first_name || ' ' || author.last_name) for 50)::varchar as slug
+    substring(utils.slugify((select full_name from author_full_name)) for 50)::varchar as slug
   from
     library.author
   where
@@ -115,9 +127,10 @@ author_highlight as (
     book.author_id = $1
 )
 insert into library_view.author_computed_data
-(author_id, slug, nb_books, highlight)
+(author_id, full_name, slug, nb_books, highlight)
   select
     $1,
+    (select full_name from author_full_name),
     (select slug from author_slug_data),
     (select count from author_nb_books),
     (select highlight from author_highlight)

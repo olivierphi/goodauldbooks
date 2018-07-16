@@ -16,9 +16,7 @@ create table library.author (
   death_year integer null
 );
 -- (Django "__istartswith" will match with UPPER(), so our GIN indexes have to use upper-cased values accordingly)
-create index on library.author
-  using gin(upper(first_name) exts.gin_trgm_ops);
-create index on library.author
+create index author_last_name_upper_idx on library.author
   using gin(upper(last_name) exts.gin_trgm_ops);
 
 create table library.book (
@@ -31,7 +29,7 @@ create table library.book (
   author_id int references library.author(author_id) not null
 );
 create index on library.book(author_id);
-create index on library.book
+create index book_title_upper_idx on library.book
   using gin(upper(title) exts.gin_trgm_ops);
 
 create table library.book_asset (

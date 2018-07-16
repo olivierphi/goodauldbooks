@@ -5,16 +5,18 @@ import typing as t
 import graphene
 from django.core.cache import cache
 from django.db import connection
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet, Q, When, Value, Case, PositiveSmallIntegerField
 from graphene_django.types import DjangoObjectType
 
-from api_public.models import Book, Author, BookComputedData, WebAppSettings
+from api_public.models import Book, Author, BookComputedData, WebAppSettings, AuthorComputedData
 
 # @link http://docs.graphene-python.org/projects/django/en/latest/tutorial-plain/
 # @link http://docs.graphene-python.org/projects/django/en/latest/authorization/
 
 DEFAULT_LIMIT = 10
 MAX_LIMIT = 15
+
+LANG_ALL = 'all'
 
 _public_pg_book_id_pattern = re.compile('^pg(\d+)$')
 _public_pg_author_id_pattern = re.compile('^pg(\d+)$')
@@ -73,7 +75,7 @@ class AuthorId(graphene.String):
 class BookComputedDataType(DjangoObjectType):
     class Meta:
         model = BookComputedData
-        exclude_fields = ('book_id')
+        exclude_fields = ('book_id',)
 
 
 class QuickAutocompletionResultType(graphene.Enum):
@@ -110,11 +112,21 @@ class BookType(DjangoObjectType):
         exclude_fields = ('id', 'computed_data', 'highlight')
 
 
+class AuthorComputedDataType(DjangoObjectType):
+    class Meta:
+        model = AuthorComputedData
+        exclude_fields = ('author_id',)
+
+
 class AuthorType(DjangoObjectType):
     author_id = AuthorId()
+    extra = graphene.Field(AuthorComputedDataType)  # just an alias to 'computed_data' :-)
 
     def resolve_author_id(self, info, **kwargs):
         return _get_public_author_id(self)
+
+    def resolve_extra(self, info, **kwargs):
+        return self.computed_data
 
     class Meta:
         model = Author
@@ -139,7 +151,8 @@ class Query():
     )
     quick_autocompletion = graphene.List(
         graphene.NonNull(QuickAutocompletionResult),
-        search=graphene.String(required=True)
+        search=graphene.String(required=True),
+        lang=graphene.String(),
     )
     book = graphene.Field(
         BookType,
@@ -176,52 +189,43 @@ class Query():
 
     def resolve_quick_autocompletion(self, info, **kwargs):
         search = kwargs.get('search')
+        lang = kwargs.get('lang', LANG_ALL)
+
         # We first try to get 4 authors for the given search:
-        authors = Author.objects.prefetch_related('computed_data') \
-                      .filter(Q(first_name__istartswith=search) | Q(last_name__istartswith=search)) \
-                      .order_by('-computed_data__highlight', '-computed_data__nb_books', 'last_name') \
-            [0:4]
+        authors = Author.objects.prefetch_related('computed_data')
+        authors = authors.filter(
+            Q(computed_data__full_name__istartswith=search) |
+            Q(last_name__istartswith=search)
+        )
+        authors = authors.order_by('-computed_data__highlight', '-computed_data__nb_books', 'last_name')
+        authors = authors[0:4]
         authors_quick_completion_results = [
-            QuickAutocompletionResult(
-                type=QuickAutocompletionResultType.AUTHOR.value,
-                book_id=None,
-                book_title=None,
-                book_lang=None,
-                book_slug=None,
-                author_id=_get_public_author_id(author),
-                author_first_name=author.first_name,
-                author_last_name=author.last_name,
-                author_slug=author.computed_data.slug,
-                author_nb_books=author.computed_data.nb_books,
-                highlight=author.computed_data.highlight,
-            )
+            _author_to_quick_autocompletion_result(author)
             for author in authors
         ]
-        # Ok, now we try to complete that results list with books, in order to get 8 total results
+
+        # Ok, now we try to complete that results list with 4-8 books, in order to get 8 total results
         nb_books_max = 8 - len(authors_quick_completion_results)
-        # .prefetch_related('author.computed_data') \
-        books = _get_books_base_queryset() \
-                    .prefetch_related('author__computed_data') \
-                    .filter(title__istartswith=search) \
-                    .order_by('-highlight', 'title') \
-            [0:nb_books_max]
+        books = _get_books_base_queryset().prefetch_related('author__computed_data')
+        if lang != LANG_ALL:
+            books = books.filter(lang=lang)
+        # we take all the books that CONTAIN that pattern...
+        books = books.filter(title__icontains=search)
+        # ...but then we look if it STARTS WITH the pattern...
+        books = books.annotate(starts_with=Case(
+            When(title__istartswith=search, then=Value(1)),
+            default=Value(0),
+            output_field=PositiveSmallIntegerField()
+        ))
+        # ...and prioritise the books that START with the pattern:
+        books = books.order_by('-starts_with', '-highlight', 'title')
+        books = books[0:nb_books_max]
         books_quick_completion_results = [
-            QuickAutocompletionResult(
-                type=QuickAutocompletionResultType.BOOK.value,
-                book_id=_get_public_book_id(book),
-                book_title=book.title,
-                book_lang=book.lang,
-                book_slug=book.computed_data.slug,
-                author_id=_get_public_author_id(book.author),
-                author_first_name=book.author.first_name,
-                author_last_name=book.author.last_name,
-                author_slug=book.author.computed_data.slug,
-                author_nb_books=book.author.computed_data.nb_books,
-                highlight=book.highlight,
-            )
+            _book_to_quick_autocompletion_result(book)
             for book in books
         ]
 
+        # All right, finally we can return the books results, followed by the authors results:
         return books_quick_completion_results + authors_quick_completion_results
 
     def resolve_all_books(self, info, **kwargs):
@@ -278,12 +282,12 @@ class Query():
 
     def resolve_books_by_genre(self, info, **kwargs):
         genre = kwargs.get('genre')
-        lang = kwargs.get('lang', 'all')
+        lang = kwargs.get('lang', LANG_ALL)
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
         books = _get_books_base_queryset().filter(genres__title=genre)
-        if lang != 'all':
+        if lang != LANG_ALL:
             books = books.filter(lang=lang)
         books = books[offset:offset + limit]
 
@@ -296,7 +300,7 @@ class Query():
 
     def resolve_books_by_author(self, info, **kwargs):
         public_author_id = kwargs.get('author_id')
-        lang = kwargs.get('lang', 'all')
+        lang = kwargs.get('lang', LANG_ALL)
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
@@ -307,7 +311,7 @@ class Query():
         else:
             books = books.filter(author__author_id=author_id_criteria.author_id)
 
-        if lang != 'all':
+        if lang != LANG_ALL:
             books = books.filter(lang=lang)
         books = books[offset:offset + limit]
 
@@ -450,4 +454,36 @@ def _get_books_by_author_metadata(author_id: AuthorIdCriteria, lang: str) -> Boo
     return BooksByCriteriaMetadata(
         nb_results=metadata['nb_results_total'],
         nb_results_for_all_langs=metadata['nb_results_total_for_all_langs']
+    )
+
+
+def _author_to_quick_autocompletion_result(author: Author) -> QuickAutocompletionResult:
+    return QuickAutocompletionResult(
+        type=QuickAutocompletionResultType.AUTHOR.value,
+        book_id=None,
+        book_title=None,
+        book_lang=None,
+        book_slug=None,
+        author_id=_get_public_author_id(author),
+        author_first_name=author.first_name,
+        author_last_name=author.last_name,
+        author_slug=author.computed_data.slug,
+        author_nb_books=author.computed_data.nb_books,
+        highlight=author.computed_data.highlight,
+    )
+
+
+def _book_to_quick_autocompletion_result(book: Book) -> QuickAutocompletionResult:
+    return QuickAutocompletionResult(
+        type=QuickAutocompletionResultType.BOOK.value,
+        book_id=_get_public_book_id(book),
+        book_title=book.title,
+        book_lang=book.lang,
+        book_slug=book.computed_data.slug,
+        author_id=_get_public_author_id(book.author),
+        author_first_name=book.author.first_name,
+        author_last_name=book.author.last_name,
+        author_slug=book.author.computed_data.slug,
+        author_nb_books=book.author.computed_data.nb_books,
+        highlight=book.highlight,
     )

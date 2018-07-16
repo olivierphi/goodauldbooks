@@ -58,6 +58,7 @@ class AuthorComputedData(models.Model):
     author_id = models.OneToOneField('Author', primary_key=True, on_delete=models.DO_NOTHING,
                                      related_name='computed_data',
                                      db_column='author_id')
+    full_name = models.CharField(max_length=200)
     slug = models.CharField(max_length=50)
     nb_books = models.PositiveIntegerField()
     highlight = models.PositiveIntegerField()
