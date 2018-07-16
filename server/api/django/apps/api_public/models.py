@@ -39,7 +39,8 @@ class Genre(models.Model):
 
 
 class BookComputedData(models.Model):
-    book_id = models.OneToOneField('Book', primary_key=True, on_delete=models.DO_NOTHING, related_name='computed_data',
+    book_id = models.OneToOneField('Book', primary_key=True, on_delete=models.DO_NOTHING,
+                                   related_name='computed_data',
                                    db_column='book_id')
     slug = models.CharField(max_length=50)
     cover_path = models.CharField(max_length=255, null=True)
@@ -50,4 +51,26 @@ class BookComputedData(models.Model):
 
     class Meta:
         db_table = 'library_view\".\"book_computed_data'
+        managed = False
+
+
+class AuthorComputedData(models.Model):
+    author_id = models.OneToOneField('Author', primary_key=True, on_delete=models.DO_NOTHING,
+                                     related_name='computed_data',
+                                     db_column='author_id')
+    slug = models.CharField(max_length=50)
+    nb_books = models.PositiveIntegerField()
+    highlight = models.PositiveIntegerField()
+
+    class Meta:
+        db_table = 'library_view\".\"author_computed_data'
+        managed = False
+
+
+class WebAppSettings(models.Model):
+    name = models.CharField(max_length=100, primary_key=True)
+    value = models.TextField()
+
+    class Meta:
+        db_table = 'webapp\".\"settings'
         managed = False

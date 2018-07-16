@@ -60,7 +60,9 @@ library.book,
 library.author,
 library.genre,
 library.book_genre,
-library_view.book_computed_data
+library_view.book_computed_data,
+library_view.author_computed_data,
+webapp.settings
 to
 django_user;
 

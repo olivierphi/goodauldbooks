@@ -68,12 +68,19 @@ services:
     working_dir: /app
     depends_on:
       - db
+      - redis
     env_file:
       - .env
     environment:
       PYTHONUSERBASE: /app/vendor
       # Add "/app/vendor/bin" (Python scripts installed by `pip install --user`) to the PATH
       PATH: /usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/vendor/bin
+      REDIS_HOST: redis
+
+  redis:
+    image: redis:4
+    ports:
+      - 6378:6379
 
   swagger_ui:
     image: swaggerapi/swagger-ui

@@ -16,7 +16,7 @@ create table webapp.settings(
  * Some default values
  */
 insert into webapp.settings(name, value) values
-  ('featured_books_ids', '{g345, g84, g174}')
+  ('featured_books_ids', '["pg345", "pg84", "pg174"]')
 ;
 
 commit;

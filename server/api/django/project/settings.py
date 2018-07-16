@@ -118,6 +118,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Caching
+# https://docs.djangoproject.com/en/2.0/topics/cache/
+# http://niwinz.github.io/django-redis/latest/
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'''redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', 6379)}/{os.getenv('REDIS_DB', 0)}''',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'django',
+    }
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 

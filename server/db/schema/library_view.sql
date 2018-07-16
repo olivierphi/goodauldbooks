@@ -20,7 +20,8 @@ create table library_view.book_computed_data (
 create table library_view.author_computed_data (
   author_id integer references library.author (author_id) primary key,
   slug varchar(50),
-  nb_books integer
+  nb_books integer,
+  highlight integer
 );
 
 create or replace function library_view.update_book_computed_data(
@@ -77,6 +78,52 @@ insert into library_view.book_computed_data
 ;
 $update_book_computed_data$;
 
+create or replace function library_view.update_author_computed_data(
+  author_id integer
+) returns void
+language sql
+volatile
+as $update_author_computed_data$
+delete from
+    library_view.author_computed_data
+  where
+    author_id = $1
+;
+with
+author_nb_books as (
+  select
+    count(*) as count
+  from
+    library.book
+  where
+    book.author_id = $1
+),
+author_slug_data as (
+  select
+    substring(utils.slugify(author.first_name || ' ' || author.last_name) for 50)::varchar as slug
+  from
+    library.author
+  where
+    author_id = $1
+),
+author_highlight as (
+  select
+    sum(highlight) as highlight
+  from
+    library.book
+  where
+    book.author_id = $1
+)
+insert into library_view.author_computed_data
+(author_id, slug, nb_books, highlight)
+  select
+    $1,
+    (select slug from author_slug_data),
+    (select count from author_nb_books),
+    (select highlight from author_highlight)
+;
+$update_author_computed_data$;
+
 create or replace function library_view.update_all_books_computed_data(
 ) returns bigint
 language sql
@@ -90,6 +137,20 @@ from
   ) upd8 on true
 ;
 $update_all_books_computed_data$;
+
+create or replace function library_view.update_all_authors_computed_data(
+) returns bigint
+language sql
+volatile
+as $update_all_authors_computed_data$
+select
+  count(*)
+from
+  library.author join lateral (
+    select library_view.update_author_computed_data(author_id)
+  ) upd8 on true
+;
+$update_all_authors_computed_data$;
 
 /*
 -- This materialized view is what powers our public API :-)

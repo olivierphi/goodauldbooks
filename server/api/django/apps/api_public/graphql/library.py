@@ -1,11 +1,14 @@
+import json
 import re
 import typing as t
 
 import graphene
+from django.core.cache import cache
 from django.db import connection
+from django.db.models import QuerySet, Q
 from graphene_django.types import DjangoObjectType
 
-from api_public.models import Book, Author, BookComputedData
+from api_public.models import Book, Author, BookComputedData, WebAppSettings
 
 # @link http://docs.graphene-python.org/projects/django/en/latest/tutorial-plain/
 # @link http://docs.graphene-python.org/projects/django/en/latest/authorization/
@@ -35,12 +38,24 @@ def _get_public_author_id(author: Author) -> str:
     return f'pg{author.gutenberg_id}' if author.gutenberg_id is not None else str(author.author_id)
 
 
+def _get_book_id_criteria(public_book_id: str) -> BookIdCriteria:
+    book_id = 0
+    gutenberg_id = 0
+    pg_public_book_id_pattern_match = _public_pg_book_id_pattern.match(public_book_id)
+    if pg_public_book_id_pattern_match:
+        gutenberg_id = int(pg_public_book_id_pattern_match[1])
+    else:
+        book_id = int(public_book_id)
+
+    return BookIdCriteria(book_id=book_id, gutenberg_id=gutenberg_id)
+
+
 def _get_author_id_criteria(public_author_id: str) -> AuthorIdCriteria:
     author_id = 0
     gutenberg_id = 0
-    pg_public_author_id_pattern_match = _public_pg_book_id_pattern.match(public_author_id)
+    pg_public_author_id_pattern_match = _public_pg_author_id_pattern.match(public_author_id)
     if pg_public_author_id_pattern_match:
-        gutenberg_id = pg_public_author_id_pattern_match[1]
+        gutenberg_id = int(pg_public_author_id_pattern_match[1])
     else:
         author_id = int(public_author_id)
 
@@ -58,21 +73,41 @@ class AuthorId(graphene.String):
 class BookComputedDataType(DjangoObjectType):
     class Meta:
         model = BookComputedData
+        exclude_fields = ('book_id')
+
+
+class QuickAutocompletionResultType(graphene.Enum):
+    BOOK = 'book'
+    AUTHOR = 'author'
+
+
+class QuickAutocompletionResult(graphene.ObjectType):
+    type = QuickAutocompletionResultType(required=True)
+    book_id = BookId()
+    book_title = graphene.String()
+    book_lang = graphene.String()
+    book_slug = graphene.String()
+    author_id = AuthorId()
+    author_first_name = graphene.String()
+    author_last_name = graphene.String()
+    author_slug = graphene.String()
+    author_nb_books = graphene.Int(required=True)
+    highlight = graphene.Int(required=True)
 
 
 class BookType(DjangoObjectType):
     book_id = BookId()
-    extra_data = graphene.Field(BookComputedDataType)
+    extra = graphene.Field(BookComputedDataType)  # just an alias to 'computed_data' :-)
 
     def resolve_book_id(self, info, **kwargs):
         return _get_public_book_id(self)
 
-    def resolve_extra_data(self, info, **kwargs):
+    def resolve_extra(self, info, **kwargs):
         return self.computed_data
 
     class Meta:
         model = Book
-        exclude_fields = ('computed_data')
+        exclude_fields = ('id', 'computed_data', 'highlight')
 
 
 class AuthorType(DjangoObjectType):
@@ -83,6 +118,7 @@ class AuthorType(DjangoObjectType):
 
     class Meta:
         model = Author
+        exclude_fields = ('id')
 
 
 class BooksByCriteriaMetadata(graphene.ObjectType):
@@ -98,6 +134,13 @@ class BooksByCriteria(graphene.ObjectType):
 class Query():
     all_books = graphene.List(BookType, offset=graphene.Int(), limit=graphene.Int())
     all_authors = graphene.List(AuthorType, offset=graphene.Int(), limit=graphene.Int())
+    featured_books = graphene.List(
+        graphene.NonNull(BookType)
+    )
+    quick_autocompletion = graphene.List(
+        graphene.NonNull(QuickAutocompletionResult),
+        search=graphene.String(required=True)
+    )
     book = graphene.Field(
         BookType,
         title=graphene.String()
@@ -121,17 +164,77 @@ class Query():
         offset=graphene.Int(), limit=graphene.Int()
     )
 
+    def resolve_featured_books(self, info, **kwargs):
+        featured_books_ids = cache.get('featured_books_ids')
+        if featured_books_ids is None:
+            featured_books_ids_raw = WebAppSettings.objects.get(name='featured_books_ids').value
+            featured_books_ids = json.loads(featured_books_ids_raw)
+            featured_books_ids = [_get_book_id_criteria(id).gutenberg_id for id in featured_books_ids]
+            cache.set('featured_books_ids', featured_books_ids)
+
+        return _get_books_base_queryset().filter(gutenberg_id__in=featured_books_ids)
+
+    def resolve_quick_autocompletion(self, info, **kwargs):
+        search = kwargs.get('search')
+        # We first try to get 4 authors for the given search:
+        authors = Author.objects.prefetch_related('computed_data') \
+                      .filter(Q(first_name__istartswith=search) | Q(last_name__istartswith=search)) \
+                      .order_by('-computed_data__highlight', '-computed_data__nb_books', 'last_name') \
+            [0:4]
+        authors_quick_completion_results = [
+            QuickAutocompletionResult(
+                type=QuickAutocompletionResultType.AUTHOR.value,
+                book_id=None,
+                book_title=None,
+                book_lang=None,
+                book_slug=None,
+                author_id=_get_public_author_id(author),
+                author_first_name=author.first_name,
+                author_last_name=author.last_name,
+                author_slug=author.computed_data.slug,
+                author_nb_books=author.computed_data.nb_books,
+                highlight=author.computed_data.highlight,
+            )
+            for author in authors
+        ]
+        # Ok, now we try to complete that results list with books, in order to get 8 total results
+        nb_books_max = 8 - len(authors_quick_completion_results)
+        # .prefetch_related('author.computed_data') \
+        books = _get_books_base_queryset() \
+                    .prefetch_related('author__computed_data') \
+                    .filter(title__istartswith=search) \
+                    .order_by('-highlight', 'title') \
+            [0:nb_books_max]
+        books_quick_completion_results = [
+            QuickAutocompletionResult(
+                type=QuickAutocompletionResultType.BOOK.value,
+                book_id=_get_public_book_id(book),
+                book_title=book.title,
+                book_lang=book.lang,
+                book_slug=book.computed_data.slug,
+                author_id=_get_public_author_id(book.author),
+                author_first_name=book.author.first_name,
+                author_last_name=book.author.last_name,
+                author_slug=book.author.computed_data.slug,
+                author_nb_books=book.author.computed_data.nb_books,
+                highlight=book.highlight,
+            )
+            for book in books
+        ]
+
+        return books_quick_completion_results + authors_quick_completion_results
+
     def resolve_all_books(self, info, **kwargs):
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
-        return Book.objects.select_related('author').all()[offset:offset + limit]
+        return _get_books_base_queryset().all()[offset:offset + limit]
 
     def resolve_all_authors(self, info, **kwargs):
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
-        return Author.objects.prefetch_related('books').all()[offset:offset + limit]
+        return _get_authors_base_queryset().all()[offset:offset + limit]
 
     def resolve_book(self, info, **kwargs):
         title = kwargs.get('title')
@@ -141,7 +244,7 @@ class Query():
         if not has_something_to_resolve:
             return None
 
-        books = Book.objects.select_related('author').prefetch_related('computed_data')
+        books = _get_books_base_queryset()
 
         criteria = dict()
         if title:
@@ -171,7 +274,7 @@ class Query():
         if last_name:
             criteria['last_name'] = last_name
 
-        return Author.objects.prefetch_related('books').get(**criteria)
+        return _get_authors_base_queryset().get(**criteria)
 
     def resolve_books_by_genre(self, info, **kwargs):
         genre = kwargs.get('genre')
@@ -179,8 +282,7 @@ class Query():
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
-        books = Book.objects.select_related('author').prefetch_related('computed_data') \
-            .filter(genres__title=genre)
+        books = _get_books_base_queryset().filter(genres__title=genre)
         if lang != 'all':
             books = books.filter(lang=lang)
         books = books[offset:offset + limit]
@@ -198,7 +300,7 @@ class Query():
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
-        books = Book.objects.select_related('author').prefetch_related('computed_data')
+        books = _get_books_base_queryset()
         author_id_criteria = _get_author_id_criteria(public_author_id)
         if author_id_criteria.gutenberg_id:
             books = books.filter(author__gutenberg_id=author_id_criteria.gutenberg_id)
@@ -215,6 +317,14 @@ class Query():
             books=list(books),
             meta=metadata
         )
+
+
+def _get_books_base_queryset() -> QuerySet:
+    return Book.objects.select_related('author').prefetch_related('computed_data')
+
+
+def _get_authors_base_queryset() -> QuerySet:
+    return Author.objects.prefetch_related('books').prefetch_related('computed_data')
 
 
 def _get_books_by_genre_metadata(genre: str, lang: str) -> BooksByCriteriaMetadata:
