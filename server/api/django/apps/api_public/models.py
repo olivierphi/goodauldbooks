@@ -1,3 +1,4 @@
+import django.contrib.postgres.fields as postgres_fields
 from django.db import models
 
 
@@ -31,7 +32,7 @@ class Author(models.Model):
 
 class Genre(models.Model):
     genre_id = models.PositiveIntegerField(primary_key=True)
-    title = models.CharField(max_length=255, )
+    title = models.CharField(max_length=255, null=None)
 
     class Meta:
         db_table = 'library\".\"genre'
@@ -74,4 +75,18 @@ class WebAppSettings(models.Model):
 
     class Meta:
         db_table = 'webapp\".\"settings'
+        managed = False
+
+
+class GenreWithStats(models.Model):
+    genre_id = models.OneToOneField('Genre', primary_key=True, on_delete=models.DO_NOTHING,
+                                    related_name='stats',
+                                    db_column='genre_id')
+    title = models.CharField(max_length=255, null=None)
+    nb_langs = models.PositiveIntegerField(null=None)
+    nb_books = models.PositiveIntegerField(null=None)
+    nb_books_by_lang = postgres_fields.JSONField(null=None)
+
+    class Meta:
+        db_table = 'library_view\".\"genre_with_related_data'
         managed = False

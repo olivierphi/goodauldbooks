@@ -6,7 +6,9 @@ create schema library_view;
 create schema if not exists exts;
 create extension if not exists pg_trgm schema exts;
 
-
+/**
+ * Tables
+ */
 create table library_view.book_computed_data (
   book_id integer references library.book (book_id) primary key,
   slug varchar(50),
@@ -27,6 +29,58 @@ create table library_view.author_computed_data (
 create index author_computed_data_full_name_upper_idx on library_view.author_computed_data
   using gin((upper(full_name)) exts.gin_trgm_ops);
 
+
+/**
+ * Views
+ */
+
+-- This materialized view has only 4 fields,
+-- but the "nb_book_per_lang" is quite expensive to compute.
+create materialized view library_view.genre_with_related_data as (
+  with
+  lang as (
+    select
+      distinct(lang) as lang
+    from
+      library.book
+  )
+  select
+    genre_id::integer,
+    title::varchar,
+    count(nb_books_by_lang.lang)::integer as nb_langs,
+    sum(nb_books_by_lang.nb_books)::integer as nb_books,
+    jsonb_object(
+      array_agg(nb_books_by_lang.lang),
+      array_agg(nb_books_by_lang.nb_books::text)
+    ) as nb_books_by_lang
+  from
+    library.genre
+    left join lateral (
+      select
+        lang.lang,
+        count(book.book_id)::integer
+      from
+        lang
+        join library.book as book on lang.lang = book.lang
+        join library.book_genre using (book_id)
+      where
+        library.book_genre.genre_id = genre.genre_id
+      group by
+        lang.lang
+      order by
+        lang.lang asc
+    ) nb_books_by_lang(lang, nb_books) on true
+  group by
+    genre_id
+);
+create unique index on library_view.genre_with_related_data
+  (genre_id);
+create unique index on library_view.genre_with_related_data
+  (title);
+
+/**
+ * Functions
+ */
 create or replace function library_view.update_book_computed_data(
   book_id integer
 ) returns void
@@ -233,50 +287,6 @@ create index on library_view.book_with_related_data
   using gin(author_last_name exts.gin_trgm_ops);
 create index on library_view.book_with_related_data
   using gin(genres);
-
--- This materialized view has only 4 fields,
--- but the "nb_book_per_lang" is quite expensive to compute.
-create materialized view library_view.genre_with_related_data as (
-  with
-  lang as (
-    select
-      distinct(lang) as lang
-    from
-      library.book
-  )
-  select
-    genre_id::integer,
-    title::varchar,
-    count(nb_books_by_lang.lang)::integer as nb_langs,
-    sum(nb_books_by_lang.nb_books)::integer as nb_books,
-    json_object(
-      array_agg(nb_books_by_lang.lang),
-      array_agg(nb_books_by_lang.nb_books::text)
-    ) as nb_books_by_lang
-  from
-    library.genre
-    left join lateral (
-      select
-        lang.lang,
-        count(book.book_id)::integer
-      from
-        lang
-        join library.book as book on lang.lang = book.lang
-        join library.book_genre using (book_id)
-      where
-        library.book_genre.genre_id = genre.genre_id
-      group by
-        lang.lang
-      order by
-        lang.lang asc
-    ) nb_books_by_lang(lang, nb_books) on true
-  group by
-    genre_id
-);
-create unique index on library_view.genre_with_related_data
-  (genre_id);
-create unique index on library_view.genre_with_related_data
-  (title);
 
 create materialized view library_view.book_additional_data as
   select

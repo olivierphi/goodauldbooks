@@ -8,7 +8,7 @@ from django.db import connection
 from django.db.models import QuerySet, Q, When, Value, Case, PositiveSmallIntegerField
 from graphene_django.types import DjangoObjectType
 
-from api_public.models import Book, Author, BookComputedData, WebAppSettings, AuthorComputedData
+from api_public.models import Book, Author, BookComputedData, WebAppSettings, AuthorComputedData, GenreWithStats
 
 # @link http://docs.graphene-python.org/projects/django/en/latest/tutorial-plain/
 # @link http://docs.graphene-python.org/projects/django/en/latest/authorization/
@@ -100,12 +100,16 @@ class QuickAutocompletionResult(graphene.ObjectType):
 class BookType(DjangoObjectType):
     book_id = BookId()
     extra = graphene.Field(BookComputedDataType)  # just an alias to 'computed_data' :-)
+    genres = graphene.List(graphene.String)
 
     def resolve_book_id(self, info, **kwargs):
         return _get_public_book_id(self)
 
     def resolve_extra(self, info, **kwargs):
         return self.computed_data
+
+    def resolve_genres(self, info, **kwargs):
+        return [genre.title for genre in self.genres.all()]
 
     class Meta:
         model = Book
@@ -143,6 +147,22 @@ class BooksByCriteria(graphene.ObjectType):
     meta = graphene.Field(graphene.NonNull(BooksByCriteriaMetadata))
 
 
+class GenreStatsNbBooksByLang(graphene.ObjectType):
+    lang = graphene.String()
+    nb_books = graphene.Int()
+
+
+class GenreStats(graphene.ObjectType):
+    title = graphene.String()
+    nb_books = graphene.Int()
+    nb_books_by_lang = graphene.List(GenreStatsNbBooksByLang)
+
+
+class BookWithGenresStats(graphene.ObjectType):
+    book = graphene.Field(BookType)
+    genres_stats = graphene.List(GenreStats)
+
+
 class Query():
     all_books = graphene.List(BookType, offset=graphene.Int(), limit=graphene.Int())
     all_authors = graphene.List(AuthorType, offset=graphene.Int(), limit=graphene.Int())
@@ -156,7 +176,11 @@ class Query():
     )
     book = graphene.Field(
         BookType,
-        title=graphene.String()
+        book_id=BookId(required=True)
+    )
+    book_with_genres_stats = graphene.Field(
+        BookWithGenresStats,
+        book_id=BookId(required=True)
     )
     author = graphene.Field(
         AuthorType,
@@ -177,7 +201,7 @@ class Query():
         offset=graphene.Int(), limit=graphene.Int()
     )
 
-    def resolve_featured_books(self, info, **kwargs):
+    def resolve_featured_books(self, info, **kwargs) -> t.List[Book]:
         featured_books_ids = cache.get('featured_books_ids')
         if featured_books_ids is None:
             featured_books_ids_raw = WebAppSettings.objects.get(name='featured_books_ids').value
@@ -187,7 +211,7 @@ class Query():
 
         return _get_books_base_queryset().filter(gutenberg_id__in=featured_books_ids)
 
-    def resolve_quick_autocompletion(self, info, **kwargs):
+    def resolve_quick_autocompletion(self, info, **kwargs) -> t.List[QuickAutocompletionResult]:
         search = kwargs.get('search')
         lang = kwargs.get('lang', LANG_ALL)
 
@@ -228,35 +252,47 @@ class Query():
         # All right, finally we can return the books results, followed by the authors results:
         return books_quick_completion_results + authors_quick_completion_results
 
-    def resolve_all_books(self, info, **kwargs):
+    def resolve_all_books(self, info, **kwargs) -> t.List[Book]:
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
         return _get_books_base_queryset().all()[offset:offset + limit]
 
-    def resolve_all_authors(self, info, **kwargs):
+    def resolve_all_authors(self, info, **kwargs) -> t.List[Author]:
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
         return _get_authors_base_queryset().all()[offset:offset + limit]
 
-    def resolve_book(self, info, **kwargs):
-        title = kwargs.get('title')
+    def resolve_book(self, info, **kwargs) -> t.Union[Book, None]:
+        public_book_id = kwargs.get('book_id')
 
-        has_something_to_resolve = any((title,))
+        book = _get_single_book_by_public_id(public_book_id)
 
-        if not has_something_to_resolve:
+        return book
+
+    def resolve_book_with_genres_stats(self, info, **kwargs) -> t.Union[BookWithGenresStats, None]:
+        public_book_id = kwargs.get('book_id')
+
+        book = _get_single_book_by_public_id(public_book_id)
+
+        if book is None:
             return None
 
-        books = _get_books_base_queryset()
+        book_genres_ids = [genre.genre_id for genre in book.genres.all()]
+        book_genres_with_stats = GenreWithStats.objects.filter(genre_id__in=book_genres_ids)
 
-        criteria = dict()
-        if title:
-            criteria['title'] = title
+        returned_genres_with_stats = [
+            _genres_w_stats_to_graphql_equivalent(genre_with_stats)
+            for genre_with_stats in book_genres_with_stats.all()
+        ]
 
-        return books.get(**criteria)
+        return BookWithGenresStats(
+            book=book,
+            genres_stats=returned_genres_with_stats
+        )
 
-    def resolve_author(self, info, **kwargs) -> t.Optional[Author]:
+    def resolve_author(self, info, **kwargs) -> t.Union[Author, None]:
         public_author_id = kwargs.get('author_id')
         first_name = kwargs.get('first_name')
         last_name = kwargs.get('last_name')
@@ -280,7 +316,7 @@ class Query():
 
         return _get_authors_base_queryset().get(**criteria)
 
-    def resolve_books_by_genre(self, info, **kwargs):
+    def resolve_books_by_genre(self, info, **kwargs) -> BooksByCriteria:
         genre = kwargs.get('genre')
         lang = kwargs.get('lang', LANG_ALL)
         offset = kwargs.get('offset', 0)
@@ -298,7 +334,7 @@ class Query():
             meta=metadata
         )
 
-    def resolve_books_by_author(self, info, **kwargs):
+    def resolve_books_by_author(self, info, **kwargs) -> BooksByCriteria:
         public_author_id = kwargs.get('author_id')
         lang = kwargs.get('lang', LANG_ALL)
         offset = kwargs.get('offset', 0)
@@ -324,11 +360,24 @@ class Query():
 
 
 def _get_books_base_queryset() -> QuerySet:
-    return Book.objects.select_related('author').prefetch_related('computed_data')
+    return Book.objects.select_related('author').prefetch_related('computed_data').prefetch_related('genres')
 
 
 def _get_authors_base_queryset() -> QuerySet:
     return Author.objects.prefetch_related('books').prefetch_related('computed_data')
+
+
+def _get_single_book_by_public_id(public_book_id: str) -> Book:
+    book_id_criteria = _get_book_id_criteria(public_book_id)
+
+    books = _get_books_base_queryset()
+    criteria = dict()
+    if book_id_criteria.gutenberg_id:
+        criteria['gutenberg_id'] = book_id_criteria.gutenberg_id
+    else:
+        criteria['author_id'] = book_id_criteria.author_id
+
+    return books.get(**criteria)
 
 
 def _get_books_by_genre_metadata(genre: str, lang: str) -> BooksByCriteriaMetadata:
@@ -486,4 +535,17 @@ def _book_to_quick_autocompletion_result(book: Book) -> QuickAutocompletionResul
         author_slug=book.author.computed_data.slug,
         author_nb_books=book.author.computed_data.nb_books,
         highlight=book.highlight,
+    )
+
+
+def _genres_w_stats_to_graphql_equivalent(genreWithStats: GenreWithStats) -> GenreStats:
+    nb_books_by_lang: t.List[GenreStatsNbBooksByLang] = [
+        GenreStatsNbBooksByLang(lang=lang, nb_books=nb_books)
+        for (lang, nb_books) in genreWithStats.nb_books_by_lang.items()
+    ]
+
+    return GenreStats(
+        title=genreWithStats.title,
+        nb_books=genreWithStats.nb_books,
+        nb_books_by_lang=nb_books_by_lang
     )
