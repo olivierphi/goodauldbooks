@@ -1,5 +1,8 @@
 from . import settings
 
+# Additional apps?
+INSTALLED_APPS = settings.INSTALLED_APPS + ['django_extensions']
+
 # Logging (to fine-tune and customise for each environment later)
 LOGGING = {
     'version': 1,
