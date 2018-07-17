@@ -36,6 +36,10 @@ export class BookIntroContainer extends React.Component<
     return <BookIntro bookId={this.props.bookId} bookIntro={this.state.bookIntro} />;
   }
 
+  public componentWillUnmount(): void {
+    this.props.hocToolkit.messageBus.off(EVENTS.BOOK_INTRO_FETCHED, this.onBookIntroFetched);
+  }
+
   private fetchData(): void {
     this.props.hocToolkit.messageBus.on(EVENTS.BOOK_INTRO_FETCHED, this.onBookIntroFetched);
     this.props.hocToolkit.actionsDispatcher.fetchIntroForBook(this.props.bookId);

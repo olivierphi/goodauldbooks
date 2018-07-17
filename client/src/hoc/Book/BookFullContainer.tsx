@@ -30,8 +30,6 @@ export class BookFullContainer extends React.Component<
   BookFullContainerProps,
   BookFullContainerPossibleState
 > {
-  public mounted: boolean = false;
-
   constructor(props: BookFullContainerProps) {
     super(props);
     this.state = this.getDerivedStateFromPropsAndAppState();
@@ -70,12 +68,8 @@ export class BookFullContainer extends React.Component<
     );
   }
 
-  public componentWillMount() {
-    this.mounted = true;
-  }
-
-  public componentWillUnmount() {
-    this.mounted = false;
+  public componentWillUnmount(): void {
+    this.props.hocToolkit.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
   }
 
   private fetchData(): void {
@@ -84,11 +78,6 @@ export class BookFullContainer extends React.Component<
   }
 
   private onBookDataFetched(): void {
-    if (!this.mounted) {
-      this.props.hocToolkit.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
-      return;
-    }
-
     const newState = this.getDerivedStateFromPropsAndAppState();
     if (!newState.loading) {
       // We now have our full book data!
