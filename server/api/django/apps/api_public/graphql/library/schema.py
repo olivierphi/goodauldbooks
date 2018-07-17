@@ -14,22 +14,28 @@ class AuthorId(graphene.String):
 
 
 class QuickAutocompletionResultEnumType(graphene.Enum):
-    BOOK = 'book'
-    AUTHOR = 'author'
+    # There is a bug in Graphene Python, which uses the Enums names instead of the values.
+    # As long as it's not solved we have to use the Enum names as values, hence the lower-case names.
+    # @link https://github.com/graphql-python/graphql-core/pull/140
+    book = 'book'
+    author = 'author'
 
 
-class QuickAutocompletionResultType(graphene.ObjectType):
-    type = QuickAutocompletionResultEnumType(required=True)
+class QuickSearchResultType(graphene.ObjectType):
+    type = QuickAutocompletionResultEnumType()
     book_id = BookId()
     book_title = graphene.String()
     book_lang = graphene.String()
     book_slug = graphene.String()
-    author_id = AuthorId()
+    author_id = AuthorId(required=True)
     author_first_name = graphene.String()
     author_last_name = graphene.String()
     author_slug = graphene.String()
     author_nb_books = graphene.Int(required=True)
     highlight = graphene.Int(required=True)
+
+    def resolve_type(self, info, **kwargs):
+        return self.type.value
 
 
 class BookType(DjangoObjectType):
@@ -108,6 +114,8 @@ class AuthorType(DjangoObjectType):
 class BooksByCriteriaMetadataType(graphene.ObjectType):
     nb_results = graphene.Int(required=True)
     nb_results_for_all_langs = graphene.Int(required=True)
+    page = graphene.Int(required=True)
+    nb_per_page = graphene.Int(required=True)
 
 
 class BooksByCriteriaType(graphene.ObjectType):

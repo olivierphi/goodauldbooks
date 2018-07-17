@@ -30,17 +30,17 @@ export interface BookWithGenreStats {
   genresStats: GenreWithStats[];
 }
 
-export interface QuickAutocompletionData {
+export interface QuickSearchData {
   type: "book" | "author";
-  book_id: string | null;
-  book_title: string | null;
-  book_lang: string;
-  book_slug: string;
-  author_id: string;
-  author_first_name: string;
-  author_last_name: string;
-  author_slug: string;
-  author_nb_books: number;
+  bookId: string | null;
+  bookTitle: string | null;
+  bookLang: string;
+  bookSlug: string;
+  authorId: string;
+  authorFirstName: string;
+  authorLastName: string;
+  authorSlug: string;
+  authorNbBooks: number;
   highlight: number;
 }
 
@@ -57,12 +57,12 @@ export interface NbBooksByLang {
 
 export interface BooksDataWithPagination<T> {
   books: T[];
-  pagination: PaginationResponseData;
+  meta: PaginationMetaData;
 }
 
-export interface PaginationResponseData {
+export interface PaginationMetaData {
   page: number;
-  nb_per_page: number;
-  nb_results_total: number;
-  nb_results_total_for_all_langs: number;
+  nbPerPage: number;
+  nbResults: number;
+  nbResultsForAllLangs: number;
 }

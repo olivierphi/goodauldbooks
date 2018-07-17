@@ -20,6 +20,9 @@ const quickSearchResultsCache: { [cacheKey: string]: QuickSearchResult[] } = {};
 
 /**
  * This module gets a bit messy, we'll probably refactor it at some point :-)
+ *
+ * N.B.: I haven't used a specific GraphQL client library like Apollo, because I always send the same static queries and
+ * I don't need to add the size of such a client lib to my JS.
  */
 export class BooksGraphqlRepository implements BooksRepository {
   public async getFeaturedBooks(lang: Lang): Promise<BooksById> {
@@ -36,7 +39,7 @@ query {
     slug
     coverPath
     genres
-    
+
     author {
       authorId
       firstName
@@ -47,8 +50,8 @@ query {
       nbBooks
     }
   }
-  
-}      
+
+}
       `;
     const response = await this.requestGraphql(graphqlQuery, null);
     const featuredBooks: Book[] = response.data.data.featuredBooks.map(mapBookFromServer);
@@ -71,7 +74,7 @@ query bookById($bookId: BookId!) {
       genres
       epubSize
       mobiSize
-      
+
       author {
         authorId
         firstName
@@ -82,18 +85,18 @@ query bookById($bookId: BookId!) {
         nbBooks
       }
     }
-    
+
     genresStats {
       title
       nbBooks
-      
+
       nbBooksByLang {
         lang
         nbBooks
       }
     }
   }
-  
+
 }
 
 `;
@@ -112,11 +115,27 @@ query bookById($bookId: BookId!) {
       return Promise.resolve(cacheForThisPatternAndLang);
     }
 
-    const response = await axios.get("/rpc/quick_autocompletion", {
-      params: { pattern, lang },
-    });
+    const graphqlQuery = `
+query quickSearch($pattern: String!, $lang: String) {
 
-    const matchingBooks = response.data.map(mapQuickAutocompletionDataFromServer);
+  quickSearch(search: $pattern, lang: $lang) {
+    type
+    bookId
+    bookLang
+    bookTitle
+    bookSlug
+    authorId
+    authorFirstName
+    authorLastName
+    authorSlug
+    authorNbBooks
+    highlight
+  }
+
+}
+    `;
+    const response = await this.requestGraphql(graphqlQuery, { pattern, lang });
+    const matchingBooks = response.data.data.quickSearch.map(mapQuickSearchDataFromServer);
     quickSearchResultsCache[cacheKey] = matchingBooks;
 
     return Promise.resolve(matchingBooks);
@@ -127,19 +146,53 @@ query bookById($bookId: BookId!) {
     lang: Lang,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
-    const response = await axios.get("/rpc/get_books_by_genre", {
-      params: {
-        genre,
-        lang,
-        page: pagination.page,
-        nb_per_page: pagination.nbPerPage,
-      },
+    const graphqlQuery = `
+query booksByGenre($genre: String!, $lang: String, $page: Int, $nbPerPage: Int) {
+
+  booksByGenre(genre: $genre, lang: $lang, page: $page, nbPerPage: $nbPerPage) {
+
+    books {
+      bookId
+      lang
+      title
+      subtitle
+      slug
+      coverPath
+      genres
+
+      author {
+        authorId
+        firstName
+        lastName
+        birthYear
+        deathYear
+        slug
+        nbBooks
+      }
+    }
+
+    meta {
+      page
+      nbPerPage
+      nbResults
+      nbResultsForAllLangs
+    }
+
+  }
+
+}
+    `;
+    const response = await this.requestGraphql(graphqlQuery, {
+      genre,
+      lang,
+      page: pagination.page,
+      nbPerPage: pagination.nbPerPage,
     });
 
     const booksWithPagination: ServerResponse.BooksDataWithPagination<ServerResponse.BookData> =
-      response.data[0];
+      response.data.data.booksByGenre;
     const paginationData: PaginationResponseData = getPaginationResponseDataFromServerResponse(
-      booksWithPagination.pagination
+      booksWithPagination.meta
     );
     const booksForThisGenre = getBooksByIdFromBooksArray(
       (booksWithPagination.books || []).map(mapBookFromServer)
@@ -166,9 +219,9 @@ query bookById($bookId: BookId!) {
     });
 
     const booksWithPagination: ServerResponse.BooksDataWithPagination<ServerResponse.BookData> =
-      response.data[0];
+      response.data.data.booksByAuthor;
     const paginationData: PaginationResponseData = getPaginationResponseDataFromServerResponse(
-      booksWithPagination.pagination
+      booksWithPagination.meta
     );
     const booksForThisGenre = getBooksByIdFromBooksArray(
       (booksWithPagination.books || []).map(mapBookFromServer)
@@ -187,7 +240,7 @@ query bookIntro($bookId: BookId!) {
   book(bookId: $bookId) {
     intro
   }
-  
+
 }
 
 
@@ -256,7 +309,7 @@ function mapBookWithGenreStatsFromServer(
 }
 
 function mapGenreWithStatsFromServer(row: ServerResponse.GenreWithStats): GenreWithStats {
-  let nbBooksByLang: { [lang: string]: number } = {};
+  const nbBooksByLang: { [lang: string]: number } = {};
   for (const nbBooksForLang of row.nbBooksByLang) {
     nbBooksByLang[nbBooksForLang.lang] = nbBooksForLang.nbBooks;
   }
@@ -264,43 +317,41 @@ function mapGenreWithStatsFromServer(row: ServerResponse.GenreWithStats): GenreW
   return {
     title: row.title,
     nbBooks: row.nbBooks,
-    nbBooksByLang: nbBooksByLang,
+    nbBooksByLang,
   };
 }
 
-function mapQuickAutocompletionDataFromServer(
-  row: ServerResponse.QuickAutocompletionData
-): QuickSearchResult {
+function mapQuickSearchDataFromServer(row: ServerResponse.QuickSearchData): QuickSearchResult {
   const rowType = row.type;
   return {
     resultType: rowType,
     book:
       "book" === rowType
         ? {
-            id: row.book_id as string,
-            title: row.book_title as string,
-            lang: row.book_lang as string,
-            slug: row.book_slug as string,
+            id: row.bookId as string,
+            title: row.bookTitle as string,
+            lang: row.bookLang as string,
+            slug: row.bookSlug as string,
           }
         : null,
     author: {
-      id: row.author_id,
-      firstName: row.author_first_name,
-      lastName: row.author_last_name,
-      slug: row.author_slug,
-      nbBooks: row.author_nb_books,
+      id: row.authorId,
+      firstName: row.authorFirstName,
+      lastName: row.authorLastName,
+      slug: row.authorSlug,
+      nbBooks: row.authorNbBooks,
     },
     highlight: row.highlight,
   };
 }
 
 function getPaginationResponseDataFromServerResponse(
-  responsePagination: ServerResponse.PaginationResponseData
+  responsePagination: ServerResponse.PaginationMetaData
 ): PaginationResponseData {
   return {
     page: responsePagination.page,
-    nbPerPage: responsePagination.nb_per_page,
-    nbResultsTotal: responsePagination.nb_results_total,
-    nbResultsTotalForAllLangs: responsePagination.nb_results_total_for_all_langs,
+    nbPerPage: responsePagination.nbPerPage,
+    nbResultsTotal: responsePagination.nbResults,
+    nbResultsTotalForAllLangs: responsePagination.nbResultsForAllLangs,
   };
 }
