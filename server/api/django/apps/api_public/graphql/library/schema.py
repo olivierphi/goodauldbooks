@@ -13,13 +13,13 @@ class AuthorId(graphene.String):
     pass
 
 
-class QuickAutocompletionResultType(graphene.Enum):
+class QuickAutocompletionResultEnumType(graphene.Enum):
     BOOK = 'book'
     AUTHOR = 'author'
 
 
-class QuickAutocompletionResult(graphene.ObjectType):
-    type = QuickAutocompletionResultType(required=True)
+class QuickAutocompletionResultType(graphene.ObjectType):
+    type = QuickAutocompletionResultEnumType(required=True)
     book_id = BookId()
     book_title = graphene.String()
     book_lang = graphene.String()
@@ -100,27 +100,27 @@ class AuthorType(DjangoObjectType):
         exclude_fields = ('gutenberg_id', 'computed_data')
 
 
-class BooksByCriteriaMetadata(graphene.ObjectType):
+class BooksByCriteriaMetadataType(graphene.ObjectType):
     nb_results = graphene.Int(required=True)
     nb_results_for_all_langs = graphene.Int(required=True)
 
 
-class BooksByCriteria(graphene.ObjectType):
+class BooksByCriteriaType(graphene.ObjectType):
     books = graphene.List(graphene.NonNull(BookType))
-    meta = graphene.Field(graphene.NonNull(BooksByCriteriaMetadata))
+    meta = graphene.Field(graphene.NonNull(BooksByCriteriaMetadataType))
 
 
-class GenreStatsNbBooksByLang(graphene.ObjectType):
+class GenreStatsNbBooksByLangType(graphene.ObjectType):
     lang = graphene.String()
     nb_books = graphene.Int()
 
 
-class GenreStats(graphene.ObjectType):
+class GenreStatsType(graphene.ObjectType):
     title = graphene.String()
     nb_books = graphene.Int()
-    nb_books_by_lang = graphene.List(GenreStatsNbBooksByLang)
+    nb_books_by_lang = graphene.List(GenreStatsNbBooksByLangType)
 
 
-class BookWithGenresStats(graphene.ObjectType):
+class BookWithGenresStatsType(graphene.ObjectType):
     book = graphene.Field(BookType)
-    genres_stats = graphene.List(GenreStats)
+    genres_stats = graphene.List(GenreStatsType)

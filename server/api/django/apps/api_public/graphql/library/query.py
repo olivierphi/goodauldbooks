@@ -26,7 +26,7 @@ class Query():
         graphene.NonNull(gql_schema.BookType)
     )
     quick_autocompletion = graphene.List(
-        graphene.NonNull(gql_schema.QuickAutocompletionResult),
+        graphene.NonNull(gql_schema.QuickAutocompletionResultType),
         search=graphene.String(required=True),
         lang=graphene.String(),
     )
@@ -35,7 +35,7 @@ class Query():
         book_id=gql_schema.BookId(required=True)
     )
     book_with_genres_stats = graphene.Field(
-        gql_schema.BookWithGenresStats,
+        gql_schema.BookWithGenresStatsType,
         book_id=gql_schema.BookId(required=True)
     )
     author = graphene.Field(
@@ -45,13 +45,13 @@ class Query():
         last_name=graphene.String(),
     )
     books_by_genre = graphene.Field(
-        gql_schema.BooksByCriteria,
+        gql_schema.BooksByCriteriaType,
         genre=graphene.String(required=True),
         lang=graphene.String(),
         offset=graphene.Int(), limit=graphene.Int()
     )
     books_by_author = graphene.Field(
-        gql_schema.BooksByCriteria,
+        gql_schema.BooksByCriteriaType,
         author_id=gql_schema.AuthorId(required=True),
         lang=graphene.String(),
         offset=graphene.Int(), limit=graphene.Int()
@@ -67,7 +67,7 @@ class Query():
 
         return list(library_utils.get_books_base_queryset().filter(gutenberg_id__in=featured_books_ids))
 
-    def resolve_quick_autocompletion(self, info, **kwargs) -> t.List[gql_schema.QuickAutocompletionResult]:
+    def resolve_quick_autocompletion(self, info, **kwargs) -> t.List[gql_schema.QuickAutocompletionResultType]:
         search = kwargs.get('search')
         lang = kwargs.get('lang', LANG_ALL)
 
@@ -127,7 +127,7 @@ class Query():
 
         return book
 
-    def resolve_book_with_genres_stats(self, info, **kwargs) -> t.Union[gql_schema.BookWithGenresStats, None]:
+    def resolve_book_with_genres_stats(self, info, **kwargs) -> t.Union[gql_schema.BookWithGenresStatsType, None]:
         public_book_id = kwargs.get('book_id')
 
         book = library_utils.get_single_book_by_public_id(public_book_id)
@@ -143,7 +143,7 @@ class Query():
             for genre_with_stats in book_genres_with_stats.all()
         ]
 
-        return gql_schema.BookWithGenresStats(
+        return gql_schema.BookWithGenresStatsType(
             book=book,
             genres_stats=returned_genres_with_stats
         )
@@ -172,7 +172,7 @@ class Query():
 
         return library_utils.get_authors_base_queryset().get(**criteria)
 
-    def resolve_books_by_genre(self, info, **kwargs) -> gql_schema.BooksByCriteria:
+    def resolve_books_by_genre(self, info, **kwargs) -> gql_schema.BooksByCriteriaType:
         genre = kwargs.get('genre')
         lang = kwargs.get('lang', LANG_ALL)
         offset = kwargs.get('offset', 0)
@@ -185,12 +185,12 @@ class Query():
 
         metadata = _get_books_by_genre_metadata(genre, lang)
 
-        return gql_schema.BooksByCriteria(
+        return gql_schema.BooksByCriteriaType(
             books=list(books),
             meta=metadata
         )
 
-    def resolve_books_by_author(self, info, **kwargs) -> gql_schema.BooksByCriteria:
+    def resolve_books_by_author(self, info, **kwargs) -> gql_schema.BooksByCriteriaType:
         public_author_id = kwargs.get('author_id')
         lang = kwargs.get('lang', LANG_ALL)
         offset = kwargs.get('offset', 0)
@@ -209,13 +209,13 @@ class Query():
 
         metadata = _get_books_by_author_metadata(author_id_criteria, lang)
 
-        return gql_schema.BooksByCriteria(
+        return gql_schema.BooksByCriteriaType(
             books=list(books),
             meta=metadata
         )
 
 
-def _get_books_by_genre_metadata(genre: str, lang: str) -> gql_schema.BooksByCriteriaMetadata:
+def _get_books_by_genre_metadata(genre: str, lang: str) -> gql_schema.BooksByCriteriaMetadataType:
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -267,14 +267,14 @@ def _get_books_by_genre_metadata(genre: str, lang: str) -> gql_schema.BooksByCri
         row = cursor.fetchone()
         metadata = {'nb_results_total': row[0], 'nb_results_total_for_all_langs': row[1]}
 
-    return gql_schema.BooksByCriteriaMetadata(
+    return gql_schema.BooksByCriteriaMetadataType(
         nb_results=metadata['nb_results_total'],
         nb_results_for_all_langs=metadata['nb_results_total_for_all_langs']
     )
 
 
 def _get_books_by_author_metadata(author_id: library_utils.AuthorIdCriteria,
-                                  lang: str) -> gql_schema.BooksByCriteriaMetadata:
+                                  lang: str) -> gql_schema.BooksByCriteriaMetadataType:
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -336,15 +336,15 @@ def _get_books_by_author_metadata(author_id: library_utils.AuthorIdCriteria,
         row = cursor.fetchone()
         metadata = {'nb_results_total': row[0], 'nb_results_total_for_all_langs': row[1]}
 
-    return gql_schema.BooksByCriteriaMetadata(
+    return gql_schema.BooksByCriteriaMetadataType(
         nb_results=metadata['nb_results_total'],
         nb_results_for_all_langs=metadata['nb_results_total_for_all_langs']
     )
 
 
-def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_schema.QuickAutocompletionResult:
-    return gql_schema.QuickAutocompletionResult(
-        type=gql_schema.QuickAutocompletionResultType.AUTHOR.value,
+def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_schema.QuickAutocompletionResultType:
+    return gql_schema.QuickAutocompletionResultType(
+        type=gql_schema.QuickAutocompletionResultEnumType.AUTHOR.value,
         book_id=None,
         book_title=None,
         book_lang=None,
@@ -358,9 +358,9 @@ def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_sch
     )
 
 
-def _book_to_quick_autocompletion_result(book: api_models.Book) -> gql_schema.QuickAutocompletionResult:
-    return gql_schema.QuickAutocompletionResult(
-        type=gql_schema.QuickAutocompletionResultType.BOOK.value,
+def _book_to_quick_autocompletion_result(book: api_models.Book) -> gql_schema.QuickAutocompletionResultType:
+    return gql_schema.QuickAutocompletionResultType(
+        type=gql_schema.QuickAutocompletionResultEnumType.BOOK.value,
         book_id=library_utils.get_public_book_id(book),
         book_title=book.title,
         book_lang=book.lang,
@@ -374,13 +374,13 @@ def _book_to_quick_autocompletion_result(book: api_models.Book) -> gql_schema.Qu
     )
 
 
-def _genres_w_stats_to_graphql_equivalent(genreWithStats: api_models.GenreWithStats) -> gql_schema.GenreStats:
-    nb_books_by_lang: t.List[gql_schema.GenreStatsNbBooksByLang] = [
-        gql_schema.GenreStatsNbBooksByLang(lang=lang, nb_books=nb_books)
+def _genres_w_stats_to_graphql_equivalent(genreWithStats: api_models.GenreWithStats) -> gql_schema.GenreStatsType:
+    nb_books_by_lang: t.List[gql_schema.GenreStatsNbBooksByLangType] = [
+        gql_schema.GenreStatsNbBooksByLangType(lang=lang, nb_books=nb_books)
         for (lang, nb_books) in genreWithStats.nb_books_by_lang.items()
     ]
 
-    return gql_schema.GenreStats(
+    return gql_schema.GenreStatsType(
         title=genreWithStats.title,
         nb_books=genreWithStats.nb_books,
         nb_books_by_lang=nb_books_by_lang
