@@ -13,12 +13,6 @@ class AuthorId(graphene.String):
     pass
 
 
-class BookComputedDataType(DjangoObjectType):
-    class Meta:
-        model = api_models.BookComputedData
-        exclude_fields = ('book_id',)
-
-
 class QuickAutocompletionResultType(graphene.Enum):
     BOOK = 'book'
     AUTHOR = 'author'
@@ -40,42 +34,70 @@ class QuickAutocompletionResult(graphene.ObjectType):
 
 class BookType(DjangoObjectType):
     book_id = BookId()
-    extra = graphene.Field(BookComputedDataType)  # just an alias to 'computed_data' :-)
     genres = graphene.List(graphene.String)
+    # A bunch of aliases pointing to the inner 'computed_data' fields :-)
+    slug = graphene.String()
+    cover_path = graphene.String()
+    epub_path = graphene.String()
+    epub_size = graphene.Int()
+    mobi_path = graphene.String()
+    mobi_size = graphene.Int()
 
     def resolve_book_id(self, info, **kwargs):
         return library_utils.get_public_book_id(self)
 
-    def resolve_extra(self, info, **kwargs):
-        return self.computed_data
+    def resolve_slug(self, info, **kwargs):
+        return self.computed_data.slug
+
+    def resolve_cover_path(self, info, **kwargs):
+        return self.computed_data.cover_path
+
+    def resolve_epub_path(self, info, **kwargs):
+        return self.computed_data.epub_path
+
+    def resolve_epub_size(self, info, **kwargs):
+        return self.computed_data.epub_size
+
+    def resolve_mobi_path(self, info, **kwargs):
+        return self.computed_data.mobi_path
+
+    def resolve_mobi_size(self, info, **kwargs):
+        return self.computed_data.mobi_size
 
     def resolve_genres(self, info, **kwargs):
         return [genre.title for genre in self.genres.all()]
 
     class Meta:
         model = api_models.Book
-        exclude_fields = ('id', 'computed_data', 'highlight')
-
-
-class AuthorComputedDataType(DjangoObjectType):
-    class Meta:
-        model = api_models.AuthorComputedData
-        exclude_fields = ('author_id',)
+        exclude_fields = ('gutenberg_id', 'computed_data', 'highlight')
 
 
 class AuthorType(DjangoObjectType):
     author_id = AuthorId()
-    extra = graphene.Field(AuthorComputedDataType)  # just an alias to 'computed_data' :-)
+    # A bunch of aliases pointing to the inner 'computed_data' fields :-)
+    full_name = graphene.String()
+    slug = graphene.String()
+    nb_books = graphene.Int()
+    highlight = graphene.Int()
 
     def resolve_author_id(self, info, **kwargs):
         return library_utils.get_public_author_id(self)
 
-    def resolve_extra(self, info, **kwargs):
-        return self.computed_data
+    def resolve_full_name(self, info, **kwargs):
+        return self.computed_data.full_name
+
+    def resolve_slug(self, info, **kwargs):
+        return self.computed_data.slug
+
+    def resolve_nb_books(self, info, **kwargs):
+        return self.computed_data.nb_books
+
+    def resolve_highlight(self, info, **kwargs):
+        return self.computed_data.highlight
 
     class Meta:
         model = api_models.Author
-        exclude_fields = ('id')
+        exclude_fields = ('gutenberg_id', 'computed_data')
 
 
 class BooksByCriteriaMetadata(graphene.ObjectType):
