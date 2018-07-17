@@ -42,9 +42,14 @@ class BookType(DjangoObjectType):
     epub_size = graphene.Int()
     mobi_path = graphene.String()
     mobi_size = graphene.Int()
+    # And this one is a proxy to the inner "additional_data" intro data:
+    intro = graphene.String()
 
     def resolve_book_id(self, info, **kwargs):
         return library_utils.get_public_book_id(self)
+
+    def resolve_genres(self, info, **kwargs):
+        return [genre.title for genre in self.genres.all()]
 
     def resolve_slug(self, info, **kwargs):
         return self.computed_data.slug
@@ -64,8 +69,8 @@ class BookType(DjangoObjectType):
     def resolve_mobi_size(self, info, **kwargs):
         return self.computed_data.mobi_size
 
-    def resolve_genres(self, info, **kwargs):
-        return [genre.title for genre in self.genres.all()]
+    def resolve_intro(self, info, **kwargs):
+        return self.additional_data.intro
 
     class Meta:
         model = api_models.Book

@@ -40,7 +40,7 @@ services:
       - ./.docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ~/gutenberg-mirror/generated-collection:/www/gutenberg-mirror/generated-collection:ro
     depends_on:
-      - postgrest
+      - django
     ports:
       - 8080:80
 
@@ -61,7 +61,7 @@ services:
     ports:
       - 8085:3000
 
-  python:
+  python: &python
     build: .docker/python/
     volumes:
       - ./api:/app
@@ -76,6 +76,11 @@ services:
       # Add "/app/vendor/bin" (Python scripts installed by `pip install --user`) to the PATH
       PATH: /usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/vendor/bin
       REDIS_HOST: redis
+
+  django:
+    <<: *python
+    working_dir: /app/django
+    command: python manage.py runserver 0:8000
 
   redis:
     image: redis:4

@@ -39,6 +39,17 @@ class Genre(models.Model):
         managed = False
 
 
+class BookAdditionalData(models.Model):
+    book_id = models.OneToOneField('Book', primary_key=True, on_delete=models.DO_NOTHING,
+                                   related_name='additional_data',
+                                   db_column='book_id')
+    intro = models.TextField()
+
+    class Meta:
+        db_table = 'library\".\"book_additional_data'
+        managed = False
+
+
 class BookComputedData(models.Model):
     book_id = models.OneToOneField('Book', primary_key=True, on_delete=models.DO_NOTHING,
                                    related_name='computed_data',

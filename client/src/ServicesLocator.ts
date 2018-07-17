@@ -7,11 +7,11 @@ import { initI18n } from "./boot/i18n-init";
 import { ActionsDispatcher } from "./domain/app-state";
 import { BooksLanguagesRepository, BooksRepository } from "./domain/queries";
 import { ServicesLocator } from "./domain/services";
-import { BooksHttpRepository } from "./repositories/BooksHttpRepository";
 import { BooksLanguagesGeneratedJsonRepository } from "./repositories/BooksLanguagesGeneratedJsonRepository";
 import { BooksWithAppStateCacheRepository } from "./repositories/BooksWithAppStateCacheRepository";
 import { AppState } from "./store";
 import { initStore } from "./store-init";
+import { BooksGraphqlRepository } from "./repositories/BooksGraphqlRepository";
 
 enum SharedServicesIds {
   APP_STATE_STORE,
@@ -27,6 +27,7 @@ enum SharedServicesIds {
 type SharedServicesRegistry = Map<SharedServicesIds, any>;
 
 const sharedServicesRegistry: SharedServicesRegistry = new Map();
+
 function sharedService(serviceId: SharedServicesIds, serviceFactory: () => any) {
   if (sharedServicesRegistry.has(serviceId)) {
     return sharedServicesRegistry.get(serviceId);
@@ -59,10 +60,10 @@ export class ServicesLocatorImpl implements ServicesLocator {
 
   get booksRepository(): BooksRepository {
     return sharedService(SharedServicesIds.BOOKS_APP_STATE_CACHE_REPOSITORY, () => {
-      const booksHttpRepository = this.booksHttpRepository;
+      const booksGraphqlRepository = this.booksGraphqlRepository;
       const bookWithCacheRepository = new BooksWithAppStateCacheRepository(
         this.appStateStore,
-        booksHttpRepository
+        booksGraphqlRepository
       );
 
       return bookWithCacheRepository;
@@ -112,11 +113,11 @@ export class ServicesLocatorImpl implements ServicesLocator {
     });
   }
 
-  private get booksHttpRepository(): BooksRepository {
+  private get booksGraphqlRepository(): BooksGraphqlRepository {
     return sharedService(SharedServicesIds.BOOKS_HTTP_REPOSITORY, () => {
-      const booksHttpRepository = new BooksHttpRepository();
+      const booksGraphqlRepository = new BooksGraphqlRepository();
 
-      return booksHttpRepository;
+      return booksGraphqlRepository;
     });
   }
 

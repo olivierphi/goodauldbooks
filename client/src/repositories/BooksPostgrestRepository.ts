@@ -14,7 +14,7 @@ import {
   PaginationResponseData,
   QuickSearchResult,
 } from "../domain/queries";
-import * as ServerResponse from "./server-responses";
+import * as ServerResponse from "./postgrest-server-responses";
 
 const quickSearchResultsCache: { [cacheKey: string]: QuickSearchResult[] } = {};
 

@@ -12,7 +12,7 @@ export function Main() {
       <Route exact={true} path="/" component={HomePage} />
       <Route
         exact={true}
-        path="/library/:booksLang([a-z]{2,3})/book/:lang([a-z]{2,3})/:authorSlug([a-z0-9-]+)/:book_slug([a-z0-9-]+)/:bookId(g?[0-9]+)"
+        path="/library/:booksLang([a-z]{2,3})/book/:lang([a-z]{2,3})/:authorSlug([a-z0-9-]+)/:book_slug([a-z0-9-]+)/:bookId(pg?[0-9]+)"
         component={BookPage}
       />
       <Route
