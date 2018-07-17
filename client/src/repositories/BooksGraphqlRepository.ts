@@ -209,13 +209,47 @@ query booksByGenre($genre: String!, $lang: String, $page: Int, $nbPerPage: Int) 
     lang: Lang,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList> {
-    const response = await axios.get("/rpc/get_books_by_author", {
-      params: {
-        author_id: authorId,
-        lang,
-        page: pagination.page,
-        nb_per_page: pagination.nbPerPage,
-      },
+    const graphqlQuery = `
+query booksByAuthor($authorId: AuthorId!, $lang: String, $page: Int, $nbPerPage: Int) {
+
+  booksByAuthor(authorId: $authorId, lang: $lang, page: $page, nbPerPage: $nbPerPage) {
+
+    books {
+      bookId
+      lang
+      title
+      subtitle
+      slug
+      coverPath
+      genres
+
+      author {
+        authorId
+        firstName
+        lastName
+        birthYear
+        deathYear
+        slug
+        nbBooks
+      }
+    }
+
+    meta {
+      page
+      nbPerPage
+      totalCount
+      totalCountForAllLangs
+    }
+
+  }
+
+}
+    `;
+    const response = await this.requestGraphql(graphqlQuery, {
+      authorId,
+      lang,
+      page: pagination.page,
+      nbPerPage: pagination.nbPerPage,
     });
 
     const booksWithPagination: ServerResponse.BooksDataWithPagination<ServerResponse.BookData> =
@@ -223,12 +257,12 @@ query booksByGenre($genre: String!, $lang: String, $page: Int, $nbPerPage: Int) 
     const paginationData: PaginationResponseData = getPaginationResponseDataFromServerResponse(
       booksWithPagination.meta
     );
-    const booksForThisGenre = getBooksByIdFromBooksArray(
+    const booksForThisAuthor = getBooksByIdFromBooksArray(
       (booksWithPagination.books || []).map(mapBookFromServer)
     );
 
     return Promise.resolve({
-      books: booksForThisGenre,
+      books: booksForThisAuthor,
       pagination: paginationData,
     });
   }

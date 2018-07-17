@@ -17,7 +17,7 @@ export function Main() {
       />
       <Route
         exact={true}
-        path="/library/:booksLang([a-z]{2,3})/author/:authorSlug([a-z0-9-]+)/:authorId(g?[0-9]+)"
+        path="/library/:booksLang([a-z]{2,3})/author/:authorSlug([a-z0-9-]+)/:authorId(pg?[0-9]+)"
         component={AuthorPage}
       />
       <Route
