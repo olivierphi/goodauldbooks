@@ -127,8 +127,8 @@ export class BooksByAuthorContainer extends React.Component<
     const authorBooksMetadata = appState.booksIdsByAuthor[criteriaName];
     const paginationResponseData: PaginationResponseData = getPaginationResponseDataFromPaginationRequest(
       this.props.pagination,
-      authorBooksMetadata.nbResultsTotal,
-      authorBooksMetadata.nbResultsTotalForAllLangs
+      authorBooksMetadata.totalCount,
+      authorBooksMetadata.totalCountForAllLangs
     );
 
     return {

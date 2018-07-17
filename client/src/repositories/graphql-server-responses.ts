@@ -63,6 +63,6 @@ export interface BooksDataWithPagination<T> {
 export interface PaginationMetaData {
   page: number;
   nbPerPage: number;
-  nbResults: number;
-  nbResultsForAllLangs: number;
+  totalCount: number;
+  totalCountForAllLangs: number;
 }

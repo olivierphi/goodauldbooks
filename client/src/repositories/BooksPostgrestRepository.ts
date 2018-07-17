@@ -217,7 +217,7 @@ function getPaginationResponseDataFromServerResponse(
   return {
     page: responsePagination.page,
     nbPerPage: responsePagination.nb_per_page,
-    nbResultsTotal: responsePagination.nb_results_total,
-    nbResultsTotalForAllLangs: responsePagination.nb_results_total_for_all_langs,
+    totalCount: responsePagination.nb_results_total,
+    totalCountForAllLangs: responsePagination.nb_results_total_for_all_langs,
   };
 }

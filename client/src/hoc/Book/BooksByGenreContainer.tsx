@@ -115,8 +115,8 @@ export class BooksByGenreContainer extends React.Component<
     const genreBooksMetadata = appState.booksIdsByGenre[criteriaName];
     const paginationResponseData: PaginationResponseData = getPaginationResponseDataFromPaginationRequest(
       this.props.pagination,
-      genreBooksMetadata.nbResultsTotal,
-      genreBooksMetadata.nbResultsTotalForAllLangs
+      genreBooksMetadata.totalCount,
+      genreBooksMetadata.totalCountForAllLangs
     );
 
     return {

@@ -73,8 +73,8 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
       return Promise.resolve({
         pagination: getPaginationResponseDataFromPaginationRequest(
           pagination,
-          appState.booksIdsByAuthor[booksIdsByAuthorCriteriaName].nbResultsTotal,
-          appState.booksIdsByAuthor[booksIdsByAuthorCriteriaName].nbResultsTotalForAllLangs
+          appState.booksIdsByAuthor[booksIdsByAuthorCriteriaName].totalCount,
+          appState.booksIdsByAuthor[booksIdsByAuthorCriteriaName].totalCountForAllLangs
         ),
         books: getBooksByIdsFromState(paginatedBooksIdsResultsFromCache, appState.booksById),
       });
@@ -100,8 +100,8 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
       return Promise.resolve({
         pagination: getPaginationResponseDataFromPaginationRequest(
           pagination,
-          appState.booksIdsByGenre[booksIdsByGenreCriteriaName].nbResultsTotal,
-          appState.booksIdsByGenre[booksIdsByGenreCriteriaName].nbResultsTotalForAllLangs
+          appState.booksIdsByGenre[booksIdsByGenreCriteriaName].totalCount,
+          appState.booksIdsByGenre[booksIdsByGenreCriteriaName].totalCountForAllLangs
         ),
         books: getBooksByIdsFromState(paginatedBooksIdsResultsFromCache, appState.booksById),
       });

@@ -18,7 +18,7 @@ export class BooksList extends React.Component<BooksListProps> {
     };
 
     const pageCount = this.props.pagination
-      ? Math.ceil(this.props.pagination.nbResultsTotal / this.props.pagination.nbPerPage)
+      ? Math.ceil(this.props.pagination.totalCount / this.props.pagination.nbPerPage)
       : 1;
     const pageIndex = this.props.pagination ? this.props.pagination.page - 1 : 0;
 

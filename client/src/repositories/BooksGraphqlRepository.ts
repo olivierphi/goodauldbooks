@@ -174,8 +174,8 @@ query booksByGenre($genre: String!, $lang: String, $page: Int, $nbPerPage: Int) 
     meta {
       page
       nbPerPage
-      nbResults
-      nbResultsForAllLangs
+      totalCount
+      totalCountForAllLangs
     }
 
   }
@@ -351,7 +351,7 @@ function getPaginationResponseDataFromServerResponse(
   return {
     page: responsePagination.page,
     nbPerPage: responsePagination.nbPerPage,
-    nbResultsTotal: responsePagination.nbResults,
-    nbResultsTotalForAllLangs: responsePagination.nbResultsForAllLangs,
+    totalCount: responsePagination.totalCount,
+    totalCountForAllLangs: responsePagination.totalCountForAllLangs,
   };
 }

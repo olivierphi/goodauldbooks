@@ -205,8 +205,8 @@ function getPaginatedBooksIdsListByCriteriaFromPreviousStateAndFetchedBooks(
   return {
     ...previousState,
     [criteriaName]: {
-      nbResultsTotal: pagination.nbResultsTotal,
-      nbResultsTotalForAllLangs: pagination.nbResultsTotalForAllLangs,
+      totalCount: pagination.totalCount,
+      totalCountForAllLangs: pagination.totalCountForAllLangs,
       results: booksIdsForThisCriteria,
     },
   };

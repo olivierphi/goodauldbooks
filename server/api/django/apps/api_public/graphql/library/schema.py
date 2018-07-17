@@ -112,8 +112,8 @@ class AuthorType(DjangoObjectType):
 
 
 class BooksByCriteriaMetadataType(graphene.ObjectType):
-    nb_results = graphene.Int(required=True)
-    nb_results_for_all_langs = graphene.Int(required=True)
+    total_count = graphene.Int(required=True)
+    total_count_for_all_langs = graphene.Int(required=True)
     page = graphene.Int(required=True)
     nb_per_page = graphene.Int(required=True)
 

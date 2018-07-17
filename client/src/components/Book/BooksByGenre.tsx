@@ -22,7 +22,7 @@ export function BooksByGenre(props: BooksByGenreProps) {
   return (
     <>
       <h4>
-        {props.paginationResponseData.nbResultsTotal} books for this genre in this language ({
+        {props.paginationResponseData.totalCount} books for this genre in this language ({
           props.currentBooksLang
         })
       </h4>
@@ -30,7 +30,7 @@ export function BooksByGenre(props: BooksByGenreProps) {
         ""
       ) : (
         <Link to={getGenreBooksPageUrlForAllLanguages()}>
-          ({props.paginationResponseData.nbResultsTotalForAllLangs} for all languages)
+          ({props.paginationResponseData.totalCountForAllLangs} for all languages)
         </Link>
       )}
 

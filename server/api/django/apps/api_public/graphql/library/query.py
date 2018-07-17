@@ -233,7 +233,7 @@ def _get_books_by_genre_metadata(genre: str, lang: str) -> gql_schema.BooksByCri
                 %s::varchar as genre,
                 %s::varchar(3) as lang
             ),
-            nb_results_total as (
+            total_count as (
                 select
                   count(book_id) as count
                 from
@@ -247,11 +247,11 @@ def _get_books_by_genre_metadata(genre: str, lang: str) -> gql_schema.BooksByCri
                     else lang = (select lang from input)
                   end
             ),
-            nb_results_total_for_all_langs as (
+            total_count_for_all_langs as (
                 select
                   case
                     when (select lang from input) = 'all' then
-                      (select count from nb_results_total)::integer
+                      (select count from total_count)::integer
                     else
                       (
                         select
@@ -266,18 +266,18 @@ def _get_books_by_genre_metadata(genre: str, lang: str) -> gql_schema.BooksByCri
                   end as count
             )
             select
-              (select count from nb_results_total)::integer as nb_results_total,
-              (select count from nb_results_total_for_all_langs)::integer as nb_results_total_for_all_langs
+              (select count from total_count)::integer as total_count,
+              (select count from total_count_for_all_langs)::integer as total_count_for_all_langs
             """
             ,
             [genre, lang]
         )
         row = cursor.fetchone()
-        metadata = {'nb_results_total': row[0], 'nb_results_total_for_all_langs': row[1]}
+        metadata = {'total_count': row[0], 'total_count_for_all_langs': row[1]}
 
     return gql_schema.BooksByCriteriaMetadataType(
-        nb_results=metadata['nb_results_total'],
-        nb_results_for_all_langs=metadata['nb_results_total_for_all_langs']
+        total_count=metadata['total_count'],
+        total_count_for_all_langs=metadata['total_count_for_all_langs']
     )
 
 
@@ -293,7 +293,7 @@ def _get_books_by_author_metadata(author_id: library_utils.AuthorIdCriteria,
                 %s::integer as gutenberg_id,
                 %s::varchar(3) as lang
             ),
-            nb_results_total as (
+            total_count as (
                 select
                   count(book_id) as count
                 from
@@ -312,11 +312,11 @@ def _get_books_by_author_metadata(author_id: library_utils.AuthorIdCriteria,
                     else lang = (select lang from input)
                   end
             ),
-            nb_results_total_for_all_langs as (
+            total_count_for_all_langs as (
                 select
                   case
                     when (select lang from input) = 'all' then
-                      (select count from nb_results_total)::integer
+                      (select count from total_count)::integer
                     else
                       (
                         select
@@ -335,18 +335,18 @@ def _get_books_by_author_metadata(author_id: library_utils.AuthorIdCriteria,
                   end as count
             )
             select
-              (select count from nb_results_total)::integer as nb_results_total,
-              (select count from nb_results_total_for_all_langs)::integer as nb_results_total_for_all_langs
+              (select count from total_count)::integer as total_count,
+              (select count from total_count_for_all_langs)::integer as total_count_for_all_langs
             """
             ,
             [author_id.author_id, author_id.gutenberg_id, lang]
         )
         row = cursor.fetchone()
-        metadata = {'nb_results_total': row[0], 'nb_results_total_for_all_langs': row[1]}
+        metadata = {'total_count': row[0], 'total_count_for_all_langs': row[1]}
 
     return gql_schema.BooksByCriteriaMetadataType(
-        nb_results=metadata['nb_results_total'],
-        nb_results_for_all_langs=metadata['nb_results_total_for_all_langs']
+        total_count=metadata['total_count'],
+        total_count_for_all_langs=metadata['total_count_for_all_langs']
     )
 
 

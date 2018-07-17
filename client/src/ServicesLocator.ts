@@ -7,11 +7,11 @@ import { initI18n } from "./boot/i18n-init";
 import { ActionsDispatcher } from "./domain/app-state";
 import { BooksLanguagesRepository, BooksRepository } from "./domain/queries";
 import { ServicesLocator } from "./domain/services";
+import { BooksGraphqlRepository } from "./repositories/BooksGraphqlRepository";
 import { BooksLanguagesGeneratedJsonRepository } from "./repositories/BooksLanguagesGeneratedJsonRepository";
 import { BooksWithAppStateCacheRepository } from "./repositories/BooksWithAppStateCacheRepository";
 import { AppState } from "./store";
 import { initStore } from "./store-init";
-import { BooksGraphqlRepository } from "./repositories/BooksGraphqlRepository";
 
 enum SharedServicesIds {
   APP_STATE_STORE,
