@@ -1,5 +1,8 @@
 begin;
 
+/**
+ * Books to highlight when people search for books:
+ */
 update
   library.book
 set
@@ -18,6 +21,13 @@ where
       2701, -- Moby Dick; Or, The Whale by Herman Melville
       5200 -- Metamorphosis by Franz Kafka
   ])
+;
+
+/**
+ * Books we display on the homepage:
+ */
+insert into webapp.settings(name, value) values
+  ('featured_books_ids', '["pg345", "pg84", "pg174"]')
 ;
 
 commit;

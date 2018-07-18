@@ -1,3 +1,7 @@
+/**
+ * DEPRECATED: we don't use this since we replaced PosgtREST with a Django app.
+ */
+
 
 /**
  * Postgrest users configuration

@@ -162,7 +162,6 @@ author_full_name as (
     library.author
   where
     author_id = $1
-
 ),
 author_slug_data as (
   select

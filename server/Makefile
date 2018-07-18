@@ -22,8 +22,9 @@ reset_db_and_import_gutenberg_books:
 	@${MAKE} import_gutenberg_books
 	@echo "\033[36mEditorial pass...\033[0m"
 	@${MAKE} editorial_pass
-	@echo "\033[36mLast but not least, we project this normalised data into some materialized views...\033[0m"
+	@echo "\033[36mLast but not least, we project this normalised data into some materialized views and 'computed data' tables...\033[0m"
 	@${MAKE} refresh_materialized_views
+	@${MAKE} update_computed_data_tables
 
 .phony: import_gutenberg_books
 import_gutenberg_books: VERBOSITY?=1
@@ -32,8 +33,17 @@ import_gutenberg_books:
 	time ${PSQL} --no-psqlrc \
 		-c  "select * from import.create_books_from_raw_rdfs(wipe_previsous_books => true, verbosity => ${VERBOSITY}::integer);"
 
+.phony: update_computed_data_tables
+update_computed_data_tables: PG_FUNCTIONS=library_view.update_all_books_computed_data library_view.update_all_authors_computed_data
+update_computed_data_tables:
+	@echo "\033[36mUpdating computed data tables...\033[0m"
+	@$(foreach function,$(PG_FUNCTIONS),\
+		(echo "\033[36m*******\nCalling function '$(function)'...\n*******\033[0m" && \
+		time ${PSQL} --no-psqlrc -q -b -c "select * from $(function)();") || exit 1; \
+	)
+
 .phony: refresh_materialized_views
-refresh_materialized_views: VIEWS=library_view.book_with_related_data library_view.genre_with_related_data library_view.book_additional_data
+refresh_materialized_views: VIEWS=library_view.genre_with_related_data
 refresh_materialized_views:
 	@echo "\033[36mRefreshing related materilized views...\033[0m"
 	@$(foreach materialized_view,$(VIEWS),\
@@ -79,7 +89,7 @@ psql: .psql-history
 	${PSQL}
 
 .phony: db_update_schema
-db_update_schema: SQL_FILES=schema/utils.sql schema/library.sql schema/library_view.sql schema/import.sql schema/webapp.sql schema/api_public.sql
+db_update_schema: SQL_FILES=schema/utils.sql schema/library.sql schema/library_view.sql schema/import.sql schema/webapp.sql
 db_update_schema: .psql-history
 # We could have launched all those SQL files in a single pass via multiple "-f" args to psql,
 # but we want to stop as soon as one of the file fails for any reason.

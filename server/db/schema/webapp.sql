@@ -12,11 +12,5 @@ create table webapp.settings(
   value text
 );
 
-/**
- * Some default values
- */
-insert into webapp.settings(name, value) values
-  ('featured_books_ids', '["pg345", "pg84", "pg174"]')
-;
 
 commit;

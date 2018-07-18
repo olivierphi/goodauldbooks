@@ -1,5 +1,10 @@
 begin;
 
+/**
+ * DEPRECATED: we don't use this since we replaced PosgtREST with a Django app.
+ * Only kept here because it contains some SQL kata that could still be useful :-)
+ */
+
 drop schema if exists api_public cascade;
 create schema api_public;
 
