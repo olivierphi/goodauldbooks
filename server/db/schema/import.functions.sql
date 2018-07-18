@@ -260,7 +260,7 @@ begin
       -- 2) it must not be a periodical (category "AP")
       and rdf_content::text not like '%<rdf:value>AP</rdf:value>%'
   loop
-    -- A) Create books, theirs authors and their literary genres
+    -- A) Create books, their authors and their literary genres
     imported_book_data = import.gutenberg_get_book_from_rdf(current_raw_book_data.rdf_content);
     select * into current_created_book from import.gutenberg_create_book(imported_book_data);
 
@@ -278,7 +278,7 @@ begin
       current_book_nb_assets_created = current_book_nb_assets_created + 1;
     end loop;
 
-    -- C) Handle book additional data
+    -- C) Handle book additional data (i.e. only the intro at the moment)
     if current_raw_book_data.intro is not null then
       insert into library.book_additional_data (book_id, intro)
         values(current_created_book.book_id, current_raw_book_data.intro);
@@ -286,7 +286,7 @@ begin
 
     nb_books_created = nb_books_created + 1;
     if (verbosity > 1 or (verbosity = 1 and nb_books_created % 100 = 0)) then
-      raise notice 'book % - g%: % (% assets)', nb_books_created, current_raw_book_data.gutenberg_id, imported_book_data.title, current_book_nb_assets_created;
+      raise notice 'book % - pg%: % (% assets)', nb_books_created, current_raw_book_data.gutenberg_id, imported_book_data.title, current_book_nb_assets_created;
     end if;
 
   end loop;

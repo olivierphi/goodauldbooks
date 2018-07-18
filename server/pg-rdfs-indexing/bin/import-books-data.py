@@ -3,6 +3,7 @@
 import re
 import time
 import typing as t
+from datetime import timedelta
 from pathlib import Path
 
 import click
@@ -51,13 +52,13 @@ def find_and_process_pg_books(path: str, batch_size: int):
             books_to_store_cur_batch = []
 
         if nb_books_processed % 100 == 0:
-            click.echo(str(nb_books_processed))
+            click.echo(f'{str(nb_books_processed).rjust(5)} books processed- pg{book_processing_result.book_id}')
 
     pg_db.execute_books_storage_in_db_batch(books_to_store_cur_batch)
 
     click.echo(f'{nb_rdf_files_found} RDF files found, {nb_books_processed} saved into database.')
     end_time = time.time()
-    click.echo(f'Took {end_time - start_time}s.')
+    click.echo(f'Duration: {timedelta(seconds=round(end_time - start_time))}')
 
 
 if __name__ == '__main__':

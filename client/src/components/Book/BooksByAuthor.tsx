@@ -23,7 +23,7 @@ export function BooksByAuthor(props: BooksByAuthorProps) {
   return (
     <>
       <h4>
-        {props.paginationResponseData.nbResultsTotal} books for this author in this language ({
+        {props.paginationResponseData.totalCount} books for this author in this language ({
           props.currentBooksLang
         })
       </h4>
@@ -31,7 +31,7 @@ export function BooksByAuthor(props: BooksByAuthorProps) {
         ""
       ) : (
         <Link to={getAuthorBooksPageUrlForAllLanguages()}>
-          ({props.paginationResponseData.nbResultsTotalForAllLangs} for all languages)
+          ({props.paginationResponseData.totalCountForAllLangs} for all languages)
         </Link>
       )}
       <BooksList

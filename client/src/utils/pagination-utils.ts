@@ -10,7 +10,7 @@ export function getPaginatedBooksIdsResultsFromCache(
     return null;
   }
   const [offset, limit] = [(pagination.page - 1) * pagination.nbPerPage, pagination.nbPerPage];
-  const upperLimit = Math.min(offset + limit, appStateList[criteriaName].nbResultsTotal);
+  const upperLimit = Math.min(offset + limit, appStateList[criteriaName].totalCount);
   const results: string[] = [];
   for (let i = offset; i < upperLimit; i++) {
     const bookId: BookId = appStateList[criteriaName].results[i];
@@ -25,13 +25,13 @@ export function getPaginatedBooksIdsResultsFromCache(
 
 export function getPaginationResponseDataFromPaginationRequest(
   paginationRequest: PaginationRequestData,
-  nbResultsTotal: number,
-  nbResultsTotalForAllLangs: number
+  totalCount: number,
+  totalCountForAllLangs: number
 ): PaginationResponseData {
   return {
     page: paginationRequest.page,
     nbPerPage: paginationRequest.nbPerPage,
-    nbResultsTotal,
-    nbResultsTotalForAllLangs,
+    totalCount,
+    totalCountForAllLangs,
   };
 }

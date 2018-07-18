@@ -15,7 +15,7 @@ interface BookFullContainerProps {
   hocToolkit: HigherOrderComponentToolkit;
 }
 
-interface BookFullContainerState {
+interface BookFullContainerReadyState {
   loading: false;
   bookFull: BookFull;
 }
@@ -24,9 +24,11 @@ interface BookFullContainerLoadingState {
   loading: true;
 }
 
+type BookFullContainerPossibleState = BookFullContainerReadyState | BookFullContainerLoadingState;
+
 export class BookFullContainer extends React.Component<
   BookFullContainerProps,
-  BookFullContainerState | BookFullContainerLoadingState
+  BookFullContainerPossibleState
 > {
   constructor(props: BookFullContainerProps) {
     super(props);
@@ -35,12 +37,17 @@ export class BookFullContainer extends React.Component<
   }
 
   public render() {
-    if (this.state.loading) {
+    const loading: boolean = this.state.loading || this.props.bookId !== this.state.bookFull.id;
+    if (loading) {
+      // We either don't have any book in our state yet,
+      // or that's not the one we want to render (likely because the user navigated to another book).
+      // --> let's fetch the wanted book data!
       this.fetchData();
       return <div className="loading">Loading full book...</div>;
     }
 
-    const bookFull: BookFull = this.state.bookFull;
+    const state = this.state as BookFullContainerReadyState;
+    const bookFull: BookFull = state.bookFull;
     const appState = this.props.hocToolkit.appStateStore.getState();
 
     const genresWithStats = this.getSortedGenresWithStats(
@@ -61,6 +68,10 @@ export class BookFullContainer extends React.Component<
     );
   }
 
+  public componentWillUnmount(): void {
+    this.props.hocToolkit.messageBus.off(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
+  }
+
   private fetchData(): void {
     this.props.hocToolkit.messageBus.on(EVENTS.BOOK_DATA_FETCHED, this.onBookDataFetched);
     this.props.hocToolkit.actionsDispatcher.fetchBookWithGenreStats(this.props.bookId);
@@ -76,9 +87,7 @@ export class BookFullContainer extends React.Component<
     }
   }
 
-  private getDerivedStateFromPropsAndAppState():
-    | BookFullContainerState
-    | BookFullContainerLoadingState {
+  private getDerivedStateFromPropsAndAppState(): BookFullContainerPossibleState {
     const appState = this.props.hocToolkit.appStateStore.getState();
     const book = appState.booksById[this.props.bookId];
 

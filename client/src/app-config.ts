@@ -6,6 +6,6 @@
  */
 
 export const AppConfig = {
-  apiBaseURL: "http://localhost:8080/api",
+  apiBaseURL: "http://localhost:8080/graphql",
   coversBaseURL: "http://localhost:8080/library/cover",
 };

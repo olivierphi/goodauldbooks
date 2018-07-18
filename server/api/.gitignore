@@ -1,0 +1,13 @@
+# Dependencies shared with the Docker container.
+/vendor
+
+# Logs
+/django/log/*
+!/django/log/.gitkeep
+
+# Compiled python modules.
+*.pyc
+
+# MyPy cache
+.mypy_cache
+

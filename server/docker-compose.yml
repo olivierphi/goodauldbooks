@@ -40,7 +40,7 @@ services:
       - ./.docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ~/gutenberg-mirror/generated-collection:/www/gutenberg-mirror/generated-collection:ro
     depends_on:
-      - postgrest
+      - django
     ports:
       - 8080:80
 
@@ -54,30 +54,38 @@ services:
     ports:
       - 8084:80
 
-  postgrest:
-    build: .docker/postgrest
-    volumes:
-      - ./postgrest-api-public.conf:/etc/postgrest.conf
-    ports:
-      - 8085:3000
-
-  python:
+  python: &python
     build: .docker/python/
     volumes:
-      - ./pg-rdfs-indexing:/app
+      - ./api:/app
     working_dir: /app
-    depends_on:
-      - db
     env_file:
       - .env
     environment:
       PYTHONUSERBASE: /app/vendor
+      # Add "/app/vendor/bin" (Python scripts installed by `pip install --user`) to the PATH
+      PATH: /usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/vendor/bin
+      REDIS_HOST: redis
 
-  swagger_ui:
-    image: swaggerapi/swagger-ui
+  pg_rdf_indexing:
+    <<: *python
+    volumes:
+      - ./pg-rdfs-indexing:/pg-rdfs-indexing:ro
+    working_dir: /pg-rdfs-indexing
     environment:
-      API_URL: http://localhost:8085/
+      PYTHONUSERBASE: /pg-rdfs-indexing/vendor
     depends_on:
       - db
+
+  django:
+    <<: *python
+    working_dir: /app/django
+    command: python manage.py runserver 0:8000
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis:4
     ports:
-      - 8086:8080
+      - 6378:6379

@@ -54,8 +54,8 @@ export interface NbBooksByLang {
 }
 
 export interface PaginatedBooksIdsList {
-  nbResultsTotal: number;
-  nbResultsTotalForAllLangs: number;
+  totalCount: number;
+  totalCountForAllLangs: number;
   results: BookId[];
 }
 
