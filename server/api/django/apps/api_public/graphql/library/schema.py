@@ -1,4 +1,5 @@
 import graphene
+from django.core.exceptions import ObjectDoesNotExist
 from graphene_django import DjangoObjectType
 
 import api_public.graphql.library.utils as library_utils
@@ -76,7 +77,10 @@ class BookType(DjangoObjectType):
         return self.computed_data.mobi_size
 
     def resolve_intro(self, info, **kwargs):
-        return self.additional_data.intro
+        try:
+            return self.additional_data.intro
+        except ObjectDoesNotExist:
+            return None
 
     class Meta:
         model = api_models.Book
