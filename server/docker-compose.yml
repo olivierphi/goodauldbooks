@@ -54,13 +54,6 @@ services:
     ports:
       - 8084:80
 
-  postgrest:
-    build: .docker/postgrest
-    volumes:
-      - ./postgrest-api-public.conf:/etc/postgrest.conf
-    ports:
-      - 8085:3000
-
   python: &python
     build: .docker/python/
     volumes:
@@ -86,12 +79,3 @@ services:
     image: redis:4
     ports:
       - 6378:6379
-
-  swagger_ui:
-    image: swaggerapi/swagger-ui
-    environment:
-      API_URL: http://localhost:8085/
-    depends_on:
-      - db
-    ports:
-      - 8086:8080
