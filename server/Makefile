@@ -67,10 +67,19 @@ dump_data_to_import_db_nodejs:
 
 .phony: dump_data_to_import_db_python
 dump_data_to_import_db_python:
-	${PYTHON_DC_PREFIX} \
-		-v ${GUTENBERG_GENERATED_COLLECTION_PATH}:/gutenberg-mirror/generated-collection \
-		python \
+	echo "\033[36m*******\nTruncating 'import.gutenberg_raw_data'...\n*******\033[0m"
+	${PSQL} --no-psqlrc -q -b -c "truncate import.gutenberg_raw_data;"
+	echo "\033[36m*******\nNow looking for *.rdf files in '${GUTENBERG_GENERATED_COLLECTION_PATH}' and dumping their data in 'import.gutenberg_raw_data'...\n*******\033[0m"
+	${DC_RUN} --entrypoint python -e PYTHONPATH=/pg-rdfs-indexing/src \
+		-v ${GUTENBERG_GENERATED_COLLECTION_PATH}:/gutenberg-mirror/generated-collection:ro \
+		pg_rdf_indexing \
 		bin/import-books-data.py /gutenberg-mirror/generated-collection
+
+.phony: dump_data_to_import_db_python_install
+dump_data_to_import_db_python_install:
+	${DC_RUN} --entrypoint pip \
+		pg_rdf_indexing \
+		install -r requirements.txt
 
 .phony: rsync_and_import_book
 rsync_and_import_book: OPTS=

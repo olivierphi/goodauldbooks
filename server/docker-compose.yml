@@ -59,9 +59,6 @@ services:
     volumes:
       - ./api:/app
     working_dir: /app
-    depends_on:
-      - db
-      - redis
     env_file:
       - .env
     environment:
@@ -70,10 +67,23 @@ services:
       PATH: /usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app/vendor/bin
       REDIS_HOST: redis
 
+  pg_rdf_indexing:
+    <<: *python
+    volumes:
+      - ./pg-rdfs-indexing:/pg-rdfs-indexing:ro
+    working_dir: /pg-rdfs-indexing
+    environment:
+      PYTHONUSERBASE: /pg-rdfs-indexing/vendor
+    depends_on:
+      - db
+
   django:
     <<: *python
     working_dir: /app/django
     command: python manage.py runserver 0:8000
+    depends_on:
+      - db
+      - redis
 
   redis:
     image: redis:4
