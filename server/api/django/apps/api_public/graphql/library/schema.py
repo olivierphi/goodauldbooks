@@ -1,4 +1,5 @@
 import graphene
+import graphql
 from django.core.exceptions import ObjectDoesNotExist
 from graphene_django import DjangoObjectType
 
@@ -35,7 +36,7 @@ class QuickSearchResultType(graphene.ObjectType):
     author_nb_books = graphene.Int(required=True)
     highlight = graphene.Int(required=True)
 
-    def resolve_type(self, info, **kwargs):
+    def resolve_type(self, info: graphql.ResolveInfo, **kwargs):
         return self.type.value
 
 
@@ -52,31 +53,31 @@ class BookType(DjangoObjectType):
     # And this one is a proxy to the inner "additional_data" intro data:
     intro = graphene.String()
 
-    def resolve_book_id(self, info, **kwargs):
+    def resolve_book_id(self, info: graphql.ResolveInfo, **kwargs):
         return library_utils.get_public_book_id(self)
 
-    def resolve_genres(self, info, **kwargs):
+    def resolve_genres(self, info: graphql.ResolveInfo, **kwargs):
         return [genre.title for genre in self.genres.all()]
 
-    def resolve_slug(self, info, **kwargs):
+    def resolve_slug(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.slug
 
-    def resolve_cover_path(self, info, **kwargs):
+    def resolve_cover_path(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.cover_path
 
-    def resolve_epub_path(self, info, **kwargs):
+    def resolve_epub_path(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.epub_path
 
-    def resolve_epub_size(self, info, **kwargs):
+    def resolve_epub_size(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.epub_size
 
-    def resolve_mobi_path(self, info, **kwargs):
+    def resolve_mobi_path(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.mobi_path
 
-    def resolve_mobi_size(self, info, **kwargs):
+    def resolve_mobi_size(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.mobi_size
 
-    def resolve_intro(self, info, **kwargs):
+    def resolve_intro(self, info: graphql.ResolveInfo, **kwargs):
         try:
             return self.additional_data.intro
         except ObjectDoesNotExist:
@@ -95,19 +96,19 @@ class AuthorType(DjangoObjectType):
     nb_books = graphene.Int()
     highlight = graphene.Int()
 
-    def resolve_author_id(self, info, **kwargs):
+    def resolve_author_id(self, info: graphql.ResolveInfo, **kwargs):
         return library_utils.get_public_author_id(self)
 
-    def resolve_full_name(self, info, **kwargs):
+    def resolve_full_name(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.full_name
 
-    def resolve_slug(self, info, **kwargs):
+    def resolve_slug(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.slug
 
-    def resolve_nb_books(self, info, **kwargs):
+    def resolve_nb_books(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.nb_books
 
-    def resolve_highlight(self, info, **kwargs):
+    def resolve_highlight(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.highlight
 
     class Meta:

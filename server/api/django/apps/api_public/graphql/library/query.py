@@ -2,6 +2,7 @@ import json
 import typing as t
 
 import graphene
+import graphql
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Q, Value, PositiveSmallIntegerField, Case, When
@@ -57,7 +58,7 @@ class Query():
         page=graphene.Int(), nb_per_page=graphene.Int()
     )
 
-    def resolve_featured_books(self, info, **kwargs) -> t.List[api_models.Book]:
+    def resolve_featured_books(self, info: graphql.ResolveInfo, **kwargs) -> t.List[api_models.Book]:
         featured_books_ids = cache.get('featured_books_ids')
         if featured_books_ids is None:
             featured_books_ids_raw = api_models.WebAppSettings.objects.get(name='featured_books_ids').value
@@ -67,7 +68,7 @@ class Query():
 
         return list(library_utils.get_books_base_queryset().filter(gutenberg_id__in=featured_books_ids))
 
-    def resolve_quick_search(self, info, **kwargs) -> t.List[gql_schema.QuickSearchResultType]:
+    def resolve_quick_search(self, info: graphql.ResolveInfo, **kwargs) -> t.List[gql_schema.QuickSearchResultType]:
         search = kwargs.get('search')
         lang = kwargs.get('lang', LANG_ALL)
 
@@ -108,26 +109,27 @@ class Query():
         # All right, finally we can return the books results, followed by the authors results:
         return books_quick_completion_results + authors_quick_completion_results
 
-    def resolve_all_books(self, info, **kwargs) -> t.List[api_models.Book]:
+    def resolve_all_books(self, info: graphql.ResolveInfo, **kwargs) -> t.List[api_models.Book]:
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
         return library_utils.get_books_base_queryset().all()[offset:offset + limit]
 
-    def resolve_all_authors(self, info, **kwargs) -> t.List[api_models.Author]:
+    def resolve_all_authors(self, info: graphql.ResolveInfo, **kwargs) -> t.List[api_models.Author]:
         offset = kwargs.get('offset', 0)
         limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
         return library_utils.get_authors_base_queryset().all()[offset:offset + limit]
 
-    def resolve_book(self, info, **kwargs) -> t.Union[api_models.Book, None]:
+    def resolve_book(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[api_models.Book, None]:
         public_book_id = kwargs.get('book_id')
 
         book = library_utils.get_single_book_by_public_id(public_book_id)
 
         return book
 
-    def resolve_book_with_genres_stats(self, info, **kwargs) -> t.Union[gql_schema.BookWithGenresStatsType, None]:
+    def resolve_book_with_genres_stats(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[
+        gql_schema.BookWithGenresStatsType, None]:
         public_book_id = kwargs.get('book_id')
 
         book = library_utils.get_single_book_by_public_id(public_book_id)
@@ -148,7 +150,7 @@ class Query():
             genres_stats=returned_genres_with_stats
         )
 
-    def resolve_author(self, info, **kwargs) -> t.Union[api_models.Author, None]:
+    def resolve_author(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[api_models.Author, None]:
         public_author_id = kwargs.get('author_id')
         first_name = kwargs.get('first_name')
         last_name = kwargs.get('last_name')
@@ -172,7 +174,7 @@ class Query():
 
         return library_utils.get_authors_base_queryset().get(**criteria)
 
-    def resolve_books_by_genre(self, info, **kwargs) -> gql_schema.BooksByCriteriaType:
+    def resolve_books_by_genre(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.BooksByCriteriaType:
         genre = kwargs.get('genre')
         lang = kwargs.get('lang', LANG_ALL)
         page = max(int(kwargs.get('page', 1)), 1)
@@ -194,7 +196,7 @@ class Query():
             meta=metadata
         )
 
-    def resolve_books_by_author(self, info, **kwargs) -> gql_schema.BooksByCriteriaType:
+    def resolve_books_by_author(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.BooksByCriteriaType:
         public_author_id = kwargs.get('author_id')
         lang = kwargs.get('lang', LANG_ALL)
         page = max(int(kwargs.get('page', 1)), 1)
