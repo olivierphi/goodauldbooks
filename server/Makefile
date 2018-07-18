@@ -89,7 +89,7 @@ psql: .psql-history
 	${PSQL}
 
 .phony: db_update_schema
-db_update_schema: SQL_FILES=schema/utils.sql schema/library.sql schema/library_view.sql schema/import.sql schema/webapp.sql
+db_update_schema: SQL_FILES=schema/utils.sql schema/library.sql schema/library_view.sql schema/import.sql schema/webapp.sql schema/django.security_policies.sql
 db_update_schema: .psql-history
 # We could have launched all those SQL files in a single pass via multiple "-f" args to psql,
 # but we want to stop as soon as one of the file fails for any reason.
@@ -114,9 +114,9 @@ django_shell:
 django_runserver:
 	${DC_RUN} --entrypoint python -e TERM=xterm-256color -w /app/django -p 9000:8000 python manage.py runserver 0:8000
 
-.phony: start_api_public
-start_api_public:
-	docker-compose up -d nginx
+.phony: start_graphql_api
+start_graphql_api:
+	docker-compose up -d nginx && docker-compose logs -f --tail=0 django
 
 .phony: pg_dump_raw_gutenberg_data
 pg_dump_raw_gutenberg_data:
