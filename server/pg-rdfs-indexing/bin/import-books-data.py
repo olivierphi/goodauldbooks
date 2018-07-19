@@ -25,6 +25,7 @@ def find_and_process_pg_books(path: str, batch_size: int):
     nb_books_processed = 0
     books_to_store_cur_batch: t.List[t.Dict] = []
     handled_pg_books_ids: t.List[str] = []
+    click.echo(f'Starting Python PG books processing...')
     for rdf_file in Path(path).glob('*/*.rdf'):
 
         nb_rdf_files_found += 1
@@ -57,13 +58,13 @@ def find_and_process_pg_books(path: str, batch_size: int):
             quick_n_dirty_title_lookup = BOOK_TITLE_REGEX.match(book_processing_result.rdf_file_content)
             book_title = quick_n_dirty_title_lookup['title'].replace('\n', ' ') if quick_n_dirty_title_lookup else '?'
             click.echo(
-                f'{str(nb_books_processed).rjust(5)} books processed- pg{book_processing_result.book_id} - {book_title}')
+                f'{str(nb_books_processed).rjust(5)} books processed - pg{book_processing_result.book_id.ljust(5)} - {book_title}')
 
     pg_db.execute_books_storage_in_db_batch(books_to_store_cur_batch)
 
     click.echo(f'{nb_rdf_files_found} RDF files found, {nb_books_processed} saved into database.')
     end_time = time.time()
-    click.echo(f'Duration: {timedelta(seconds=round(end_time - start_time))}')
+    click.echo(f'Python PG books processing finished. Duration: {timedelta(seconds=round(end_time - start_time))}')
 
 
 if __name__ == '__main__':
