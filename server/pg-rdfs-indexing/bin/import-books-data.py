@@ -13,6 +13,8 @@ from pg_import import db as pg_db, parsing as pg_parsing
 RDF_FILE_REGEX = re.compile('^pg(\d+)\.rdf$')
 DB_BATCH_SIZE_DEFAULT = 150  # we will store books in DB only every N books
 
+BOOK_TITLE_REGEX = re.compile(r'^.+<dcterms:title>(?P<title>[^<]+)</dcterms:title>.+$', re.DOTALL)
+
 
 @click.command()
 @click.argument('path', type=click.Path(exists=True, dir_okay=True, file_okay=False, readable=True))
@@ -52,7 +54,10 @@ def find_and_process_pg_books(path: str, batch_size: int):
             books_to_store_cur_batch = []
 
         if nb_books_processed % 100 == 0:
-            click.echo(f'{str(nb_books_processed).rjust(5)} books processed- pg{book_processing_result.book_id}')
+            quick_n_dirty_title_lookup = BOOK_TITLE_REGEX.match(book_processing_result.rdf_file_content)
+            book_title = quick_n_dirty_title_lookup['title'].replace('\n', ' ') if quick_n_dirty_title_lookup else '?'
+            click.echo(
+                f'{str(nb_books_processed).rjust(5)} books processed- pg{book_processing_result.book_id} - {book_title}')
 
     pg_db.execute_books_storage_in_db_batch(books_to_store_cur_batch)
 

@@ -6,6 +6,11 @@ from graphene_django import DjangoObjectType
 import api_public.graphql.library.utils as library_utils
 import api_public.models as api_models
 
+# This ratio doesn't always work
+# (for Dr. Jekyll for example it's closer to 300 ¯\_(ツ)_/¯ ),
+# but for most of the cases it roughly does the job
+BOOK_SIZE_NB_PAGES_RATIO = 800
+
 
 class BookId(graphene.String):
     pass
@@ -43,6 +48,7 @@ class QuickSearchResultType(graphene.ObjectType):
 class BookType(DjangoObjectType):
     book_id = BookId()
     genres = graphene.List(graphene.String)
+    nb_pages = graphene.Int()
     # A bunch of aliases pointing to the inner 'computed_data' fields :-)
     slug = graphene.String()
     cover_path = graphene.String()
@@ -58,6 +64,9 @@ class BookType(DjangoObjectType):
 
     def resolve_genres(self, info: graphql.ResolveInfo, **kwargs):
         return [genre.title for genre in self.genres.all()]
+
+    def resolve_nb_pages(self, info: graphql.ResolveInfo, **kwargs):
+        return round(self.size / BOOK_SIZE_NB_PAGES_RATIO)
 
     def resolve_slug(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.slug
@@ -85,7 +94,7 @@ class BookType(DjangoObjectType):
 
     class Meta:
         model = api_models.Book
-        exclude_fields = ('gutenberg_id', 'computed_data', 'highlight')
+        exclude_fields = ('gutenberg_id', 'computed_data', 'highlight', 'size')
 
 
 class AuthorType(DjangoObjectType):
@@ -113,7 +122,7 @@ class AuthorType(DjangoObjectType):
 
     class Meta:
         model = api_models.Author
-        exclude_fields = ('gutenberg_id', 'computed_data')
+        exclude_fields = ('gutenberg_id', 'computed_data', 'highlight')
 
 
 class BooksByCriteriaMetadataType(graphene.ObjectType):

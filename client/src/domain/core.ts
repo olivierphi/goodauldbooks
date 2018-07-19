@@ -10,6 +10,7 @@ export interface Book {
   author: Author;
   title: string;
   subtitle: string | null;
+  nbPages: number | null;
   coverUrl: string | null;
   slug: string;
   genres: Genre[];

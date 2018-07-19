@@ -31,7 +31,7 @@ import_gutenberg_books: VERBOSITY?=1
 import_gutenberg_books:
 	@echo "\033[36mPopulating 'library' tables from 'import.gutenberg_raw_data' content...\033[0m"
 	time ${PSQL} --no-psqlrc \
-		-c  "select * from import.create_books_from_raw_rdfs(wipe_previsous_books => true, verbosity => ${VERBOSITY}::integer);"
+		-c  "select * from import.create_books_from_raw_rdfs(wipe_previous_books => true, verbosity => ${VERBOSITY}::integer);"
 
 .phony: update_computed_data_tables
 update_computed_data_tables: PG_FUNCTIONS=library_view.update_all_books_computed_data library_view.update_all_authors_computed_data
@@ -84,9 +84,9 @@ dump_data_to_import_db_python_install:
 .phony: rsync_and_import_book
 rsync_and_import_book: OPTS=
 rsync_and_import_book:
-	${PYTHON_DC_PREFIX} \
+	${DC_RUN} --entrypoint python -e PYTHONPATH=/pg-rdfs-indexing/src \
 		-v ${GUTENBERG_GENERATED_COLLECTION_PATH}:/gutenberg-mirror/generated-collection \
-		python \
+		pg_rdf_indexing \
 		bin/rsync-and-import-book.py ${PG_BOOK_ID} /gutenberg-mirror/generated-collection ${OPTS}
 
 .phony: start_dev_api_admin

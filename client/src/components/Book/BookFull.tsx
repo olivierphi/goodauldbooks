@@ -41,6 +41,7 @@ export function BookFull(props: BookFullProps) {
                 />
                 <Author author={book.author} />
                 <EbookDownloadLinks book={book} />
+                {book.nbPages} pages
                 <BookIntroContainer bookId={book.id} hocToolkit={hocToolkit} />
               </div>
             </div>

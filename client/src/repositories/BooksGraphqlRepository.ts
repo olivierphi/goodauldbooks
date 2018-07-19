@@ -36,6 +36,7 @@ query {
     lang
     title
     subtitle
+    nbPages
     slug
     coverPath
     genres
@@ -69,6 +70,7 @@ query bookById($bookId: BookId!) {
       lang
       title
       subtitle
+      nbPages
       slug
       coverPath
       genres
@@ -156,6 +158,7 @@ query booksByGenre($genre: String!, $lang: String, $page: Int, $nbPerPage: Int) 
       lang
       title
       subtitle
+      nbPages
       slug
       coverPath
       genres
@@ -219,6 +222,7 @@ query booksByAuthor($authorId: AuthorId!, $lang: String, $page: Int, $nbPerPage:
       lang
       title
       subtitle
+      nbPages
       slug
       coverPath
       genres
@@ -310,6 +314,7 @@ function mapBookFromServer(row: ServerResponse.BookData): Book {
     lang: row.lang,
     title: row.title,
     subtitle: row.subtitle,
+    nbPages: row.nbPages,
     slug: row.slug,
     author: {
       id: row.author.authorId,
