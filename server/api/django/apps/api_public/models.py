@@ -9,6 +9,7 @@ class Book(models.Model):
     subtitle = models.CharField(max_length=255, null=True)
     lang = models.CharField(max_length=3)
     highlight = models.PositiveIntegerField(default=0)
+    size = models.PositiveIntegerField(default=0)
     author = models.ForeignKey('Author', on_delete=models.DO_NOTHING, related_name='books', db_column='author_id')
     genres = models.ManyToManyField('Genre', related_name='genres', db_table='library\".\"book_genre')
 
