@@ -15,7 +15,6 @@ reset_db_and_import_gutenberg_books:
 		${MAKE} pg_restore_raw_gutenberg_data \
 	) || (\
 		echo "\033[36mScanning rsynced PG collection and copy the raw data in in the 'gutenberg_raw_data' table...\033[0m" && \
-		${MAKE} build_api_admin && \
 		${MAKE} dump_data_to_import_db_python \
 	) || exit 1
 	@echo "\033[36mNow converting this raw data from Project Gutenberg into normalised data...\033[0m"
@@ -60,10 +59,6 @@ build_api_admin:
 	cd api-admin/ && \
 		make install && \
 		make build
-
-.phony: dump_data_to_import_db_nodejs
-dump_data_to_import_db_nodejs:
-	time ./api-admin/dist/cli/store-rsynced-generated-collection-in-db-imports.js ${GUTENBERG_GENERATED_COLLECTION_PATH}
 
 .phony: dump_data_to_import_db_python
 dump_data_to_import_db_python:
