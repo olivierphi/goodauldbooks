@@ -23,6 +23,7 @@ create type import.gutenberg_imported_book as (
   lang varchar(3),
   title text,
   subtitle text,
+  size integer,
   genres text[],
   author import.gutenberg_imported_author
 );
@@ -78,6 +79,13 @@ with
         xmlns
       ) )::text )
       as book_title,
+
+      trim( unnest( xpath(
+        '//pgterms:file[contains(@rdf:about, ''.epub.noimages'')]/dcterms:extent/text()',
+        rdf_data,
+        xmlns
+      ) )::text )
+      as book_size,
 
       utils.array_remove_nulls(
         xpath(
@@ -149,6 +157,7 @@ select
     book_lang,
     title_array[1],
     title_array[2],
+    book_size::integer,
     book_genre,
     (
       -- author fields (see the definition of the "import.gutenberg_imported_author" composite type)
@@ -195,8 +204,8 @@ begin
   -- ditto: only create the book if it doesn't exists already:
   select book_id into returned_book_id from library.book where gutenberg_id = imported_book.gutenberg_id;
   if returned_book_id is null then
-    insert into library.book (gutenberg_id, lang, title, subtitle, author_id)
-    values (imported_book.gutenberg_id, imported_book.lang, imported_book.title, imported_book.subtitle, returned_author_id)
+    insert into library.book (gutenberg_id, lang, title, subtitle, size, author_id)
+    values (imported_book.gutenberg_id, imported_book.lang, imported_book.title, imported_book.subtitle, imported_book.size, returned_author_id)
     returning book_id into returned_book_id;
   end if;
 
@@ -227,7 +236,7 @@ $function_create_book$;
 
 
 create or replace function import.create_books_from_raw_rdfs(
-  wipe_previsous_books bool,
+  wipe_previous_books bool,
   verbosity integer = 0
 ) returns integer
 language plpgsql
@@ -241,7 +250,7 @@ declare
   current_book_nb_assets_created integer;
   imported_book_data import.gutenberg_imported_book;
 begin
-  if wipe_previsous_books then
+  if wipe_previous_books then
     truncate library.book_additional_data, library.book, library.author, library.genre, library.book_genre, library.book_asset cascade;
   end if;
 

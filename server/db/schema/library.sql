@@ -25,6 +25,7 @@ create table library.book (
   lang varchar(3) collate "C" not null,
   title varchar not null,
   subtitle varchar null,
+  size integer null,
   highlight integer not null default 0,
   author_id int references library.author(author_id) not null
 );

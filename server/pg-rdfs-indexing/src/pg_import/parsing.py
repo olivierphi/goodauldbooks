@@ -32,7 +32,7 @@ class BookProcessingResult(t.NamedTuple):
     book_id: str
     rdf_file_content: str
     assets: t.Dict[BookAssetType, BookAsset]
-    intro: t.Optional[str]
+    intro: t.Union[str, None]
 
     def assets_as_json(self, books_root_path: str) -> str:
         assets_as_simple_structures = {
@@ -47,6 +47,8 @@ def process_book_from_pg_rdf_file(pg_book_id: str, rdf_file: Path) -> t.Optional
     assets = get_pg_book_assets(rdf_file_dir)
 
     if BookAssetType.EPUB not in assets:
+        # Allowing people to download books in epub format is our top priority,
+        # so we don't handle PG items that don't have an epub file
         return None
 
     rdf_file_content = rdf_file.read_text(encoding='utf-8')

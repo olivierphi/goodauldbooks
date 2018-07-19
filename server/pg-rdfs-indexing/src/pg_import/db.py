@@ -51,7 +51,7 @@ def _book_to_dict_for_db(books_root_path: str, book: parsing.BookProcessingResul
         'id': book.book_id,
         'rdf_content': book.rdf_file_content,
         'assets': book.assets_as_json(books_root_path),
-        'intro': book.intro
+        'intro': book.intro,
     }
 
 

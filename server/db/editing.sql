@@ -31,3 +31,4 @@ insert into webapp.settings(name, value) values
 ;
 
 commit;
+
