@@ -2,6 +2,7 @@ export interface BookData {
   bookId: string;
   title: string;
   subtitle: string | null;
+  nbPages: number | null;
   coverPath: string | null;
   lang: string;
   slug: string;
