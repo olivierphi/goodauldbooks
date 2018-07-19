@@ -15,7 +15,6 @@ reset_db_and_import_gutenberg_books:
 		${MAKE} pg_restore_raw_gutenberg_data \
 	) || (\
 		echo "\033[36mScanning rsynced PG collection and copy the raw data in in the 'gutenberg_raw_data' table...\033[0m" && \
-		${MAKE} build_api_admin && \
 		${MAKE} dump_data_to_import_db_python \
 	) || exit 1
 	@echo "\033[36mNow converting this raw data from Project Gutenberg into normalised data...\033[0m"
@@ -30,7 +29,7 @@ reset_db_and_import_gutenberg_books:
 import_gutenberg_books: VERBOSITY?=1
 import_gutenberg_books:
 	@echo "\033[36mPopulating 'library' tables from 'import.gutenberg_raw_data' content...\033[0m"
-	time ${PSQL} --no-psqlrc \
+	@${PSQL} --no-psqlrc \
 		-c  "select * from import.create_books_from_raw_rdfs(wipe_previous_books => true, verbosity => ${VERBOSITY}::integer);"
 
 .phony: update_computed_data_tables
@@ -39,7 +38,7 @@ update_computed_data_tables:
 	@echo "\033[36mUpdating computed data tables...\033[0m"
 	@$(foreach function,$(PG_FUNCTIONS),\
 		(echo "\033[36m*******\nCalling function '$(function)'...\n*******\033[0m" && \
-		time ${PSQL} --no-psqlrc -q -b -c "select * from $(function)();") || exit 1; \
+		${PSQL} --no-psqlrc -q -b -c "select * from $(function)();") || exit 1; \
 	)
 
 .phony: refresh_materialized_views
@@ -48,43 +47,36 @@ refresh_materialized_views:
 	@echo "\033[36mRefreshing related materilized views...\033[0m"
 	@$(foreach materialized_view,$(VIEWS),\
 		(echo "\033[36m*******\nRefreshing '$(materialized_view)'...\n*******\033[0m" && \
-		time ${PSQL} --no-psqlrc -q -b -c "refresh materialized view concurrently $(materialized_view);") || exit 1; \
+		${PSQL} --no-psqlrc -q -b -c "refresh materialized view concurrently $(materialized_view);") || exit 1; \
 	)
 
 .phony: editorial_pass
 editorial_pass:
-	${PSQL_QUIET} --no-psqlrc -q -b -f /host/db/editing.sql
-
-.phony: build_api_admin
-build_api_admin:
-	cd api-admin/ && \
-		make install && \
-		make build
-
-.phony: dump_data_to_import_db_nodejs
-dump_data_to_import_db_nodejs:
-	time ./api-admin/dist/cli/store-rsynced-generated-collection-in-db-imports.js ${GUTENBERG_GENERATED_COLLECTION_PATH}
+	@${PSQL_QUIET} --no-psqlrc -q -b -f /host/db/editing.sql
 
 .phony: dump_data_to_import_db_python
 dump_data_to_import_db_python:
-	echo "\033[36m*******\nTruncating 'import.gutenberg_raw_data'...\n*******\033[0m"
-	${PSQL} --no-psqlrc -q -b -c "truncate import.gutenberg_raw_data;"
-	echo "\033[36m*******\nNow looking for *.rdf files in '${GUTENBERG_GENERATED_COLLECTION_PATH}' and dumping their data in 'import.gutenberg_raw_data'...\n*******\033[0m"
-	${DC_RUN} --entrypoint python -e PYTHONPATH=/pg-rdfs-indexing/src \
+	@echo "\033[36m*******\nTruncating 'import.gutenberg_raw_data'...\n*******\033[0m"
+	@${PSQL} --no-psqlrc -q -b -c "truncate import.gutenberg_raw_data;"
+	@echo "\033[36m*******\nNow looking for *.rdf files in '${GUTENBERG_GENERATED_COLLECTION_PATH}' and dumping their data in 'import.gutenberg_raw_data'...\n*******\033[0m"
+	@${DC_RUN} --entrypoint python -e PYTHONPATH=/pg-rdfs-indexing/src \
 		-v ${GUTENBERG_GENERATED_COLLECTION_PATH}:/gutenberg-mirror/generated-collection:ro \
 		pg_rdf_indexing \
 		bin/import-books-data.py /gutenberg-mirror/generated-collection
 
 .phony: dump_data_to_import_db_python_install
+dump_data_to_import_db_python_install: REQUIREMENTS_FILES=requirements.txt requirements-dev.txt
 dump_data_to_import_db_python_install:
-	${DC_RUN} --entrypoint pip \
-		pg_rdf_indexing \
-		install -r requirements.txt
+	@$(foreach requirement_file,$(REQUIREMENTS_FILES),\
+		${DC_RUN} --entrypoint pip \
+			pg_rdf_indexing \
+			install -r ${requirement_file}; \
+	)
 
 .phony: rsync_and_import_book
 rsync_and_import_book: OPTS=
 rsync_and_import_book:
-	${DC_RUN} --entrypoint python -e PYTHONPATH=/pg-rdfs-indexing/src \
+	@${DC_RUN} --entrypoint python -e PYTHONPATH=/pg-rdfs-indexing/src \
 		-v ${GUTENBERG_GENERATED_COLLECTION_PATH}:/gutenberg-mirror/generated-collection \
 		pg_rdf_indexing \
 		bin/rsync-and-import-book.py ${PG_BOOK_ID} /gutenberg-mirror/generated-collection ${OPTS}
@@ -129,7 +121,7 @@ start_graphql_api:
 
 .phony: pg_dump_raw_gutenberg_data
 pg_dump_raw_gutenberg_data:
-	docker-compose run --rm --user $$(id -u):$$(id -g) --entrypoint pg_dump db-cli \
+	@docker-compose run --rm --user $$(id -u):$$(id -g) --entrypoint pg_dump db-cli \
 		--data-only \
 		-t 'import.gutenberg_raw_data' \
 		--format=plain \
@@ -137,12 +129,12 @@ pg_dump_raw_gutenberg_data:
 
 .phony: pg_restore_raw_gutenberg_data
 pg_restore_raw_gutenberg_data:
-	${PSQL} --no-psqlrc -q -b \
+	@${PSQL} --no-psqlrc -q -b \
 		-f /host/gutenberg_raw_data.sql
 
 .phony: export_books_langs
 export_books_langs:
-	${PSQL} --no-psqlrc \
+	@${PSQL} --no-psqlrc \
 		-f /host/db/scripts/books-langs.sql \
 		| jq '.' --monochrome-output \
 		> ../client/generated/data/books-langs.json

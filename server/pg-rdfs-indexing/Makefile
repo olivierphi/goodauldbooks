@@ -15,4 +15,7 @@ python_shell:
 	${PYTHON_SHELL}
 
 mypy:
-	${DC} --entrypoint python -e PYTHONPATH=/app/src -e MYPYPATH=/app/src python -m mypy bin/ src/
+	@${DC} --entrypoint python \
+		-e PYTHONPATH=/pg-rdfs-indexing/src -e MYPYPATH=/pg-rdfs-indexing/src \
+		pg_rdf_indexing \
+		-m mypy bin/ src/
