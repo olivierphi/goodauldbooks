@@ -81,10 +81,6 @@ rsync_and_import_book:
 		pg_rdf_indexing \
 		bin/rsync-and-import-book.py ${PG_BOOK_ID} /gutenberg-mirror/generated-collection ${OPTS}
 
-.phony: start_dev_api_admin
-start_dev_api_admin:
-	cd api-admin && make start_dev
-
 .phony: psql
 psql: .psql-history
 	${PSQL}
@@ -117,7 +113,8 @@ django_runserver:
 
 .phony: start_graphql_api
 start_graphql_api:
-	docker-compose up -d nginx && docker-compose logs -f --tail=0 django
+	docker-compose kill django || true
+	docker-compose up -d nginx && docker-compose logs -f --tail=10 django
 
 .phony: pg_dump_raw_gutenberg_data
 pg_dump_raw_gutenberg_data:
