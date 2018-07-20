@@ -1,7 +1,13 @@
 .book-full {
-  @include clearfix;
+  .cover-container {
+    width: 25%;
+  }
 
-  h3 {
-    font-family: $family-serif;
+  .main-container {
+    width: 75%;
+
+    .box {
+      padding: 2rem;
+    }
   }
 }

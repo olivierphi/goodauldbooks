@@ -10,5 +10,12 @@ export function BookIntro(props: BookIntroProps) {
     return <div className="book-intro no-intro">[no intro]</div>;
   }
 
-  return <div className="book-intro">{props.bookIntro}...</div>;
+  return (
+    <div className="book-intro">
+      {props.bookIntro
+        .replace(/\n\n/gm, "@@@")
+        .replace(/\n/gm, "")
+        .replace(/@@@/gm, "\n\n")}[...]
+    </div>
+  );
 }

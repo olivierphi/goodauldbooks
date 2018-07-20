@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
+import * as truncate from "smart-truncate";
 import { AssetsConfigContext } from "../../contexts/assets-config";
 import { BooksLangContext } from "../../contexts/books-lang";
 import { Book, Lang } from "../../domain/core";
@@ -30,7 +31,9 @@ export function BookCover(props: BookCoverProps) {
                     alt={props.book.title}
                   />
                 ) : (
-                  <span className="title">{props.book.title}</span>
+                  <span className="title">
+                    {truncate(props.book.title, 50, { mark: " [...]" })}
+                  </span>
                 )}
               </span>
             </Link>

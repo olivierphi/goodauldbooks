@@ -1,6 +1,11 @@
 .books-list {
   .book-list-item {
     height: 570px;
+
+    .book-title a {
+      color: $color-black;
+    }
+
     p {
       margin: 0.5em 0;
     }

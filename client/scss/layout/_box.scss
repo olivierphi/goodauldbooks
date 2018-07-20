@@ -1,12 +1,12 @@
 /* Box */
 
 .box {
-  @include clearfix();
-
-  background: $white;
-  box-shadow: 0 2px 0 0 $grey-light;
+  margin: $box-margin;
+  background: $color-white;
+  box-shadow: 0 2px 3px 0 rgba($color-gray, 0.5);
 
   .box-header {
+    background-color: $color-black;
     text-align: center;
   }
 

@@ -1,14 +1,29 @@
 body {
-  background: $white-bis;
+  margin: 0;
+  background: $color-black;
+  color: $color-text;
+  size: $body-size;
+  font-family: $family-sans-serif;
 }
 
 a {
-  transition: color 0.2s ease-in-out, border-bottom-color 0.2s ease-in-out;
-  border-bottom: dotted 1px;
-  color: $blue;
+  color: $color-blue;
   text-decoration: none;
 }
 
-a:hover {
-  border-bottom-color: transparent;
+h1,
+h2,
+h3 {
+  font-family: $family-serif;
+  color: $color-black;
+  margin: 0.5rem 0;
+}
+
+h1 {
+  font-size: 3.6rem;
+  line-height: 1.25;
+}
+
+#page-wrapper {
+  background: $color-gray-light;
 }

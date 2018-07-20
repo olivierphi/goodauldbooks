@@ -6,23 +6,14 @@ I just refactored it in SCSS and added things here and there for my own needs.
 > html5up.net | @ajlkn
 > Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
-
 @import "variables";
-
-@import "~bulma/sass/utilities/all";
-@import "~bulma/sass/base/all";
-@import "~bulma/sass/grid/all";
-@import "~bulma/sass/elements/tag";
-@import "~bulma/sass/elements/form"; //we don't actually have any forms at the moment, but Bulma uses the ".field" utility in this file :-/
-
 @import "mixins";
 @import "typography";
-
+@import "layout/reset";
 @import "layout/basic";
 @import "layout/container";
 @import "layout/box";
 @import "layout/grid";
-
 @import "component/main";
 @import "component/banner";
 @import "component/books-list";
@@ -34,5 +25,4 @@ I just refactored it in SCSS and added things here and there for my own needs.
 @import "component/author";
 @import "component/autocomplete";
 @import "component/pagination";
-
 @import "~react-select/scss/default";

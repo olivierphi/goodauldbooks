@@ -1,11 +1,8 @@
 .book-intro {
-  font-family: Times, Times New Roman, Georgia, serif;
-  white-space: pre;
-  max-height: 25em;
-  overflow-y: auto;
-  border-radius: 25px;
+  font-family: $family-sans-serif;
+  white-space: pre-line;
   padding: 10px;
-  color: $grey;
-  background-color: $white;
+  color: $color-gray;
+  background-color: $color-white;
   text-align: justify;
 }

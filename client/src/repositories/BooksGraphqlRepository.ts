@@ -71,11 +71,12 @@ query bookWithGenreStatsById($bookId: BookId!) {
     subtitle
     nbPages
     slug
+    hasIntro
     coverPath
     genres
     epubSize
     mobiSize
-    
+
     genresWithStats {
       title
       nbBooks
@@ -326,6 +327,7 @@ function mapBookFromServer(row: ServerResponse.BookData): Book {
     },
     coverUrl: row.coverPath,
     genres: row.genres,
+    hasIntro: row.hasIntro,
   };
 }
 

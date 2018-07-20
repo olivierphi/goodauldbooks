@@ -1,23 +1,30 @@
 .book-cover {
   display: block;
+  width: 200px;
   height: 300px;
-  background-color: $purple;
+  margin: 0 auto;
 
   &.has-cover {
     text-align: center;
   }
 
   &.no-cover {
+    $color-background: #fef2e1;
+    $color-text: #b33e4a;
+
     position: relative;
+    background-color: $color-background;
     span {
       position: absolute;
-      top: 50%;
+      width: 70%;
+      top: 30%;
       left: 50%;
       margin-right: -50%;
       transform: translate(-50%, -50%);
-      font-size: 2.3rem;
+
+      font-size: 1rem;
+      color: $color-text;
       font-family: $family-serif, serif;
-      color: $white;
       font-weight: bold;
       text-align: center;
     }

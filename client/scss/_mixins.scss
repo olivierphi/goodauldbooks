@@ -1,0 +1,13 @@
+@mixin clearfix {
+  &:after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+}
+
+@mixin mobile {
+  @media (max-width: $media-queries-mobile-width) {
+    @content;
+  }
+}

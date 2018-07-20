@@ -14,6 +14,7 @@ export interface Book {
   coverUrl: string | null;
   slug: string;
   genres: Genre[];
+  hasIntro: boolean;
 }
 
 export interface BookFull extends Book {
