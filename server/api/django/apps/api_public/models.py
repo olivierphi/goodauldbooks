@@ -1,3 +1,5 @@
+import typing as t
+
 import django.contrib.postgres.fields as postgres_fields
 from django.db import models
 
@@ -12,6 +14,24 @@ class Book(models.Model):
     size = models.PositiveIntegerField(default=0)
     author = models.ForeignKey('Author', on_delete=models.DO_NOTHING, related_name='books', db_column='author_id')
     genres = models.ManyToManyField('Genre', related_name='genres', db_table='library\".\"book_genre')
+
+    def get_genres_with_stats(self) -> t.List['GenreWithStats']:
+        book_genres = self.genres.all()
+        book_genres_ids: t.List[int] = [genre.genre_id for genre in book_genres]
+        book_genres_with_stats: t.List[GenreWithStats] = list(
+            GenreWithStats.objects.filter(genre_id__in=book_genres_ids)
+        )
+
+        # We have a list of GenreWithStats for this book, but we want to keep the
+        # same ordering than the book "genres" one: let's sort that list!
+        book_genres_titles: t.List[str] = [genre.title for genre in book_genres]
+
+        def sort_genres_with_stats(genre_w_stats: GenreWithStats) -> int:
+            return book_genres_titles.index(str(genre_w_stats.title))
+
+        book_genres_with_stats.sort(key=sort_genres_with_stats)
+
+        return book_genres_with_stats
 
     class Meta:
         db_table = 'library\".\"book'

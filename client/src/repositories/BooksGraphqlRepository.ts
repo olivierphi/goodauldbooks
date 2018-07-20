@@ -62,33 +62,21 @@ query {
 
   public async getBookById(bookId: string): Promise<BookWithGenreStats | null> {
     const graphqlQuery = `
-query bookById($bookId: BookId!) {
+query bookWithGenreStatsById($bookId: BookId!) {
 
-  bookWithGenresStats(bookId: $bookId) {
-    book {
-      bookId
-      lang
-      title
-      subtitle
-      nbPages
-      slug
-      coverPath
-      genres
-      epubSize
-      mobiSize
-
-      author {
-        authorId
-        firstName
-        lastName
-        birthYear
-        deathYear
-        slug
-        nbBooks
-      }
-    }
-
-    genresStats {
+  book(bookId: $bookId) {
+    bookId
+    lang
+    title
+    subtitle
+    nbPages
+    slug
+    coverPath
+    genres
+    epubSize
+    mobiSize
+    
+    genresWithStats {
       title
       nbBooks
 
@@ -97,14 +85,23 @@ query bookById($bookId: BookId!) {
         nbBooks
       }
     }
+
+    author {
+      authorId
+      firstName
+      lastName
+      birthYear
+      deathYear
+      slug
+      nbBooks
+    }
   }
 
 }
 
 `;
     const response = await this.requestGraphql(graphqlQuery, { bookId });
-    const bookDataFromServer: ServerResponse.BookWithGenreStats =
-      response.data.data.bookWithGenresStats;
+    const bookDataFromServer: ServerResponse.BookFullData = response.data.data.book;
     const bookWithGenreStats = mapBookWithGenreStatsFromServer(bookDataFromServer);
 
     return Promise.resolve(bookWithGenreStats);
@@ -122,10 +119,12 @@ query quickSearch($pattern: String!, $lang: String) {
 
   quickSearch(search: $pattern, lang: $lang) {
     type
-    bookId
-    bookLang
-    bookTitle
-    bookSlug
+    ... on QuickSearchResultBook {
+      bookId
+      bookLang
+      bookTitle
+      bookSlug
+    }
     authorId
     authorFirstName
     authorLastName
@@ -151,7 +150,7 @@ query quickSearch($pattern: String!, $lang: String) {
     const graphqlQuery = `
 query booksByGenre($genre: String!, $lang: String, $page: Int, $nbPerPage: Int) {
 
-  booksByGenre(genre: $genre, lang: $lang, page: $page, nbPerPage: $nbPerPage) {
+  books(genre: $genre, lang: $lang, page: $page, nbPerPage: $nbPerPage) {
 
     books {
       bookId
@@ -193,7 +192,7 @@ query booksByGenre($genre: String!, $lang: String, $page: Int, $nbPerPage: Int) 
     });
 
     const booksWithPagination: ServerResponse.BooksDataWithPagination<ServerResponse.BookData> =
-      response.data.data.booksByGenre;
+      response.data.data.books;
     const paginationData: PaginationResponseData = getPaginationResponseDataFromServerResponse(
       booksWithPagination.meta
     );
@@ -215,7 +214,7 @@ query booksByGenre($genre: String!, $lang: String, $page: Int, $nbPerPage: Int) 
     const graphqlQuery = `
 query booksByAuthor($authorId: AuthorId!, $lang: String, $page: Int, $nbPerPage: Int) {
 
-  booksByAuthor(authorId: $authorId, lang: $lang, page: $page, nbPerPage: $nbPerPage) {
+  books(authorId: $authorId, lang: $lang, page: $page, nbPerPage: $nbPerPage) {
 
     books {
       bookId
@@ -257,7 +256,7 @@ query booksByAuthor($authorId: AuthorId!, $lang: String, $page: Int, $nbPerPage:
     });
 
     const booksWithPagination: ServerResponse.BooksDataWithPagination<ServerResponse.BookData> =
-      response.data.data.booksByAuthor;
+      response.data.data.books;
     const paginationData: PaginationResponseData = getPaginationResponseDataFromServerResponse(
       booksWithPagination.meta
     );
@@ -338,12 +337,12 @@ function mapBookFullFromServer(row: ServerResponse.BookFullData): BookFull {
   };
 }
 
-function mapBookWithGenreStatsFromServer(
-  row: ServerResponse.BookWithGenreStats
-): BookWithGenreStats {
+function mapBookWithGenreStatsFromServer(row: ServerResponse.BookFullData): BookWithGenreStats {
   return {
-    book: mapBookFullFromServer(row.book),
-    genresWithStats: row.genresStats.map(mapGenreWithStatsFromServer),
+    book: mapBookFullFromServer(row),
+    genresWithStats: row.genresWithStats
+      ? row.genresWithStats.map(mapGenreWithStatsFromServer)
+      : [],
   };
 }
 
@@ -365,7 +364,7 @@ function mapQuickSearchDataFromServer(row: ServerResponse.QuickSearchData): Quic
   return {
     resultType: rowType,
     book:
-      "book" === rowType
+      "BOOK" === rowType
         ? {
             id: row.bookId as string,
             title: row.bookTitle as string,

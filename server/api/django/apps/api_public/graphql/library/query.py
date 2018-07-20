@@ -21,42 +21,105 @@ LANG_ALL = 'all'
 
 
 class Query():
-    all_books = graphene.List(gql_schema.BookType, offset=graphene.Int(), limit=graphene.Int())
-    all_authors = graphene.List(gql_schema.AuthorType, offset=graphene.Int(), limit=graphene.Int())
-    featured_books = graphene.List(
-        graphene.NonNull(gql_schema.BookType)
-    )
-    quick_search = graphene.List(
-        graphene.NonNull(gql_schema.QuickSearchResultType),
-        search=graphene.String(required=True),
-        lang=graphene.String(),
-    )
     book = graphene.Field(
-        gql_schema.BookType,
-        book_id=gql_schema.BookId(required=True)
-    )
-    book_with_genres_stats = graphene.Field(
-        gql_schema.BookWithGenresStatsType,
+        gql_schema.Book,
         book_id=gql_schema.BookId(required=True)
     )
     author = graphene.Field(
-        gql_schema.AuthorType,
+        gql_schema.Author,
         author_id=gql_schema.AuthorId(),
-        first_name=graphene.String(),
-        last_name=graphene.String(),
     )
-    books_by_genre = graphene.Field(
-        gql_schema.BooksByCriteriaType,
-        genre=graphene.String(required=True),
+    books = graphene.Field(
+        gql_schema.BooksList,
+        genre=graphene.String(),
+        author_id=gql_schema.AuthorId(),
         lang=graphene.String(),
         page=graphene.Int(), nb_per_page=graphene.Int()
     )
-    books_by_author = graphene.Field(
-        gql_schema.BooksByCriteriaType,
-        author_id=gql_schema.AuthorId(required=True),
+    authors = graphene.Field(
+        gql_schema.AuthorsList,
+        genre=graphene.String(),
         lang=graphene.String(),
         page=graphene.Int(), nb_per_page=graphene.Int()
     )
+    featured_books = graphene.List(
+        graphene.NonNull(gql_schema.Book)
+    )
+    quick_search = graphene.List(
+        graphene.NonNull(gql_schema.QuickSearchResultInterface),
+        search=graphene.String(required=True),
+        lang=graphene.String(),
+    )
+
+    def resolve_book(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[api_models.Book, None]:
+        public_book_id = kwargs.get('book_id')
+
+        book = library_utils.get_single_book_by_public_id(public_book_id)
+
+        return book
+
+    def resolve_author(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[api_models.Author, None]:
+        public_author_id = kwargs.get('author_id')
+
+        author = library_utils.get_single_author_by_public_id(public_author_id)
+
+        return author
+
+    def resolve_books(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.BooksList:
+        genre = kwargs.get('genre')
+        public_author_id = kwargs.get('author_id')
+        lang = kwargs.get('lang', LANG_ALL)
+        page = max(int(kwargs.get('page', 1)), 1)
+        nb_per_page = min(int(kwargs.get('nb_per_page', DEFAULT_LIMIT)), MAX_LIMIT)
+
+        books = library_utils.get_books_base_queryset().order_by('title', 'subtitle')
+        if genre:
+            books = books.filter(genres__title=genre)
+        author_id_criteria = None
+        if public_author_id:
+            author_id_criteria = library_utils.get_author_id_criteria(public_author_id)
+            if author_id_criteria.gutenberg_id:
+                books = books.filter(author__gutenberg_id=author_id_criteria.gutenberg_id)
+            else:
+                books = books.filter(author__author_id=author_id_criteria.author_id)
+        if lang != LANG_ALL:
+            books = books.filter(lang=lang)
+
+        offset = (page - 1) * nb_per_page
+        books = books[offset:offset + nb_per_page]
+
+        metadata = _get_books_metadata(author_id_criteria, genre, lang)
+        metadata.page = page
+        metadata.nb_per_page = nb_per_page
+
+        return gql_schema.BooksList(
+            books=list(books),
+            meta=metadata
+        )
+
+    def resolve_authors(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.AuthorsList:
+        genre = kwargs.get('genre')
+        lang = kwargs.get('lang', LANG_ALL)
+        page = max(int(kwargs.get('page', 1)), 1)
+        nb_per_page = min(int(kwargs.get('nb_per_page', DEFAULT_LIMIT)), MAX_LIMIT)
+
+        authors = library_utils.get_authors_base_queryset().order_by('last_name', 'first_name')
+        if genre:
+            authors = authors.filter(books__genres__title=genre)
+        if lang != LANG_ALL:
+            authors = authors.filter(books__lang=lang)
+
+        offset = (page - 1) * nb_per_page
+        authors = authors[offset:offset + nb_per_page]
+
+        metadata = _get_authors_metadata(genre, lang)
+        metadata.page = page
+        metadata.nb_per_page = nb_per_page
+
+        return gql_schema.AuthorsList(
+            authors=list(authors),
+            meta=metadata
+        )
 
     def resolve_featured_books(self, info: graphql.ResolveInfo, **kwargs) -> t.List[api_models.Book]:
         featured_books_ids = cache.get('featured_books_ids')
@@ -68,7 +131,8 @@ class Query():
 
         return list(library_utils.get_books_base_queryset().filter(gutenberg_id__in=featured_books_ids))
 
-    def resolve_quick_search(self, info: graphql.ResolveInfo, **kwargs) -> t.List[gql_schema.QuickSearchResultType]:
+    def resolve_quick_search(self, info: graphql.ResolveInfo, **kwargs) -> t.List[
+        gql_schema.QuickSearchResultInterface]:
         search = kwargs.get('search')
         lang = kwargs.get('lang', LANG_ALL)
 
@@ -109,256 +173,51 @@ class Query():
         # All right, finally we can return the books results, followed by the authors results:
         return books_quick_completion_results + authors_quick_completion_results
 
-    def resolve_all_books(self, info: graphql.ResolveInfo, **kwargs) -> t.List[api_models.Book]:
-        offset = kwargs.get('offset', 0)
-        limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
 
-        return library_utils.get_books_base_queryset().all()[offset:offset + limit]
-
-    def resolve_all_authors(self, info: graphql.ResolveInfo, **kwargs) -> t.List[api_models.Author]:
-        offset = kwargs.get('offset', 0)
-        limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
-
-        return library_utils.get_authors_base_queryset().all()[offset:offset + limit]
-
-    def resolve_book(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[api_models.Book, None]:
-        public_book_id = kwargs.get('book_id')
-
-        book = library_utils.get_single_book_by_public_id(public_book_id)
-
-        return book
-
-    def resolve_book_with_genres_stats(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[
-        gql_schema.BookWithGenresStatsType, None]:
-        public_book_id = kwargs.get('book_id')
-
-        book = library_utils.get_single_book_by_public_id(public_book_id)
-
-        if book is None:
-            return None
-
-        book_genres_ids = [genre.genre_id for genre in book.genres.all()]
-        book_genres_with_stats = api_models.GenreWithStats.objects.filter(genre_id__in=book_genres_ids)
-
-        returned_genres_with_stats = [
-            _genres_w_stats_to_graphql_equivalent(genre_with_stats)
-            for genre_with_stats in book_genres_with_stats.all()
-        ]
-
-        return gql_schema.BookWithGenresStatsType(
-            book=book,
-            genres_stats=returned_genres_with_stats
-        )
-
-    def resolve_author(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[api_models.Author, None]:
-        public_author_id = kwargs.get('author_id')
-        first_name = kwargs.get('first_name')
-        last_name = kwargs.get('last_name')
-
-        has_something_to_resolve = any((public_author_id, first_name, last_name))
-
-        if not has_something_to_resolve:
-            return None
-
-        criteria = dict()
-        if public_author_id:
-            author_id_criteria = library_utils.get_author_id_criteria(public_author_id)
-            if author_id_criteria.gutenberg_id:
-                criteria['gutenberg_id'] = author_id_criteria.gutenberg_id
-            else:
-                criteria['author_id'] = author_id_criteria.author_id
-        if first_name:
-            criteria['first_name'] = first_name
-        if last_name:
-            criteria['last_name'] = last_name
-
-        return library_utils.get_authors_base_queryset().get(**criteria)
-
-    def resolve_books_by_genre(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.BooksByCriteriaType:
-        genre = kwargs.get('genre')
-        lang = kwargs.get('lang', LANG_ALL)
-        page = max(int(kwargs.get('page', 1)), 1)
-        nb_per_page = min(int(kwargs.get('nb_per_page', DEFAULT_LIMIT)), MAX_LIMIT)
-
-        books = library_utils.get_books_base_queryset().filter(genres__title=genre)
-        if lang != LANG_ALL:
-            books = books.filter(lang=lang)
-
-        offset = (page - 1) * nb_per_page
-        books = books[offset:offset + nb_per_page]
-
-        metadata = _get_books_by_genre_metadata(genre, lang)
-        metadata.page = page
-        metadata.nb_per_page = nb_per_page
-
-        return gql_schema.BooksByCriteriaType(
-            books=list(books),
-            meta=metadata
-        )
-
-    def resolve_books_by_author(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.BooksByCriteriaType:
-        public_author_id = kwargs.get('author_id')
-        lang = kwargs.get('lang', LANG_ALL)
-        page = max(int(kwargs.get('page', 1)), 1)
-        nb_per_page = min(int(kwargs.get('nb_per_page', DEFAULT_LIMIT)), MAX_LIMIT)
-
-        books = library_utils.get_books_base_queryset()
-        author_id_criteria = library_utils.get_author_id_criteria(public_author_id)
-        if author_id_criteria.gutenberg_id:
-            books = books.filter(author__gutenberg_id=author_id_criteria.gutenberg_id)
-        else:
-            books = books.filter(author__author_id=author_id_criteria.author_id)
-
-        if lang != LANG_ALL:
-            books = books.filter(lang=lang)
-
-        offset = (page - 1) * nb_per_page
-        books = books[offset:offset + nb_per_page]
-
-        metadata = _get_books_by_author_metadata(author_id_criteria, lang)
-        metadata.page = page
-        metadata.nb_per_page = nb_per_page
-
-        return gql_schema.BooksByCriteriaType(
-            books=list(books),
-            meta=metadata
-        )
-
-
-def _get_books_by_genre_metadata(genre: str, lang: str) -> gql_schema.BooksByCriteriaMetadataType:
+def _get_books_metadata(
+        author_id: t.Optional[library_utils.AuthorIdCriteria] = None,
+        genre: t.Optional[str] = None,
+        lang: t.Optional[str] = None
+) -> gql_schema.ItemsListMetadata:
+    author_id = author_id or library_utils.AuthorIdCriteria(author_id=0, gutenberg_id=0)
+    genre = genre or ''
+    lang = lang or LANG_ALL
     with connection.cursor() as cursor:
         cursor.execute(
-            """
-            with 
-            input as (
-              select
-                %s::varchar as genre,
-                %s::varchar(3) as lang
-            ),
-            total_count as (
-                select
-                  count(book_id) as count
-                from
-                  library.book as book
-                  join library.book_genre using(book_id)
-                  join library.genre as genre using(genre_id)
-                where
-                  genre.title = (select genre from input) and
-                  case
-                    when (select lang from input) = 'all' then true
-                    else lang = (select lang from input)
-                  end
-            ),
-            total_count_for_all_langs as (
-                select
-                  case
-                    when (select lang from input) = 'all' then
-                      (select count from total_count)::integer
-                    else
-                      (
-                        select
-                          count(*)
-                        from
-                          library.book as book
-                          join library.book_genre using(book_id)
-                          join library.genre as genre using(genre_id)
-                        where
-                          genre.title = (select genre from input)
-                      )::integer
-                  end as count
-            )
-            select
-              (select count from total_count)::integer as total_count,
-              (select count from total_count_for_all_langs)::integer as total_count_for_all_langs
-            """
-            ,
+            _BOOKS_METADATA_SQL,
+            [genre, author_id.author_id, author_id.gutenberg_id, lang]
+        )
+        row = cursor.fetchone()
+    metadata = {'total_count': row[0], 'total_count_for_all_langs': row[1]}
+
+    return gql_schema.ItemsListMetadata(
+        total_count=metadata['total_count'],
+        total_count_for_all_langs=metadata['total_count_for_all_langs']
+    )
+
+
+def _get_authors_metadata(
+        genre: t.Optional[str] = None,
+        lang: t.Optional[str] = None
+) -> gql_schema.ItemsListMetadata:
+    genre = genre or ''
+    lang = lang or LANG_ALL
+    with connection.cursor() as cursor:
+        cursor.execute(
+            _AUTHORS_METADATA_SQL,
             [genre, lang]
         )
         row = cursor.fetchone()
-        metadata = {'total_count': row[0], 'total_count_for_all_langs': row[1]}
+    metadata = {'total_count': row[0], 'total_count_for_all_langs': row[1]}
 
-    return gql_schema.BooksByCriteriaMetadataType(
+    return gql_schema.ItemsListMetadata(
         total_count=metadata['total_count'],
         total_count_for_all_langs=metadata['total_count_for_all_langs']
     )
 
 
-def _get_books_by_author_metadata(author_id: library_utils.AuthorIdCriteria,
-                                  lang: str) -> gql_schema.BooksByCriteriaMetadataType:
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            with 
-            input as (
-              select
-                %s::integer as author_id,
-                %s::integer as gutenberg_id,
-                %s::varchar(3) as lang
-            ),
-            total_count as (
-                select
-                  count(book_id) as count
-                from
-                  library.book as book
-                  join library.author as author using(author_id)
-                where
-                  case
-                    when (select gutenberg_id from input) = 0 then 
-                      author.author_id = (select author_id from input)
-                    else 
-                      author.gutenberg_id = (select gutenberg_id from input)
-                  end
-                  and
-                  case
-                    when (select lang from input) = 'all' then true
-                    else lang = (select lang from input)
-                  end
-            ),
-            total_count_for_all_langs as (
-                select
-                  case
-                    when (select lang from input) = 'all' then
-                      (select count from total_count)::integer
-                    else
-                      (
-                        select
-                          count(*)
-                        from
-                          library.book as book
-                          join library.author as author using(author_id)
-                        where
-                          case
-                            when (select gutenberg_id from input) = 0 then 
-                              author.author_id = (select author_id from input)
-                            else 
-                              author.gutenberg_id = (select gutenberg_id from input)
-                          end
-                      )::integer
-                  end as count
-            )
-            select
-              (select count from total_count)::integer as total_count,
-              (select count from total_count_for_all_langs)::integer as total_count_for_all_langs
-            """
-            ,
-            [author_id.author_id, author_id.gutenberg_id, lang]
-        )
-        row = cursor.fetchone()
-        metadata = {'total_count': row[0], 'total_count_for_all_langs': row[1]}
-
-    return gql_schema.BooksByCriteriaMetadataType(
-        total_count=metadata['total_count'],
-        total_count_for_all_langs=metadata['total_count_for_all_langs']
-    )
-
-
-def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_schema.QuickSearchResultType:
-    return gql_schema.QuickSearchResultType(
-        type=gql_schema.QuickAutocompletionResultEnumType.author,
-        book_id=None,
-        book_title=None,
-        book_lang=None,
-        book_slug=None,
+def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_schema.QuickSearchResultAuthor:
+    return gql_schema.QuickSearchResultAuthor(
         author_id=library_utils.get_public_author_id(author),
         author_first_name=author.first_name,
         author_last_name=author.last_name,
@@ -368,9 +227,8 @@ def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_sch
     )
 
 
-def _book_to_quick_autocompletion_result(book: api_models.Book) -> gql_schema.QuickSearchResultType:
-    return gql_schema.QuickSearchResultType(
-        type=gql_schema.QuickAutocompletionResultEnumType.book,
+def _book_to_quick_autocompletion_result(book: api_models.Book) -> gql_schema.QuickSearchResultBook:
+    return gql_schema.QuickSearchResultBook(
         book_id=library_utils.get_public_book_id(book),
         book_title=book.title,
         book_lang=book.lang,
@@ -384,14 +242,144 @@ def _book_to_quick_autocompletion_result(book: api_models.Book) -> gql_schema.Qu
     )
 
 
-def _genres_w_stats_to_graphql_equivalent(genreWithStats: api_models.GenreWithStats) -> gql_schema.GenreStatsType:
-    nb_books_by_lang: t.List[gql_schema.GenreStatsNbBooksByLangType] = [
-        gql_schema.GenreStatsNbBooksByLangType(lang=lang, nb_books=nb_books)
-        for (lang, nb_books) in genreWithStats.nb_books_by_lang.items()
-    ]
-
-    return gql_schema.GenreStatsType(
-        title=genreWithStats.title,
-        nb_books=genreWithStats.nb_books,
-        nb_books_by_lang=nb_books_by_lang
+_BOOKS_METADATA_SQL = \
+    """
+    with 
+    input as (
+      select
+        %s::varchar as genre,
+        %s::integer as author_id,
+        %s::integer as author_pg_id,
+        %s::varchar(3) as lang
+    ),
+    total_count as (
+      select
+        count(distinct book.book_id) as count
+      from
+        library.book as book
+        join library.author as author using(author_id)
+        join library.book_genre using(book_id)
+        join library.genre as genre using(genre_id)
+      where
+        case 
+          when (select genre from input) <> '' then 
+            genre.title = (select genre from input) 
+          else
+            true
+        end
+        and
+        case
+          when (select author_id from input) <> 0 then 
+            author.author_id = (select author_id from input)
+          when (select author_pg_id from input) <> 0 then
+            author.gutenberg_id = (select author_pg_id from input)
+          else
+            true
+        end
+        and
+        case
+          when (select lang from input) <> 'all' then
+            lang = (select lang from input)
+          else 
+            true
+        end
+    ),
+    total_count_for_all_langs as (
+      select
+        case
+          when (select lang from input) = 'all' then
+            (select count from total_count)::integer
+          else
+            (
+              -- same query than "total_count", except that we don't filter by lang this time
+              select
+                count(distinct book.book_id) as count
+              from
+                library.book as book
+                join library.author as author using(author_id)
+                join library.book_genre using(book_id)
+                join library.genre as genre using(genre_id)
+              where
+                case 
+                  when (select genre from input) <> '' then 
+                    genre.title = (select genre from input) 
+                  else
+                    true
+                end
+                and
+                case
+                  when (select author_id from input) <> 0 then 
+                    author.author_id = (select author_id from input)
+                  when (select author_pg_id from input) <> 0 then
+                    author.gutenberg_id = (select author_pg_id from input)
+                  else
+                    true
+                end
+            )::integer
+        end as count
     )
+    select
+      (select count from total_count)::integer as total_count,
+      (select count from total_count_for_all_langs)::integer as total_count_for_all_langs
+    """
+
+_AUTHORS_METADATA_SQL = \
+    """
+    with 
+    input as (
+      select
+        %s::varchar as genre,
+        %s::varchar(3) as lang
+    ),
+    total_count as (
+      select
+        count(distinct author.author_id) as count
+      from
+        library.author as author
+        join library.book as book using(author_id)
+        join library.book_genre using(book_id)
+        join library.genre as genre using(genre_id)
+      where
+        case 
+          when (select genre from input) <> '' then 
+            genre.title = (select genre from input) 
+          else
+            true
+        end
+        and
+        case
+          when (select lang from input) <> 'all' then
+            lang = (select lang from input)
+          else 
+            true
+        end
+    ),
+    total_count_for_all_langs as (
+      select
+        case
+          when (select lang from input) = 'all' then
+            (select count from total_count)::integer
+          else
+            (
+              -- same query than "total_count", except that we don't filter by lang this time
+              select
+                count(distinct author.author_id) as count
+              from
+                library.author as author
+                join library.book as book using(author_id)
+                join library.book_genre using(book_id)
+                join library.genre as genre using(genre_id)
+              where
+                case 
+                  when (select genre from input) <> '' then 
+                    genre.title = (select genre from input) 
+                  else
+                    true
+                end
+            )::integer
+        end as count
+    )
+    select
+      (select count from total_count)::integer as total_count,
+      (select count from total_count_for_all_langs)::integer as total_count_for_all_langs
+    """

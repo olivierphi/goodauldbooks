@@ -22,7 +22,7 @@ export interface BooksLanguagesRepository {
 }
 
 export interface QuickSearchResult {
-  readonly resultType: "book" | "author";
+  readonly resultType: "BOOK" | "AUTHOR";
   readonly book: QuickSearchResultBook | null;
   readonly author: QuickSearchResultAuthor;
   readonly highlight: number;
