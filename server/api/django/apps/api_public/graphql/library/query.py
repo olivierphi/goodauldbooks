@@ -109,25 +109,6 @@ class Query():
         # All right, finally we can return the books results, followed by the authors results:
         return books_quick_completion_results + authors_quick_completion_results
 
-    def resolve_all_books(self, info: graphql.ResolveInfo, **kwargs) -> t.List[api_models.Book]:
-        offset = kwargs.get('offset', 0)
-        limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
-
-        return library_utils.get_books_base_queryset().all()[offset:offset + limit]
-
-    def resolve_all_authors(self, info: graphql.ResolveInfo, **kwargs) -> t.List[api_models.Author]:
-        offset = kwargs.get('offset', 0)
-        limit = min(kwargs.get('limit', DEFAULT_LIMIT), MAX_LIMIT)
-
-        return library_utils.get_authors_base_queryset().all()[offset:offset + limit]
-
-    def resolve_book(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[api_models.Book, None]:
-        public_book_id = kwargs.get('book_id')
-
-        book = library_utils.get_single_book_by_public_id(public_book_id)
-
-        return book
-
     def resolve_book_with_genres_stats(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[
         gql_schema.BookWithGenresStatsType, None]:
         public_book_id = kwargs.get('book_id')
@@ -150,79 +131,6 @@ class Query():
             genres_stats=returned_genres_with_stats
         )
 
-    def resolve_author(self, info: graphql.ResolveInfo, **kwargs) -> t.Union[api_models.Author, None]:
-        public_author_id = kwargs.get('author_id')
-        first_name = kwargs.get('first_name')
-        last_name = kwargs.get('last_name')
-
-        has_something_to_resolve = any((public_author_id, first_name, last_name))
-
-        if not has_something_to_resolve:
-            return None
-
-        criteria = dict()
-        if public_author_id:
-            author_id_criteria = library_utils.get_author_id_criteria(public_author_id)
-            if author_id_criteria.gutenberg_id:
-                criteria['gutenberg_id'] = author_id_criteria.gutenberg_id
-            else:
-                criteria['author_id'] = author_id_criteria.author_id
-        if first_name:
-            criteria['first_name'] = first_name
-        if last_name:
-            criteria['last_name'] = last_name
-
-        return library_utils.get_authors_base_queryset().get(**criteria)
-
-    def resolve_books_by_genre(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.BooksByCriteriaType:
-        genre = kwargs.get('genre')
-        lang = kwargs.get('lang', LANG_ALL)
-        page = max(int(kwargs.get('page', 1)), 1)
-        nb_per_page = min(int(kwargs.get('nb_per_page', DEFAULT_LIMIT)), MAX_LIMIT)
-
-        books = library_utils.get_books_base_queryset().filter(genres__title=genre)
-        if lang != LANG_ALL:
-            books = books.filter(lang=lang)
-
-        offset = (page - 1) * nb_per_page
-        books = books[offset:offset + nb_per_page]
-
-        metadata = _get_books_by_genre_metadata(genre, lang)
-        metadata.page = page
-        metadata.nb_per_page = nb_per_page
-
-        return gql_schema.BooksByCriteriaType(
-            books=list(books),
-            meta=metadata
-        )
-
-    def resolve_books_by_author(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.BooksByCriteriaType:
-        public_author_id = kwargs.get('author_id')
-        lang = kwargs.get('lang', LANG_ALL)
-        page = max(int(kwargs.get('page', 1)), 1)
-        nb_per_page = min(int(kwargs.get('nb_per_page', DEFAULT_LIMIT)), MAX_LIMIT)
-
-        books = library_utils.get_books_base_queryset()
-        author_id_criteria = library_utils.get_author_id_criteria(public_author_id)
-        if author_id_criteria.gutenberg_id:
-            books = books.filter(author__gutenberg_id=author_id_criteria.gutenberg_id)
-        else:
-            books = books.filter(author__author_id=author_id_criteria.author_id)
-
-        if lang != LANG_ALL:
-            books = books.filter(lang=lang)
-
-        offset = (page - 1) * nb_per_page
-        books = books[offset:offset + nb_per_page]
-
-        metadata = _get_books_by_author_metadata(author_id_criteria, lang)
-        metadata.page = page
-        metadata.nb_per_page = nb_per_page
-
-        return gql_schema.BooksByCriteriaType(
-            books=list(books),
-            meta=metadata
-        )
 
 
 def _get_books_by_genre_metadata(genre: str, lang: str) -> gql_schema.BooksByCriteriaMetadataType:
@@ -354,7 +262,7 @@ def _get_books_by_author_metadata(author_id: library_utils.AuthorIdCriteria,
 
 def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_schema.QuickSearchResultType:
     return gql_schema.QuickSearchResultType(
-        type=gql_schema.QuickAutocompletionResultEnumType.author,
+        type=gql_schema.QuickAutocompletionResultEnumType.AUTHOR,
         book_id=None,
         book_title=None,
         book_lang=None,
@@ -370,7 +278,7 @@ def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_sch
 
 def _book_to_quick_autocompletion_result(book: api_models.Book) -> gql_schema.QuickSearchResultType:
     return gql_schema.QuickSearchResultType(
-        type=gql_schema.QuickAutocompletionResultEnumType.book,
+        type=gql_schema.QuickAutocompletionResultEnumType.BOOK,
         book_id=library_utils.get_public_book_id(book),
         book_title=book.title,
         book_lang=book.lang,

@@ -365,7 +365,7 @@ function mapQuickSearchDataFromServer(row: ServerResponse.QuickSearchData): Quic
   return {
     resultType: rowType,
     book:
-      "book" === rowType
+      "BOOK" === rowType
         ? {
             id: row.bookId as string,
             title: row.bookTitle as string,

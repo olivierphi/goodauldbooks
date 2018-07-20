@@ -32,7 +32,7 @@ export interface BookWithGenreStats {
 }
 
 export interface QuickSearchData {
-  type: "book" | "author";
+  type: "BOOK" | "AUTHOR";
   bookId: string | null;
   bookTitle: string | null;
   bookLang: string;

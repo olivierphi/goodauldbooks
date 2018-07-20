@@ -21,11 +21,8 @@ class AuthorId(graphene.String):
 
 
 class QuickAutocompletionResultEnumType(graphene.Enum):
-    # There is a bug in Graphene Python, which uses the Enums names instead of the values.
-    # As long as it's not solved we have to use the Enum names as values, hence the lower-case names.
-    # @link https://github.com/graphql-python/graphql-core/pull/140
-    book = 'book'
-    author = 'author'
+    BOOK = 'book'
+    AUTHOR = 'author'
 
 
 class QuickSearchResultType(graphene.ObjectType):
