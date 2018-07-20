@@ -77,6 +77,7 @@ class Book(DjangoObjectType):
     genres_with_stats = graphene.List(GenreWithStats)
     # A bunch of aliases pointing to the inner 'computed_data' fields :-)
     slug = graphene.String()
+    has_intro = graphene.Boolean()
     cover_path = graphene.String()
     epub_path = graphene.String()
     epub_size = graphene.Int()
@@ -106,6 +107,9 @@ class Book(DjangoObjectType):
 
     def resolve_slug(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.slug
+
+    def resolve_has_intro(self, info: graphql.ResolveInfo, **kwargs):
+        return self.computed_data.has_intro
 
     def resolve_cover_path(self, info: graphql.ResolveInfo, **kwargs):
         return self.computed_data.cover_path

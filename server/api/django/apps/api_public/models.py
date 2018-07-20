@@ -76,6 +76,7 @@ class BookComputedData(models.Model):
                                    related_name='computed_data',
                                    db_column='book_id')
     slug = models.CharField(max_length=50)
+    has_intro = models.BooleanField()
     cover_path = models.CharField(max_length=255, null=True)
     epub_path = models.CharField(max_length=255)
     epub_size = models.PositiveIntegerField()

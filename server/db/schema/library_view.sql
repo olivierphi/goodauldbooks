@@ -12,6 +12,7 @@ create extension if not exists pg_trgm schema exts;
 create table library_view.book_computed_data (
   book_id integer references library.book (book_id) primary key,
   slug varchar(50),
+  has_intro boolean,
   cover_path varchar null,
   epub_path varchar,
   epub_size integer,
@@ -120,12 +121,26 @@ book_slug_data as (
     substring(utils.slugify(book_title) for 50)::varchar as slug
   from
     book_with_assets_data
+),
+book_intro as (
+  select
+    intro
+  from
+    library.book_additional_data
+  where
+    book_id = $1
 )
 insert into library_view.book_computed_data
-(book_id, slug, cover_path, epub_path, epub_size, mobi_path, mobi_size)
+(book_id, slug, has_intro, cover_path, epub_path, epub_size, mobi_path, mobi_size)
   select
     $1,
     (select slug from book_slug_data),
+    case
+      when (select count(*) from book_intro) > 0 and length((select intro from book_intro)) > 0
+        then true
+      else
+        false
+    end,
     book_cover_path,
     book_epub_path,
     book_epub_size,
