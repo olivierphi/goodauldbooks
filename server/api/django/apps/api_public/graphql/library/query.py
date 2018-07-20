@@ -22,31 +22,31 @@ LANG_ALL = 'all'
 
 class Query():
     book = graphene.Field(
-        gql_schema.BookType,
+        gql_schema.Book,
         book_id=gql_schema.BookId(required=True)
     )
     author = graphene.Field(
-        gql_schema.AuthorType,
+        gql_schema.Author,
         author_id=gql_schema.AuthorId(),
     )
     books = graphene.Field(
-        gql_schema.BooksType,
+        gql_schema.BooksList,
         genre=graphene.String(),
         author_id=gql_schema.AuthorId(),
         lang=graphene.String(),
         page=graphene.Int(), nb_per_page=graphene.Int()
     )
     authors = graphene.Field(
-        gql_schema.AuthorsType,
+        gql_schema.AuthorsList,
         genre=graphene.String(),
         lang=graphene.String(),
         page=graphene.Int(), nb_per_page=graphene.Int()
     )
     featured_books = graphene.List(
-        graphene.NonNull(gql_schema.BookType)
+        graphene.NonNull(gql_schema.Book)
     )
     quick_search = graphene.List(
-        graphene.NonNull(gql_schema.QuickSearchResultType),
+        graphene.NonNull(gql_schema.QuickSearchResultInterface),
         search=graphene.String(required=True),
         lang=graphene.String(),
     )
@@ -65,7 +65,7 @@ class Query():
 
         return author
 
-    def resolve_books(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.BooksType:
+    def resolve_books(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.BooksList:
         genre = kwargs.get('genre')
         public_author_id = kwargs.get('author_id')
         lang = kwargs.get('lang', LANG_ALL)
@@ -92,12 +92,12 @@ class Query():
         metadata.page = page
         metadata.nb_per_page = nb_per_page
 
-        return gql_schema.BooksType(
+        return gql_schema.BooksList(
             books=list(books),
             meta=metadata
         )
 
-    def resolve_authors(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.AuthorsType:
+    def resolve_authors(self, info: graphql.ResolveInfo, **kwargs) -> gql_schema.AuthorsList:
         genre = kwargs.get('genre')
         lang = kwargs.get('lang', LANG_ALL)
         page = max(int(kwargs.get('page', 1)), 1)
@@ -116,7 +116,7 @@ class Query():
         metadata.page = page
         metadata.nb_per_page = nb_per_page
 
-        return gql_schema.AuthorsType(
+        return gql_schema.AuthorsList(
             authors=list(authors),
             meta=metadata
         )
@@ -131,7 +131,8 @@ class Query():
 
         return list(library_utils.get_books_base_queryset().filter(gutenberg_id__in=featured_books_ids))
 
-    def resolve_quick_search(self, info: graphql.ResolveInfo, **kwargs) -> t.List[gql_schema.QuickSearchResultType]:
+    def resolve_quick_search(self, info: graphql.ResolveInfo, **kwargs) -> t.List[
+        gql_schema.QuickSearchResultInterface]:
         search = kwargs.get('search')
         lang = kwargs.get('lang', LANG_ALL)
 
@@ -177,7 +178,7 @@ def _get_books_metadata(
         author_id: t.Optional[library_utils.AuthorIdCriteria] = None,
         genre: t.Optional[str] = None,
         lang: t.Optional[str] = None
-) -> gql_schema.ItemsListMetadataType:
+) -> gql_schema.ItemsListMetadata:
     author_id = author_id or library_utils.AuthorIdCriteria(author_id=0, gutenberg_id=0)
     genre = genre or ''
     lang = lang or LANG_ALL
@@ -189,7 +190,7 @@ def _get_books_metadata(
         row = cursor.fetchone()
     metadata = {'total_count': row[0], 'total_count_for_all_langs': row[1]}
 
-    return gql_schema.ItemsListMetadataType(
+    return gql_schema.ItemsListMetadata(
         total_count=metadata['total_count'],
         total_count_for_all_langs=metadata['total_count_for_all_langs']
     )
@@ -198,7 +199,7 @@ def _get_books_metadata(
 def _get_authors_metadata(
         genre: t.Optional[str] = None,
         lang: t.Optional[str] = None
-) -> gql_schema.ItemsListMetadataType:
+) -> gql_schema.ItemsListMetadata:
     genre = genre or ''
     lang = lang or LANG_ALL
     with connection.cursor() as cursor:
@@ -209,19 +210,14 @@ def _get_authors_metadata(
         row = cursor.fetchone()
     metadata = {'total_count': row[0], 'total_count_for_all_langs': row[1]}
 
-    return gql_schema.ItemsListMetadataType(
+    return gql_schema.ItemsListMetadata(
         total_count=metadata['total_count'],
         total_count_for_all_langs=metadata['total_count_for_all_langs']
     )
 
 
-def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_schema.QuickSearchResultType:
-    return gql_schema.QuickSearchResultType(
-        type=gql_schema.QuickAutocompletionResultEnumType.AUTHOR,
-        book_id=None,
-        book_title=None,
-        book_lang=None,
-        book_slug=None,
+def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_schema.QuickSearchResultAuthor:
+    return gql_schema.QuickSearchResultAuthor(
         author_id=library_utils.get_public_author_id(author),
         author_first_name=author.first_name,
         author_last_name=author.last_name,
@@ -231,9 +227,8 @@ def _author_to_quick_autocompletion_result(author: api_models.Author) -> gql_sch
     )
 
 
-def _book_to_quick_autocompletion_result(book: api_models.Book) -> gql_schema.QuickSearchResultType:
-    return gql_schema.QuickSearchResultType(
-        type=gql_schema.QuickAutocompletionResultEnumType.BOOK,
+def _book_to_quick_autocompletion_result(book: api_models.Book) -> gql_schema.QuickSearchResultBook:
+    return gql_schema.QuickSearchResultBook(
         book_id=library_utils.get_public_book_id(book),
         book_title=book.title,
         book_lang=book.lang,
