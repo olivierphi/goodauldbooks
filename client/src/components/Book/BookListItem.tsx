@@ -15,7 +15,7 @@ export function BookListItem(props: ListItemProps) {
     return getBookPageUrl(currentBooksLang, book.lang, book.author.slug, book.slug, book.id);
   };
 
-  const title = truncate(props.book.title, 41, { position: 20 });
+  const title = truncate(props.book.title, 70, { mark: " [...]" });
 
   return (
     <BooksLangContext.Consumer>

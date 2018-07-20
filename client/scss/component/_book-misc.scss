@@ -12,21 +12,25 @@
     $color-background: #fef2e1;
     $color-text: #b33e4a;
 
-    position: relative;
     background-color: $color-background;
-    span {
-      position: absolute;
-      width: 70%;
-      top: 30%;
-      left: 50%;
-      margin-right: -50%;
-      transform: translate(-50%, -50%);
-
+    .no-cover-content {
+      display: block;
+      padding: 2rem 0.5rem 0 0.5rem;
       font-size: 1rem;
       color: $color-text;
       font-family: $family-serif, serif;
       font-weight: bold;
       text-align: center;
+
+      span {
+        display: block;
+
+        &.by {
+          margin: 0.75rem 0;
+          font-style: italic;
+          color: $color-black;
+        }
+      }
     }
   }
 }

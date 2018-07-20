@@ -11,11 +11,24 @@ interface BookCoverProps {
   book: Book;
 }
 
+// TODO: i18n
 export function BookCover(props: BookCoverProps) {
   const hasCover: boolean = null !== props.book.coverUrl;
   const className = hasCover ? "has-cover" : "no-cover";
+
   const bookUrl = (currentBooksLang: Lang, book: Book) => {
     return getBookPageUrl(currentBooksLang, book.lang, book.author.slug, book.slug, book.id);
+  };
+  const noCover = (book: Book) => {
+    return (
+      <span className="no-cover-content">
+        <span className="title">{truncate(book.title, 70, { mark: " [...]" })}</span>
+        <span className="by">by</span>
+        <span className="author">
+          {book.author.firstName}&nbsp;{book.author.lastName}
+        </span>
+      </span>
+    );
   };
 
   return (
@@ -31,9 +44,7 @@ export function BookCover(props: BookCoverProps) {
                     alt={props.book.title}
                   />
                 ) : (
-                  <span className="title">
-                    {truncate(props.book.title, 50, { mark: " [...]" })}
-                  </span>
+                  noCover(props.book)
                 )}
               </span>
             </Link>
