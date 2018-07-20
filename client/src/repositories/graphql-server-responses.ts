@@ -8,6 +8,8 @@ export interface BookData {
   slug: string;
   genres: string[];
   author: AuthorData;
+
+  genresWithStats?: GenreWithStats[];
 }
 
 export interface AuthorData {
@@ -26,17 +28,12 @@ export interface BookFullData extends BookData {
   intro: string;
 }
 
-export interface BookWithGenreStats {
-  book: BookFullData;
-  genresStats: GenreWithStats[];
-}
-
 export interface QuickSearchData {
   type: "BOOK" | "AUTHOR";
-  bookId: string | null;
-  bookTitle: string | null;
-  bookLang: string;
-  bookSlug: string;
+  bookId?: string | null;
+  bookTitle?: string | null;
+  bookLang?: string;
+  bookSlug?: string;
   authorId: string;
   authorFirstName: string;
   authorLastName: string;
