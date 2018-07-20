@@ -70,3 +70,16 @@ def get_single_book_by_public_id(public_book_id: str) -> api_models.Book:
         criteria['author_id'] = book_id_criteria.author_id
 
     return books.get(**criteria)
+
+
+def get_single_author_by_public_id(public_author_id: str) -> api_models.Author:
+    author_id_criteria = get_author_id_criteria(public_author_id)
+
+    authors = get_authors_base_queryset()
+    criteria = dict()
+    if author_id_criteria.gutenberg_id:
+        criteria['gutenberg_id'] = author_id_criteria.gutenberg_id
+    else:
+        criteria['author_id'] = author_id_criteria.author_id
+
+    return authors.get(**criteria)
