@@ -14,6 +14,7 @@ I just refactored it in SCSS and added things here and there for my own needs.
 @import "layout/container";
 @import "layout/box";
 @import "layout/grid";
+@import "layout/forms";
 @import "component/main";
 @import "component/banner";
 @import "component/books-list";
@@ -25,4 +26,5 @@ I just refactored it in SCSS and added things here and there for my own needs.
 @import "component/author";
 @import "component/autocomplete";
 @import "component/pagination";
+@import "pages/book";
 @import "~react-select/scss/default";

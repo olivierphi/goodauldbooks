@@ -1,9 +1,13 @@
+html {
+  font-size: $font-size-default;
+}
+
 body {
   margin: 0;
   background: $color-black;
-  color: $color-text;
-  size: $body-size;
   font-family: $family-sans-serif;
+  font-size: 1.6rem;
+  color: $color-text-default;
 }
 
 a {
@@ -13,17 +17,44 @@ a {
 
 h1,
 h2,
-h3 {
+h3,
+h6 {
   font-family: $family-serif;
-  color: $color-black;
   margin: 0.5rem 0;
+  color: $color-text-title;
 }
 
-h1 {
+h1,
+h2.page-title {
   font-size: 3.6rem;
+  line-height: 1.25;
+  letter-spacing: -0.1rem;
+}
+
+h2,
+h3 {
+  font-size: 2.4rem;
   line-height: 1.25;
 }
 
+h2.page-title {
+  .subtitle {
+    padding-left: 2rem;
+    font-style: italic;
+  }
+}
+
+h6 {
+  font-size: 2rem;
+  line-height: 1.4;
+  letter-spacing: 0.16rem;
+}
+
+p,
+.text {
+  line-height: 1.8;
+}
+
 #page-wrapper {
-  background: $color-gray-light;
+  background: $color-gray-lightest;
 }

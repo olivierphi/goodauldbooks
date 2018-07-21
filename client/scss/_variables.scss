@@ -1,14 +1,17 @@
 $family-serif: "Libre Baskerville";
 $family-sans-serif: "Metropolis Regular";
-$body-size: 16px;
+$font-size-default: 10px;
 
 $color-black: #19191b;
 $color-white: #ffffff;
-$color-gray-light: #f2f2f2;
+$color-gray-lightest: #f2f2f2;
+$color-gray-light: #e2e2e2;
 $color-gray: #858585;
-$color-text-title: #000000;
-$color-text: $color-gray;
+$color-gray-dark: #656565;
 $color-blue: #0054a5;
+
+$color-text-title: $color-black;
+$color-text-default: $color-gray-dark;
 
 $box-margin: 2rem;
 

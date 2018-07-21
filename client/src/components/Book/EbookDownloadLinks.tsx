@@ -10,9 +10,12 @@ export function EbookDownloadLinks(props: EbookDownloadLinksProps) {
   const book: BookFull = props.book;
 
   return (
-    <div className="ebook-download-links">
-      {book.epubSize ? <DownloadLink type="epub" size={book.epubSize} /> : ""}
-      {book.mobiSize ? <DownloadLink type="mobi" size={book.mobiSize} /> : ""}
+    <div className="ebook-download-links-container">
+      <h6>Download</h6>
+      <div className="ebook-download-links">
+        {book.epubSize ? <DownloadLink type="epub" size={book.epubSize} /> : ""}
+        {book.mobiSize ? <DownloadLink type="mobi" size={book.mobiSize} /> : ""}
+      </div>
     </div>
   );
 }

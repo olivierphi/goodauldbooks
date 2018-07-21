@@ -17,7 +17,7 @@ export function AuthorPage(
   return (
     <>
       <Head isLandingPage={false} />
-      <section className="box">
+      <section>
         <HigherOrderComponentToolkitContext.Consumer>
           {(hocToolkit: HigherOrderComponentToolkit) => (
             <BooksLangContext.Consumer>

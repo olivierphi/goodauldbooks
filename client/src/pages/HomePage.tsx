@@ -12,7 +12,7 @@ function TranslatableHomePage(props: InjectedTranslateProps) {
     <>
       <Head isLandingPage={true} />
       <section>
-        <h1>{props.t("page.homepage.title")}</h1>
+        <h2 className="page-title">{props.t("page.homepage.title")}</h2>
         <HigherOrderComponentToolkitContext.Consumer>
           {(hocToolkit: HigherOrderComponentToolkit) => (
             <BooksLangContext.Consumer>

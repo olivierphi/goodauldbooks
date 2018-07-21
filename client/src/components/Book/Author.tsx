@@ -8,27 +8,32 @@ export interface AuthorProps {
   author: Author;
 }
 
+// TODO: i18n
 export function Author(props: AuthorProps) {
   const author: Author = props.author;
 
   return (
     <BooksLangContext.Consumer>
       {(currentBooksLang: Lang) => (
-        <p className="author">
-          <Link to={getAuthorPageUrl(currentBooksLang, author.slug, author.id)} className="name">
-            {author.firstName} {author.lastName}
-          </Link>
-          {author.birthYear || author.deathYear ? (
-            <span className="life-period">
-              ({author.birthYear || "?"} - {author.deathYear || "?"})
-            </span>
-          ) : (
-            ""
-          )}
-          <span className="nb-books">
-            {author.nbBooks} books on Good Auld Books {/* TODO: i18n */}
-          </span>
-        </p>
+        <div className="author-container">
+          <h6>The author</h6>
+
+          <p className="author">
+            <Link to={getAuthorPageUrl(currentBooksLang, author.slug, author.id)} className="name">
+              {author.firstName} {author.lastName}
+            </Link>
+            {author.birthYear || author.deathYear ? (
+              <span className="life-period">
+                ({author.birthYear || "?"} - {author.deathYear || "?"})
+              </span>
+            ) : (
+              ""
+            )}
+          </p>
+          <p className="nb-books">
+            We have {author.nbBooks} books from this author on Good Auld Books
+          </p>
+        </div>
       )}
     </BooksLangContext.Consumer>
   );

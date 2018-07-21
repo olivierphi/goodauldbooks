@@ -8,7 +8,7 @@ import { HigherOrderComponentToolkit } from "../hoc/HigherOrderComponentToolkit"
 export function BookPage(routeProps: RouteComponentProps<{ bookId: string }>): JSX.Element {
   return (
     <>
-      <Head isLandingPage={false} />
+      <Head isLandingPage={false} pageName={"book"} />
       <section>
         <HigherOrderComponentToolkitContext.Consumer>
           {(hocToolkit: HigherOrderComponentToolkit) => (

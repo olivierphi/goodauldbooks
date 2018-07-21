@@ -9,28 +9,35 @@ export interface GenresAsTagsProps {
   genresWithStats: GenreWithStats[];
 }
 
+// TODO: i18n
 export function GenresAsTags(props: GenresAsTagsProps) {
+  const getNbBooksToDisplay = (genre: GenreWithStats): number => {
+    return LANG_ALL === props.currentBooksLang
+      ? genre.nbBooks
+      : genre.nbBooksByLang[props.currentBooksLang] || 0;
+  };
+
   return (
     <BooksLangContext.Consumer>
       {(currentBooksLang: Lang) => (
-        <ul className="genres tags field is-grouped is-grouped-multiline">
-          {props.genresWithStats.map((genre: GenreWithStats, i) => {
-            return (
-              <li key={i} className="control">
-                <div className="tags has-addons">
-                  <span className="tag is-dark">
-                    <Link to={getGenrePageUrl(currentBooksLang, genre.title)}>{genre.title}</Link>
-                  </span>
-                  <span className="tag is-info">
-                    {LANG_ALL === props.currentBooksLang
-                      ? genre.nbBooks
-                      : genre.nbBooksByLang[props.currentBooksLang] || 0}
-                  </span>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="tags-container">
+          <h6>This book belong to the following literary genres:</h6>
+
+          <ul className="genres tags">
+            {props.genresWithStats.map((genre: GenreWithStats, i) => {
+              return (
+                <li key={i}>
+                  <div className="tag">
+                    <span className="tag-main-content">
+                      <Link to={getGenrePageUrl(currentBooksLang, genre.title)}>{genre.title}</Link>
+                    </span>
+                    <span className="tag-side-content">{getNbBooksToDisplay(genre)} books</span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
     </BooksLangContext.Consumer>
   );
