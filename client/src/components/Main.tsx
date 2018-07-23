@@ -1,6 +1,9 @@
 // tslint:disable: max-line-length
 import * as React from "react";
 import { Route } from "react-router";
+import { HigherOrderComponentToolkitContext } from "../contexts/hoc-toolkit";
+import { HigherOrderComponentToolkit } from "../hoc/HigherOrderComponentToolkit";
+import { BreadcrumbContainer } from "../hoc/Layout/BreadcrumbContainer";
 import { AuthorPage } from "../pages/AuthorPage";
 import { BookPage } from "../pages/BookPage";
 import { GenrePage } from "../pages/GenrePage";
@@ -9,6 +12,12 @@ import { HomePage } from "../pages/HomePage";
 export function Main() {
   return (
     <section id="main" className="container">
+      <HigherOrderComponentToolkitContext.Consumer>
+        {(hocToolkit: HigherOrderComponentToolkit) => (
+          <BreadcrumbContainer hocToolkit={hocToolkit} />
+        )}
+      </HigherOrderComponentToolkitContext.Consumer>
+
       <Route exact={true} path="/" component={HomePage} />
       <Route
         exact={true}

@@ -1,0 +1,13 @@
+#breadcrumb {
+  margin: 1rem 0 2rem 0;
+
+  .separator {
+    display: inline-block;
+    margin: 0 1rem;
+  }
+
+  .item {
+    display: inline-block;
+    font-size: 1.5rem;
+  }
+}

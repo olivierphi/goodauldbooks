@@ -7,6 +7,8 @@ import { getBooksLangFromLocation } from "../utils/url-utils";
 let currentLang = LANG_ALL;
 
 function onHistoryEvent(messageBus: EventEmitter, location: Location): void {
+  messageBus.emit(EVENTS.URL_CHANGED, location.pathname);
+
   const lang = getBooksLangFromLocation(location);
   if (!lang || lang === currentLang) {
     return; // don't dispatch a "new lang" event if it didn't changed

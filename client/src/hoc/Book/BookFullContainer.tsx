@@ -3,6 +3,7 @@ import { BookFull as BookFullComponent } from "../../components/Book/BookFull";
 import { BooksLangContext } from "../../contexts/books-lang";
 import { BookFull, GenreWithStats, GenreWithStatsByName, Lang } from "../../domain/core";
 import { EVENTS } from "../../domain/messages";
+import { Page } from "../../domain/pages";
 import {
   appStateHasGenresWithStats,
   getFullBookDataFromState,
@@ -54,6 +55,8 @@ export class BookFullContainer extends React.Component<
       bookFull.genres,
       appState.genresWithStats
     );
+
+    this.props.hocToolkit.setBreadcrumb({ currentPage: Page.BOOK, currentBook: bookFull });
 
     return (
       <BooksLangContext.Consumer>

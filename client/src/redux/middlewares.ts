@@ -5,7 +5,7 @@ import { Actions } from "../store/actions";
 
 export const storeActionsToMessageBusEvents = (
   servicesLocator: ServicesLocator
-): Middleware => api => next => action => {
+): Middleware => (api) => (next) => (action) => {
   console.log("dispatching", action); // tslint:disable-line
   const result = next(action);
   console.log("next state", api.getState()); // tslint:disable-line

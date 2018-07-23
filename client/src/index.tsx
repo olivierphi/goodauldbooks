@@ -16,7 +16,7 @@ async function startApp(): Promise<boolean> {
   return Promise.resolve(true);
 }
 
-startApp().catch(reason => {
+startApp().catch((reason) => {
   console.error("Can't start app!", reason); // tslint:disable-line
 });
 

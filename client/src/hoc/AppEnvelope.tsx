@@ -1,4 +1,4 @@
-import { EVENTS } from "domain/messages";
+import { ACTIONS, EVENTS } from "domain/messages";
 import { ServicesLocator } from "domain/services";
 import { AssetsConfig } from "domain/web";
 import * as React from "react";
@@ -10,6 +10,7 @@ import { BooksLangContext } from "../contexts/books-lang";
 import { HigherOrderComponentToolkitContext } from "../contexts/hoc-toolkit";
 import { MessageBusContext } from "../contexts/message-bus";
 import { OmnipotentComponentToolkitContext } from "../contexts/omnipotent-component-toolkit";
+import { BreadcrumbData } from "../domain/pages";
 import { HigherOrderComponentToolkit } from "./HigherOrderComponentToolkit";
 import { OmniponentComponentToolkit } from "./OmnipotentComponentToolkit";
 
@@ -72,6 +73,9 @@ export class AppEnvelope extends React.Component<AppEnvelopeProps, AppEnvelopeSt
       appStateStore: this.props.servicesLocator.appStateStore,
       actionsDispatcher: this.props.servicesLocator.actionsDispatcher,
       messageBus: this.props.servicesLocator.messageBus,
+      setBreadcrumb: (breadcumb: BreadcrumbData): void => {
+        this.props.servicesLocator.messageBus.emit(ACTIONS.SET_BREADCRUMB, breadcumb);
+      },
     };
     const omnipotentComponentToolkit = {
       ...hocToolkit,
