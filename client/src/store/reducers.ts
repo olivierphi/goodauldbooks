@@ -26,6 +26,10 @@ interface BooksByAuthorFetchedAction extends Action {
   payload: PaginatedBooksList;
   meta: BooksByAuthorFetchedActionMeta;
 }
+interface BooksByLangFetchedAction extends Action {
+  payload: PaginatedBooksList;
+  meta: BooksByLangFetchedActionMeta;
+}
 
 interface BookFetchedAction extends Action {
   payload: BookWithGenreStats;
@@ -38,6 +42,10 @@ interface BooksByGenreFetchedActionMeta {
 
 interface BooksByAuthorFetchedActionMeta {
   authorId: string;
+  lang: Lang;
+}
+
+interface BooksByLangFetchedActionMeta {
   lang: Lang;
 }
 
@@ -69,6 +77,12 @@ export function booksById(state: BooksById = {}, action: Action): BooksById {
       };
     case `${Actions.FETCH_BOOKS_FOR_AUTHOR}_FULFILLED`:
       actionRef = action as BooksByAuthorFetchedAction;
+      return {
+        ...state,
+        ...actionRef.payload.books,
+      };
+    case `${Actions.FETCH_BOOKS_FOR_LANG}_FULFILLED`:
+      actionRef = action as BooksByLangFetchedAction;
       return {
         ...state,
         ...actionRef.payload.books,
@@ -152,6 +166,29 @@ export function booksIdsByAuthor(
       const authorId = actionRef.meta.authorId;
       const language = actionRef.meta.lang;
       const criteriaName: string = `${authorId}-${language}`;
+
+      return getPaginatedBooksIdsListByCriteriaFromPreviousStateAndFetchedBooks(
+        state,
+        criteriaName,
+        actionRef.payload.books,
+        actionRef.payload.pagination
+      );
+
+    default:
+      return state;
+  }
+}
+
+export function booksIdsByLang(
+  state: PaginatedBooksIdsListByCriteria = {},
+  action: Action
+): PaginatedBooksIdsListByCriteria {
+  let actionRef;
+  switch (action.type) {
+    case `${Actions.FETCH_BOOKS_FOR_LANG}_FULFILLED`:
+      actionRef = action as BooksByLangFetchedAction;
+      const language = actionRef.meta.lang;
+      const criteriaName: string = `${language}`;
 
       return getPaginatedBooksIdsListByCriteriaFromPreviousStateAndFetchedBooks(
         state,

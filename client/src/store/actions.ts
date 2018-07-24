@@ -8,6 +8,7 @@ export enum Actions {
   FETCH_BOOK_WITH_GENRE_STATS = "FETCH_BOOK_WITH_GENRE_STATS",
   FETCH_BOOKS_FOR_GENRE = "FETCH_BOOKS_FOR_GENRE",
   FETCH_BOOKS_FOR_AUTHOR = "FETCH_BOOKS_FOR_AUTHOR",
+  FETCH_BOOKS_FOR_LANG = "FETCH_BOOKS_FOR_LANG",
 }
 
 export function setCurrentBooksLang(lang: Lang): Action {
@@ -32,6 +33,19 @@ export function fetchBooksForGenre(
 ): Action {
   const fetchBooksPromise = booksRepository.getBooksByGenre(genre, lang, pagination);
   return { type: Actions.FETCH_BOOKS_FOR_GENRE, payload: fetchBooksPromise, meta: { genre, lang } };
+}
+
+export function fetchBooksForLang(
+  booksRepository: BooksRepository,
+  lang: string,
+  pagination: PaginationRequestData
+): Action {
+  const fetchBooksPromise = booksRepository.getBooksByLang(lang, pagination);
+  return {
+    type: Actions.FETCH_BOOKS_FOR_LANG,
+    payload: fetchBooksPromise,
+    meta: { lang },
+  };
 }
 
 export function fetchBooksForAuthor(

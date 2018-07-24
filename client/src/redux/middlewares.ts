@@ -14,6 +14,7 @@ export const storeActionsToMessageBusEvents = (
     case `${Actions.FETCH_FEATURED_BOOKS}_FULFILLED`:
     case `${Actions.FETCH_BOOKS_FOR_GENRE}_FULFILLED`:
     case `${Actions.FETCH_BOOKS_FOR_AUTHOR}_FULFILLED`:
+    case `${Actions.FETCH_BOOKS_FOR_LANG}_FULFILLED`:
     case `${Actions.FETCH_BOOK_WITH_GENRE_STATS}_FULFILLED`:
       servicesLocator.messageBus.emit(EVENTS.BOOK_DATA_FETCHED);
   }

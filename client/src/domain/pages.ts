@@ -5,6 +5,7 @@ export enum Page {
   BOOK = "book",
   AUTHOR = "author",
   GENRE = "genre",
+  LANG = "lang",
 }
 
 export interface BreadcrumbData {

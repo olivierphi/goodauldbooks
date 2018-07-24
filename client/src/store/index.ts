@@ -13,6 +13,7 @@ export interface AppState {
   featuredBooksIds: string[];
   booksIdsByGenre: PaginatedBooksIdsListByCriteria;
   booksIdsByAuthor: PaginatedBooksIdsListByCriteria;
+  booksIdsByLang: PaginatedBooksIdsListByCriteria;
   booksAssetsSize: BooksAssetsSizeById;
 }
 

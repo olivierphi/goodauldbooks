@@ -43,7 +43,7 @@ export class BreadcrumbContainer extends React.Component<
     this.setBreadcrumb(breadcrumb);
   }
 
-  private setBreadcrumb(breadcrumbProps: BreadcrumbData): void {
-    this.setState({ currentBreadcrumb: breadcrumbProps });
+  private setBreadcrumb(breadcrumb: BreadcrumbData): void {
+    this.setState({ currentBreadcrumb: breadcrumb });
   }
 }

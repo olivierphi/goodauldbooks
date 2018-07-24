@@ -24,6 +24,13 @@ export class BooksList extends React.Component<BooksListProps> {
 
     return (
       <>
+        {this.props.pagination ? (
+          <p className="pagination-caption">
+            {this.props.pagination.totalCount} books - page {this.props.pagination.page}/{pageCount}
+          </p>
+        ) : (
+          ""
+        )}
         <div className="grid boxes-container books-list">
           {Object.values(this.props.books).map((book: Book) => {
             return <BookListItem book={book} key={book.id} />;

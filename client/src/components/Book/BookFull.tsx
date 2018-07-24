@@ -24,8 +24,8 @@ export function BookFull(props: BookFullProps) {
         <>
           <h2 className="page-title">
             <span className="book-title">{book.title}</span>
-            {book.subtitle ? <span className="subtitle book-subtitle">{book.subtitle}</span> : ""}
           </h2>
+          {book.subtitle ? <h3 className="subtitle book-subtitle">{book.subtitle}</h3> : ""}
           <div className="grid boxes-container book-full">
             <div className="grid-item cover-container">
               <div className="box">

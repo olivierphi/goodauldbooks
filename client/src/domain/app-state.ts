@@ -9,6 +9,7 @@ export interface ActionsDispatcher {
   setBooksLang(lang: Lang): void;
   fetchFeaturedBooksList(lang: Lang): void;
   fetchBookWithGenreStats(bookId: string): void;
+  fetchBooksForLang(lang: Lang, pagination: PaginationRequestData): void;
   fetchBooksForAuthor(authorId: string, lang: Lang, pagination: PaginationRequestData): void;
   fetchBooksForGenre(genre: string, lang: Lang, pagination: PaginationRequestData): void;
   fetchIntroForBook(bookId: string): void;

@@ -26,6 +26,10 @@ export class ActionsDispatcherImpl implements ActionsDispatcher {
     this.dispatchToAppStateStore(actions.fetchBookWithGenreStats(this.booksRepository, bookId));
   }
 
+  public fetchBooksForLang(lang: string, pagination: PaginationRequestData): void {
+    this.dispatchToAppStateStore(actions.fetchBooksForLang(this.booksRepository, lang, pagination));
+  }
+
   public fetchBooksForAuthor(
     authorId: string,
     lang: Lang,
