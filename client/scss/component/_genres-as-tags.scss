@@ -1,22 +1,33 @@
 .genres.tags {
   li {
-    a {
-      color: $white-ter;
-    }
-  }
-  /*
-  li {
     display: inline-block;
-    margin: $margin-size;
-    line-height: 1em;
-    padding: 5px 10px;
-    background-color: $color-gray-2;
-    border-radius: 5px;
 
-    a {
-      font-size: 14px;
-      color: $color-white;
+    .tag {
+      $border-radius: 4px;
+
+      font-size: 1.6rem;
+      margin-right: 2rem;
+      margin-bottom: 1.4rem;
+
+      .tag-main-content,
+      .tag-side-content {
+        display: inline-block;
+        padding: 0.6rem;
+      }
+
+      .tag-main-content {
+        background-color: $color-gray-light;
+        border-radius: $border-radius 0 0 $border-radius;
+        a {
+          color: $color-black;
+        }
+      }
+
+      .tag-side-content {
+        background-color: $color-gray;
+        border-radius: 0 $border-radius $border-radius 0;
+        color: $color-white;
+      }
     }
   }
-  */
 }

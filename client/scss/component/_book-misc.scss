@@ -1,25 +1,36 @@
 .book-cover {
   display: block;
+  width: 200px;
   height: 300px;
-  background-color: $purple;
+  margin: 0 auto;
 
   &.has-cover {
     text-align: center;
   }
 
   &.no-cover {
-    position: relative;
-    span {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      margin-right: -50%;
-      transform: translate(-50%, -50%);
-      font-size: 2.3rem;
+    $color-background: #fef2e1;
+    $color-text: #b33e4a;
+
+    background-color: $color-background;
+    .no-cover-content {
+      display: block;
+      padding: 2rem 0.5rem 0 0.5rem;
+      font-size: 1.5rem;
+      color: $color-text;
       font-family: $family-serif, serif;
-      color: $white;
       font-weight: bold;
       text-align: center;
+
+      span {
+        display: block;
+
+        &.by {
+          margin: 0.75rem 0;
+          font-style: italic;
+          color: $color-black;
+        }
+      }
     }
   }
 }

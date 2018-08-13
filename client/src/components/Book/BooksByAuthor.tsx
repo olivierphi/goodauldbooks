@@ -19,14 +19,18 @@ export function BooksByAuthor(props: BooksByAuthorProps) {
     return getAuthorPageUrl(LANG_ALL, props.authorSlug, props.authorId);
   };
 
+  const authorBooksArray = Object.values(props.authorBooks);
+  const author = authorBooksArray.length ? authorBooksArray[0].author : null;
   // TODO: i18n
   return (
     <>
-      <h4>
-        {props.paginationResponseData.totalCount} books for this author in this language ({
-          props.currentBooksLang
-        })
-      </h4>
+      <h3 className="books-list-title">
+        {author
+          ? `${author.firstName} ${author.lastName}`
+          : props.currentBooksLang !== LANG_ALL
+            ? "No books for this author in this language, but we do have some in other languages"
+            : ""}
+      </h3>
       {props.currentBooksLang === LANG_ALL ? (
         ""
       ) : (

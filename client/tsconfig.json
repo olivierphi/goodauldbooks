@@ -9,11 +9,11 @@
     "target": "es5",
     "lib": ["ES2015", "ES2017", "dom"],
     "jsx": "react",
-    "types": [],
     "baseUrl": "./src",
     "paths": {
       "*": ["../generated/*", "*"]
-    }
+    },
+    "typeRoots": ["./node_modules/@types", "./@types"]
   },
   "include": ["./src/**/*", "./generated/**/*"]
 }

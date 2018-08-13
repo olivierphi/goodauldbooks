@@ -14,7 +14,7 @@ export function BooksLangsSelector(props: BooksLangsSelectorProps) {
   };
 
   return (
-    <div className="books-langs-selector-container select">
+    <div className="books-langs-selector-container">
       <select
         className="books-langs-selector"
         onChange={onLangChange}

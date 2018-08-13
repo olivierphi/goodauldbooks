@@ -110,6 +110,32 @@ export class BooksWithAppStateCacheRepository implements BooksRepository {
     return this.underlyingRepository.getBooksByGenre(genre, lang, pagination);
   }
 
+  public getBooksByLang(
+    lang: Lang,
+    pagination: PaginationRequestData
+  ): Promise<PaginatedBooksList> {
+    const appState = this.appStateStore.getState();
+    const booksIdsByLangCriteriaName = `${lang}`;
+    const paginatedBooksIdsResultsFromCache = getPaginatedBooksIdsResultsFromCache(
+      appState.booksIdsByLang,
+      booksIdsByLangCriteriaName,
+      pagination
+    );
+
+    if (paginatedBooksIdsResultsFromCache) {
+      return Promise.resolve({
+        pagination: getPaginationResponseDataFromPaginationRequest(
+          pagination,
+          appState.booksIdsByLang[booksIdsByLangCriteriaName].totalCount,
+          appState.booksIdsByLang[booksIdsByLangCriteriaName].totalCountForAllLangs
+        ),
+        books: getBooksByIdsFromState(paginatedBooksIdsResultsFromCache, appState.booksById),
+      });
+    }
+
+    return this.underlyingRepository.getBooksByLang(lang, pagination);
+  }
+
   public getFeaturedBooks(lang: Lang): Promise<BooksById> {
     // TODO: store the featured books ids into the app state, so that we can cache the result
     return this.underlyingRepository.getFeaturedBooks(lang);

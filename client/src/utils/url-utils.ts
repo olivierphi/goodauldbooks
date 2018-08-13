@@ -1,7 +1,7 @@
 import { Lang } from "domain/core";
 import { Location } from "history";
 
-const URL_LANG_REGEX = /^\/library\/([a-z]{2,3})\//;
+const URL_LANG_REGEX = /^\/library\/([a-z]{2,3})(\/|$)/;
 
 export function getBooksLangFromLocation(location: Location): Lang | null {
   const urlWithLangMatch = location.pathname.match(URL_LANG_REGEX);
@@ -13,5 +13,5 @@ export function getBooksLangFromLocation(location: Location): Lang | null {
 }
 
 export function replaceBooksLangInLocation(location: Location, lang: Lang): string {
-  return location.pathname.replace(URL_LANG_REGEX, `/library/${lang}/`);
+  return location.pathname.replace(URL_LANG_REGEX, `/library/${lang}$2`);
 }

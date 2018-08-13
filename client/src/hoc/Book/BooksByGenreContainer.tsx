@@ -2,6 +2,7 @@ import * as React from "react";
 import { BooksByGenre } from "../../components/Book/BooksByGenre";
 import { BooksById, Lang } from "../../domain/core";
 import { ACTIONS, EVENTS } from "../../domain/messages";
+import { Page } from "../../domain/pages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
 import {
@@ -55,6 +56,11 @@ export class BooksByGenreContainer extends React.Component<
       this.fetchData();
       return <div className="loading">Loading books for this genre...</div>;
     }
+
+    this.props.hocToolkit.setBreadcrumb({
+      currentPage: Page.GENRE,
+      currentGenre: this.props.genre,
+    });
 
     return (
       <BooksByGenre

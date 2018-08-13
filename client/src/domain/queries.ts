@@ -14,6 +14,7 @@ export interface BooksRepository {
     lang: Lang,
     pagination: PaginationRequestData
   ): Promise<PaginatedBooksList>;
+  getBooksByLang(lang: Lang, pagination: PaginationRequestData): Promise<PaginatedBooksList>;
   getBookIntro(bookId: string): Promise<string | null>;
 }
 

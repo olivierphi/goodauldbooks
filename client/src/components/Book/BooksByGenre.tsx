@@ -21,11 +21,7 @@ export function BooksByGenre(props: BooksByGenreProps) {
   // TODO: i18n
   return (
     <>
-      <h4>
-        {props.paginationResponseData.totalCount} books for this genre in this language ({
-          props.currentBooksLang
-        })
-      </h4>
+      <h3 className="books-list-title">{props.genre}</h3>
       {props.currentBooksLang === LANG_ALL ? (
         ""
       ) : (

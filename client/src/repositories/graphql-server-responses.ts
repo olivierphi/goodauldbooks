@@ -8,6 +8,7 @@ export interface BookData {
   slug: string;
   genres: string[];
   author: AuthorData;
+  hasIntro: boolean;
 
   genresWithStats?: GenreWithStats[];
 }

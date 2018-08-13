@@ -71,11 +71,12 @@ query bookWithGenreStatsById($bookId: BookId!) {
     subtitle
     nbPages
     slug
+    hasIntro
     coverPath
     genres
     epubSize
     mobiSize
-    
+
     genresWithStats {
       title
       nbBooks
@@ -270,6 +271,68 @@ query booksByAuthor($authorId: AuthorId!, $lang: String, $page: Int, $nbPerPage:
     });
   }
 
+  public async getBooksByLang(
+    lang: Lang,
+    pagination: PaginationRequestData
+  ): Promise<PaginatedBooksList> {
+    const graphqlQuery = `
+query booksByLang($lang: String!, $page: Int, $nbPerPage: Int) {
+
+  books(lang: $lang, page: $page, nbPerPage: $nbPerPage) {
+
+    books {
+      bookId
+      lang
+      title
+      subtitle
+      nbPages
+      slug
+      coverPath
+      genres
+
+      author {
+        authorId
+        firstName
+        lastName
+        birthYear
+        deathYear
+        slug
+        nbBooks
+      }
+    }
+
+    meta {
+      page
+      nbPerPage
+      totalCount
+      totalCountForAllLangs
+    }
+
+  }
+
+}
+    `;
+    const response = await this.requestGraphql(graphqlQuery, {
+      lang,
+      page: pagination.page,
+      nbPerPage: pagination.nbPerPage,
+    });
+
+    const booksWithPagination: ServerResponse.BooksDataWithPagination<ServerResponse.BookData> =
+      response.data.data.books;
+    const paginationData: PaginationResponseData = getPaginationResponseDataFromServerResponse(
+      booksWithPagination.meta
+    );
+    const booksForThisLang = getBooksByIdFromBooksArray(
+      (booksWithPagination.books || []).map(mapBookFromServer)
+    );
+
+    return Promise.resolve({
+      books: booksForThisLang,
+      pagination: paginationData,
+    });
+  }
+
   public async getBookIntro(bookId: string): Promise<string | null> {
     const graphqlQuery = `
 query bookIntro($bookId: BookId!) {
@@ -326,6 +389,7 @@ function mapBookFromServer(row: ServerResponse.BookData): Book {
     },
     coverUrl: row.coverPath,
     genres: row.genres,
+    hasIntro: row.hasIntro,
   };
 }
 

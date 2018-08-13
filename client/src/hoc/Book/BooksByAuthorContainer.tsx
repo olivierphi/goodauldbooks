@@ -2,6 +2,7 @@ import * as React from "react";
 import { BooksByAuthor } from "../../components/Book/BooksByAuthor";
 import { BooksById, Lang } from "../../domain/core";
 import { ACTIONS, EVENTS } from "../../domain/messages";
+import { Page } from "../../domain/pages";
 import { PaginationRequestData, PaginationResponseData } from "../../domain/queries";
 import { getBooksByIdsFromState } from "../../utils/app-state-utils";
 import {
@@ -55,6 +56,12 @@ export class BooksByAuthorContainer extends React.Component<
     if (this.state.loading) {
       this.fetchData();
       return <div className="loading">Loading books for this author...</div>;
+    }
+
+    const authorBooksArray = Object.values(this.state.authorBooks);
+    if (authorBooksArray.length) {
+      const author = authorBooksArray[0].author;
+      this.props.hocToolkit.setBreadcrumb({ currentPage: Page.AUTHOR, currentAuthor: author });
     }
 
     return (

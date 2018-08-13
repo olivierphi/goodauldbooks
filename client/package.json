@@ -34,7 +34,6 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "bulma": "^0.7.1",
     "eventemitter3": "^3.1.0",
     "filesize": "^3.6.1",
     "history": "^4.7.2",
@@ -52,6 +51,7 @@
     "react-select": "^1.2.1",
     "redux": "^3.7.2",
     "redux-promise-middleware": "^5.0.0",
+    "smart-truncate": "^1.0.1",
     "tslint": "^5.9.1",
     "url-search-params-polyfill": "^4.0.0"
   }
