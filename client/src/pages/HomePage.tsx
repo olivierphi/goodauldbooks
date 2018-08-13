@@ -31,7 +31,7 @@ class TranslatableHomePage extends React.Component<InjectedTranslateProps> {
                 </BooksLangContext.Consumer>
               </>
             )}
-          </HigherOrderComponentToolkitContext.Consumer>;
+          </HigherOrderComponentToolkitContext.Consumer>
         </section>
       </>
     );

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Banner } from "./Layout/Banner";
+import { Footer } from "./Layout/Footer";
 import { Main } from "./Main";
 
 export function Layout(): JSX.Element {
@@ -9,6 +10,7 @@ export function Layout(): JSX.Element {
         <Banner />
         <Main />
       </div>
+      <Footer />
     </>
   );
 }

@@ -1,7 +1,7 @@
 /* Containers */
 
 .container {
-  width: 120rem;
+  width: $container-width-desktop;
   margin: 0 auto;
 
   @include mobile {
