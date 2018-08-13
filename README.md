@@ -28,6 +28,7 @@ The local dev backend environement is entirely based on Docker and Docker Compos
 
 ```bash
 $ rsync -av --progress \
+    --exclude-from=$PWD/server/gutenberg-rsync-excludes.txt \
     aleph.gutenberg.org::gutenberg-epub \
     ~/gutenberg-mirror/generated-collection
 ```
