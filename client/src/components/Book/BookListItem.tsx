@@ -11,11 +11,18 @@ export interface ListItemProps {
 }
 
 export function BookListItem(props: ListItemProps) {
-  const bookUrl = (currentBooksLang: Lang, book: Book) => {
-    return getBookPageUrl(currentBooksLang, book.lang, book.author.slug, book.slug, book.id);
+  const bookUrl = (currentBooksLang: Lang, targetBook: Book) => {
+    return getBookPageUrl(
+      currentBooksLang,
+      targetBook.lang,
+      targetBook.author.slug,
+      targetBook.slug,
+      targetBook.id
+    );
   };
 
-  const title = truncate(props.book.title, 70, { mark: " [...]" });
+  const book = props.book;
+  const title = truncate(book.title, 70, { mark: " [...]" });
 
   return (
     <BooksLangContext.Consumer>
@@ -23,25 +30,22 @@ export function BookListItem(props: ListItemProps) {
         <div className="grid-item">
           <div className="box book-list-item">
             <div className="box-header">
-              <BookCover book={props.book} />
+              <BookCover book={book} />
             </div>
             <div className="box-content">
               <h3 className="book-title">
-                <Link to={bookUrl(currentBooksLang, props.book)}>{title}</Link>
+                <Link to={bookUrl(currentBooksLang, book)}>{title}</Link>
               </h3>
-              {props.book.subtitle ? <p className="book-subtitle">{props.book.subtitle}</p> : ""}
+              {book.subtitle ? <p className="book-subtitle">{book.subtitle}</p> : ""}
               <p className="book-author">
                 <Link
-                  to={getAuthorPageUrl(
-                    currentBooksLang,
-                    props.book.author.slug,
-                    props.book.author.id
-                  )}
+                  to={getAuthorPageUrl(currentBooksLang, book.author.slug, book.author.id)}
                   className="name"
                 >
-                  {props.book.author.firstName} {props.book.author.lastName}
+                  {book.author.firstName} {book.author.lastName}
                 </Link>
               </p>
+              <p className="nb-pages">{book.nbPages} pages</p>
             </div>
           </div>
         </div>

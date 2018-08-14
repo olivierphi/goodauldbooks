@@ -1,3 +1,4 @@
+import { LANG_ALL } from "domain/core";
 import * as i18next from "i18next";
 import * as LngDetector from "i18next-browser-languagedetector";
 import { ServicesLocator } from "../domain/services";
@@ -19,6 +20,17 @@ export async function initI18n(servicesLocator: ServicesLocator): Promise<i18nex
                   title: "Homepage",
                 },
               },
+              lang: {
+                [LANG_ALL]: "All languages",
+                en: "English",
+                fr: "French",
+                fi: "Finnish",
+                nl: "Dutch",
+                de: "German",
+                es: "Spanish",
+                it: "Italian",
+                pt: "Portuguese",
+              },
             },
           },
           fr: {
@@ -26,6 +38,17 @@ export async function initI18n(servicesLocator: ServicesLocator): Promise<i18nex
               page: {
                 homepage: {
                   title: "Accueil",
+                },
+                lang: {
+                  [LANG_ALL]: "Toutes les langues",
+                  en: "Anglais",
+                  fr: "Français",
+                  fi: "Finnois",
+                  nl: "Néerlandais",
+                  de: "Allemand",
+                  es: "Espagnol",
+                  it: "Italien",
+                  pt: "Portuguais",
                 },
               },
             },

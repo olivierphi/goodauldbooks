@@ -38,31 +38,37 @@
 
   .search-container {
     width: 670px;
-    height: 36px;
     margin: 0 auto;
-    position: relative;
 
-    .autocomplete-search-container,
-    .books-langs-selector-container {
-      display: inline-block;
-      height: 36px;
-      margin: 0;
-      vertical-align: top;
-    }
+    .Select {
+      display: block;
+      width: 100%;
 
-    .autocomplete-search-container {
-      width: 510px;
-    }
-    .books-langs-selector-container {
-      display: inline-block;
-      width: 160px;
-
-      .books-langs-selector {
-        display: inline-block;
-        height: 36px;
-        font-size: 1.8rem;
-        border-radius: 4px;
+      .Select-control {
+        border-radius: 0;
       }
+    }
+  }
+
+  .books-langs-selector-container {
+    margin-top: 1rem;
+
+    span {
+      color: $color-white;
+      font-size: 1.8rem;
+    }
+
+    .current-books-language {
+      display: block;
+
+      .language {
+        font-weight: bold;
+      }
+    }
+
+    .books-langs-selector {
+      height: 36px;
+      font-size: 1.8rem;
     }
   }
 }
