@@ -20,6 +20,7 @@ export function Main() {
       </HigherOrderComponentToolkitContext.Consumer>
 
       <Route exact={true} path="/" component={HomePage} />
+      <Route exact={true} path="/:booksLang([a-z]{2,3})" component={HomePage} />
       <Route exact={true} path="/library/:booksLang([a-z]{2,3})" component={BooksByLangPage} />
       <Route
         exact={true}

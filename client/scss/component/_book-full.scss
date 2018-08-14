@@ -8,6 +8,13 @@
 
     .box {
       padding: 2rem;
+
+      .tags-container {
+        .nb-books-explanation {
+          font-style: italic;
+          margin-bottom: 1rem;
+        }
+      }
     }
   }
 }
