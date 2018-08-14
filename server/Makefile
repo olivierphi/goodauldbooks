@@ -5,6 +5,16 @@ PSQL ?= docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) db-cli -v O
 PSQL_QUIET ?= docker-compose run --rm --no-deps --user $$(id -u):$$(id -g) -e PGOPTIONS='--client-min-messages=warning' db-cli -v ON_ERROR_STOP=1
 PYTHON_DC_PREFIX ?= ${DC_RUN} --entrypoint python -e PYTHONPATH=/app/src
 
+.phony: install
+install: REQUIREMENTS_FILES=requirements.txt requirements-dev.txt
+install:
+	@$(foreach requirement_file,$(REQUIREMENTS_FILES),\
+		${DC_RUN} --entrypoint pip \
+			-v $$(pwd)/../${requirement_file}:/requirements.txt:ro \
+			python \
+			install --user -r /requirements.txt; \
+	)
+
 .phony: reset_db_and_import_gutenberg_books
 reset_db_and_import_gutenberg_books:
 	docker-compose up -d db && sleep 2
