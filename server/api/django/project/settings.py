@@ -141,12 +141,17 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# CleverCloud settings?
-if os.getenv('CLEVER_CLOUD'):
-    from .settings_clevercloud import *
+# pylint: disable=E0401,E0402,E0602
+
+# Heroku settings?
+if os.getenv('HEROKU'):
+    import django_heroku
+    django_heroku.settings(locals())
+
+    from .settings_heroku import *
 
     # that's rather ugly, but I have to do that in order to prevent PyCharm auto-formatting from removing my import:
-    SETTINGS_CLEVER_CLOUD
+    SETTINGS_HEROKU
 
 # Dev settings?
 if DEBUG:
