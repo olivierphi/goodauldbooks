@@ -1,17 +1,28 @@
 import { Lang } from "domain/core";
 import { Location } from "history";
 
-const URL_LANG_REGEX = /^\/library\/([a-z]{2,3})(\/|$)/;
+const HOMEPAGE_URL_REGEX = /^(\/)([a-z]{2,3})?(\/|$)/;
+const LIBRARY_URL_REGEX = /^(\/library\/)([a-z]{2,3})(\/|$)/;
+
+const URLS_REGEXES = [HOMEPAGE_URL_REGEX, LIBRARY_URL_REGEX];
 
 export function getBooksLangFromLocation(location: Location): Lang | null {
-  const urlWithLangMatch = location.pathname.match(URL_LANG_REGEX);
-  if (!urlWithLangMatch) {
-    return null;
+  for (const urlRegexp of URLS_REGEXES) {
+    const urlWithLangMatch = location.pathname.match(urlRegexp);
+    if (!urlWithLangMatch) {
+      continue;
+    }
+    const lang = urlWithLangMatch[2];
+    return lang;
   }
-  const lang = urlWithLangMatch[1];
-  return lang;
+  return null;
 }
 
 export function replaceBooksLangInLocation(location: Location, lang: Lang): string {
-  return location.pathname.replace(URL_LANG_REGEX, `/library/${lang}$2`);
+  for (const urlRegexp of URLS_REGEXES) {
+    if (location.pathname.match(urlRegexp)) {
+      return location.pathname.replace(urlRegexp, `$1${lang}$3`);
+    }
+  }
+  return "/";
 }

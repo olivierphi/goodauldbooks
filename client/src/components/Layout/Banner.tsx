@@ -19,7 +19,7 @@ function TranslatableBanner(props: BannerProps) {
   return (
     <section id="banner">
       <h1>
-        <Link to={`/`}>Good Auld Books</Link>
+        <Link to={`/${props.currentBooksLang}`}>Good Auld Books</Link>
       </h1>
       <p>Find a book amongst a collection of {props.nbBooks} by using the search field below</p>
       <OmnipotentComponentToolkitContext.Consumer>
