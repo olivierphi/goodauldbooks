@@ -141,6 +141,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# CleverCloud settings?
+if os.getenv('CLEVER_CLOUD'):
+    from .settings_clevercloud import *
+
+    # that's rather ugly, but I have to do that in order to prevent PyCharm auto-formatting from removing my import:
+    SETTINGS_CLEVER_CLOUD
+
 # Dev settings?
 if DEBUG:
     from .settings_dev import *
