@@ -3,6 +3,8 @@ from . import settings
 
 DEBUG = False
 
+SECRET_KEY = os.getenv('SECRET_KEY')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
