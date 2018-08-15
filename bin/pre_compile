@@ -1,0 +1,11 @@
+#!/bin/bash
+# Heroku "hidden" pre-compilation hook (had to dig into the Heroku Python build pack source code to find that :-) 
+# @link https://github.com/heroku/heroku-buildpack-python/blob/master/bin/compile
+set -e
+echo '**** CUSTOM HEROKU PYTHON BUILD PACK "bin/pre_compile" HOOK'
+ROOT_DIR=$(dirname $(dirname "$0"))
+echo '**** COPYING PYTHON ENV FILE FROM "/server/api/" FOLDER TO ROOT FOLDER'
+cp ${ROOT_DIR}/server/api/requirements.txt ${ROOT_DIR}/requirements.txt
+cp ${ROOT_DIR}/server/api/runtime.txt ${ROOT_DIR}/runtime.txt
+rm ${ROOT_DIR}/Pipfile
+echo '**** DONE.'

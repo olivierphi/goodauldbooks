@@ -2,7 +2,7 @@
 
 A modern Web interface for the [Project Gutenberg](http://gutenberg.org) public domain books collection, powered by React and a (Python) GraphQL API.
 
-_N.B.: This project is not endorsed by the Project Gutenberg: I only used the RDF data that comes with each of their book, from an rsync-ed copy of their collection, and then built everything myself from scratch._
+_N.B.: This project is not endorsed by the Project Gutenberg: I only used the RDF data that comes with each of their book, from an rsync-ed copy of their collection, and then built everything myself from scratch. :-)_
 
 ## Technologies
 
@@ -21,6 +21,15 @@ This project is based on the following technologies:
   - [Redux](https://redux.js.org/)
 
 The local dev backend environement is entirely based on Docker and Docker Compose.
+
+## Hosting
+
+- The Python-and-Django-powered GraphQL API lives on [Heroku](https://www.heroku.com/python)  
+  ("Hobby Basic" paid plans for both the dyno and the PostgreSQL database)
+- The React-powered front-end app lives on [Netlify](https://www.netlify.com/)  
+  (free plan)
+
+They both provide an awesome service! :-)
 
 ## Install
 

@@ -44,9 +44,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphene_django',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -140,6 +142,23 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# CORS (Cross-Origin Resource Sharing) management
+# https://github.com/ottoyiu/django-cors-headers
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+# pylint: disable=E0401,E0402,E0602
+
+# Heroku settings?
+if os.getenv('HEROKU'):
+    import django_heroku
+    django_heroku.settings(locals())
+
+    from .settings_heroku import *
+
+    # that's rather ugly, but I have to do that in order to prevent PyCharm auto-formatting from removing my import:
+    SETTINGS_HEROKU
 
 # Dev settings?
 if DEBUG:
