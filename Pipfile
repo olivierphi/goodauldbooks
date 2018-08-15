@@ -1,0 +1,5 @@
+# This Pipfile is not actually used:
+#  1) We have to have such a file at the root of the repository, otherwise the the Heroku Python build pack will crash
+#  2) We use the "more or less hidden" "bin/pre_compile" Heroku hook file to actually copy our "requirements.txt" and "runtime.txt" from the "server/api" folder to the root of the repository
+
+# @link https://github.com/heroku/heroku-buildpack-python/blob/master/bin/detect
