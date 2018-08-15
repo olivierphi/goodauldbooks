@@ -10,7 +10,7 @@ install: REQUIREMENTS_FILES=requirements.txt requirements-dev.txt
 install:
 	@$(foreach requirement_file,$(REQUIREMENTS_FILES),\
 		${DC_RUN} --entrypoint pip \
-			-v $$(pwd)/../${requirement_file}:/requirements.txt:ro \
+			-v $$(pwd)/api/${requirement_file}:/requirements.txt:ro \
 			python \
 			install --user -r /requirements.txt; \
 	)
