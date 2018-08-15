@@ -1,6 +1,6 @@
 #!/bin/bash
 API_URL='https://goodauldbooks-django-api.herokuapp.com/graphql'
-BOOK_COVERS_URL='http://www.gutenberg.org/cache/epub'
+BOOK_COVERS_URL='https://www.gutenberg.org/cache/epub'
 
 set -e
 
