@@ -48,7 +48,9 @@ You can go for a walk, the rsync repository is rather huge so this process will 
 
 ```bash
 $ cd server
-$ make python_install
+$ cd pg-rdfs-indexing
+$ make install
+$ cd ..
 $ make reset_db_and_import_gutenberg_books GUTENBERG_GENERATED_COLLECTION_PATH=~/gutenberg-mirror/generated-collection
 $ make export_books_langs
 ```

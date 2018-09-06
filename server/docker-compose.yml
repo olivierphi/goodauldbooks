@@ -1,7 +1,6 @@
-version: '3.1'
+version: "3.1"
 
 services:
-
   db:
     image: postgres
     environment:
@@ -70,7 +69,7 @@ services:
   pg_rdf_indexing:
     <<: *python
     volumes:
-      - ./pg-rdfs-indexing:/pg-rdfs-indexing:ro
+      - ./pg-rdfs-indexing:/pg-rdfs-indexing
     working_dir: /pg-rdfs-indexing
     environment:
       PYTHONUSERBASE: /pg-rdfs-indexing/vendor
