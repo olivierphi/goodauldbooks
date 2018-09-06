@@ -3,6 +3,9 @@ begin;
 drop schema if exists library cascade;
 create schema library;
 
+create schema if not exists exts;
+create extension if not exists pg_trgm schema exts;
+
 /**
  * Tables
  */
