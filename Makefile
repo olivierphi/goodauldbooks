@@ -3,7 +3,7 @@ PSQL ?= psql 'postgresql://goodauldbooks:localdev@localhost:5433/goodauldbooks' 
 # @link http://petereisentraut.blogspot.co.uk/2010/03/running-sql-scripts-with-psql.html
 PSQL_QUIET ?= PGOPTIONS='--client-min-messages=warning' ${PSQL}
 PYTHON_DC_PREFIX ?= ${DC_RUN} --entrypoint python -e PYTHONPATH=/app/src
-PIPENV_DC_PREFIX ?= ${DC_RUN} --entrypoint pipenv -e PYTHONPATH=/app/src -e TERM=xterm-256color  -e PIPENV_DONT_LOAD_ENV=1  -e PIPENV_CACHE_DIR=/app/pipenv/.pipenv-cache -e PIPENV_SHELL=/bin/bash
+PIPENV_DC_PREFIX ?= ${DC_RUN} --entrypoint pipenv -e PYTHONPATH=/app/src:/app/src/apps -e TERM=xterm-256color  -e PIPENV_DONT_LOAD_ENV=1  -e PIPENV_CACHE_DIR=/app/pipenv/.pipenv-cache -e PIPENV_SHELL=/bin/bash
 DJANGO_PORT ?= 9000
 
 .PHONY: python-shell
@@ -25,6 +25,24 @@ python-django-manage:
 	@[ "${CMD}" ] || ( echo "! Make variable CMD is not set"; exit 1 )
 	${PIPENV_DC_PREFIX} -w /app/src python \
 		run python manage.py ${CMD}
+
+.PHONY: python-code-quality
+python-code-quality:
+# Bash-Fu is my greatest passion. (NO)
+	@exit_codes=0 ; \
+		${MAKE} python-black ; exit_codes=$$(( $$exit_codes + $$? )) ; \
+		${MAKE} python-pylint ; exit_codes=$$(( $$exit_codes + $$? )) ; \
+		exit $$exit_codes
+
+.PHONY: python-black
+python-black:
+	${PIPENV_DC_PREFIX} python \
+		run black src/
+
+.PHONY: python-pylint
+python-pylint:
+	${PIPENV_DC_PREFIX} python \
+		run pylint project library
 
 .PHONY: psql
 psql:

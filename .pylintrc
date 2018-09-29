@@ -1,0 +1,4 @@
+[MESSAGES CONTROL]
+# - "C0330" is "Wrong continued indentation": Black formatting generates such messages, so we have to disable them
+# - "line-too-long": ditto
+disable=C0330,too-few-public-methods,missing-docstring,line-too-long

@@ -9,6 +9,8 @@ django = "==2.1.*"
 pyaml = "==17.*"
 
 [dev-packages]
+pylint = "*"
+black = "==18.9b0"
 
 [requires]
 python_version = "3.7"
