@@ -9,6 +9,7 @@ class Book(models.Model):
     lang = models.CharField(max_length=3)
     highlight = models.PositiveIntegerField(default=0)
     size = models.PositiveIntegerField(default=0)
+    genres = models.ManyToManyField("Genre", related_name="genres")
 
     author = models.ForeignKey(
         "Author",
@@ -25,3 +26,8 @@ class Author(models.Model):
     last_name = models.CharField(max_length=255, null=True)
     birth_year = models.PositiveSmallIntegerField(null=True)
     death_year = models.PositiveSmallIntegerField(null=True)
+
+
+class Genre(models.Model):
+    genre_id = models.PositiveIntegerField(primary_key=True)
+    title = models.CharField(max_length=255, null=None)

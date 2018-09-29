@@ -1,3 +1,12 @@
+- model: library.genre
+  pk: 1
+  fields:
+    title: Fiction
+- model: library.genre
+  pk: 2
+  fields:
+    title: Fantastic
+
 - model: library.author
   pk: 1
   fields:
@@ -17,3 +26,4 @@
     highlight: 1
     size: 350
     author_id: 1
+    genres: [1, 2]
