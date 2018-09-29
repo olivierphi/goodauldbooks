@@ -3,9 +3,10 @@ import typing as t
 from django.conf import settings
 import graphql
 from graphql.language.ast import Field
+from graphene_django.utils import maybe_queryset
 
-# from graphene_django.utils import maybe_queryset
-
+from public_api.graphql import schema
+from library import domain
 from library import models as library_models
 from library.repository import author_repository, book_repository
 
@@ -35,6 +36,33 @@ def resolve_author(
     return author_repository.get_author_by_id(
         author_id, fetch_books=fetch_books, fetch_books_genres=fetch_books_genres
     )
+
+
+def resolve_books(self, info: graphql.ResolveInfo, **kwargs) -> schema.BooksList:
+    genre = kwargs.get("genre", None)
+    author_id = kwargs.get("author_id", None)
+
+    page = max(int(kwargs.get("page", 1)), 1)
+    nb_per_page = kwargs.get("nb_per_page", domain.DEFAULT_LIMIT)
+    pagination = domain.PaginationRequest(page=page, nb_per_page=nb_per_page)
+
+    fetch_author = _is_field_requested_by_graphql_ast(info, "books.author")
+    fetch_genres = _is_field_requested_by_graphql_ast(info, "books.genres")
+
+    books = book_repository.get_books(
+        author_id=author_id,
+        genre=genre,
+        pagination=pagination,
+        fetch_author=fetch_author,
+        fetch_genres=fetch_genres,
+    )
+    books = maybe_queryset(books)
+    # TODO: metadata.total_count
+    metadata = schema.ItemsListMetadata(
+        total_count=33, page=page, nb_per_page=nb_per_page
+    )
+
+    return schema.BooksList(books=books, meta=metadata)
 
 
 def _is_field_requested_by_graphql_ast(
