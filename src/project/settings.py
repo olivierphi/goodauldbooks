@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-import sys
 from pathlib import Path
+import sys
+import typing as t
 
 # We put our apps in an "apps/" sub-folder: let's first append this path to the Python path:
 ROOT_DIR = (Path(__file__) / "../..").resolve()
@@ -32,7 +33,7 @@ SECRET_KEY = "e!v(!kjnq_cvwac%t&&k_cb$nak#uv(n0u354k=)7z9cc2w328"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: t.List[str] = []
 
 
 # Application definition

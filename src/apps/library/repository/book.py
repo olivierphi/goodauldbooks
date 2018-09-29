@@ -9,4 +9,4 @@ class _BookRepository(AbstractBookRepository):
         return Book.objects.get(pk=book_id)
 
 
-repository = _BookRepository()  # pylint: disable=invalid-name
+repository: AbstractBookRepository = _BookRepository()  # pylint: disable=invalid-name

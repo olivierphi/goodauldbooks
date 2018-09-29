@@ -32,6 +32,7 @@ python-code-quality:
 	@exit_codes=0 ; \
 		${MAKE} python-black ; exit_codes=$$(( $$exit_codes + $$? )) ; \
 		${MAKE} python-pylint ; exit_codes=$$(( $$exit_codes + $$? )) ; \
+		${MAKE} python-mypy ; exit_codes=$$(( $$exit_codes + $$? )) ; \
 		exit $$exit_codes
 
 .PHONY: python-black
@@ -43,6 +44,13 @@ python-black:
 python-pylint:
 	${PIPENV_DC_PREFIX} python \
 		run pylint project library
+
+.PHONY: python-mypy
+python-mypy:
+	${PIPENV_DC_PREFIX} -e MYPYPATH=/app/src:/app/src/apps python \
+		run mypy --config-file=mypy.ini \
+		-p library \
+		-p public_api
 
 .PHONY: psql
 psql:

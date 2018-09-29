@@ -1,3 +1,5 @@
 /pipenv
 
+/.mypy_cache
+
 /.vscode
