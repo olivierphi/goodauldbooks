@@ -1,0 +1,9 @@
+- model: library.book
+  pk: 1
+  fields:
+    gutenberg_id: 123
+    title: Frankenstein
+    subtitle: Or, the modern Prometheus
+    lang: en
+    highlight: 1
+    size: 350
