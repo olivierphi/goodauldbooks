@@ -13,5 +13,7 @@ class BookRepository(ABC):
 
 class AuthorRepository(ABC):
     @abstractmethod
-    def get_author_by_id(self, author_id: str, *, fetch_books: bool = False) -> Author:
+    def get_author_by_id(
+        self, author_id: str, *, fetch_books: bool = False, fetch_books_genres=False
+    ) -> Author:
         pass

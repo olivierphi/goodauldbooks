@@ -5,11 +5,15 @@ from library.models import Author
 
 
 class _AuthorkRepository(AbstractAuthorRepository):
-    def get_author_by_id(self, author_id: str, *, fetch_books: bool = False) -> Author:
+    def get_author_by_id(
+        self, author_id: str, *, fetch_books: bool = False, fetch_books_genres=False
+    ) -> Author:
         author_qs: QuerySet = Author.objects
 
         if fetch_books:
             author_qs = author_qs.prefetch_related("books")
+            if fetch_books_genres:
+                author_qs = author_qs.prefetch_related("books__genres")
 
         author = author_qs.get(pk=author_id)
 

@@ -1,3 +1,6 @@
+###########################
+# Literary genres
+###########################
 - model: library.genre
   pk: 1
   fields:
@@ -6,6 +9,22 @@
   pk: 2
   fields:
     title: Fantastic
+- model: library.genre
+  pk: 3
+  fields:
+    title: Horror
+- model: library.genre
+  pk: 4
+  fields:
+    title: Adventure stories
+- model: library.genre
+  pk: 5
+  fields:
+    title: Scotland -- Fiction
+
+###########################
+# Authors
+###########################
 
 - model: library.author
   pk: 1
@@ -16,10 +35,23 @@
     birth_year: 1797
     death_year: 1851
 
+- model: library.author
+  pk: 2
+  fields:
+    gutenberg_id: 190
+    first_name: Bram
+    last_name: Stocker
+    birth_year: 1847
+    death_year: 1912
+
+###########################
+# Books
+###########################
+
 - model: library.book
   pk: 1
   fields:
-    gutenberg_id: 123
+    gutenberg_id: 84
     title: Frankenstein
     subtitle: Or, the modern Prometheus
     lang: en
@@ -27,3 +59,25 @@
     size: 350
     author_id: 1
     genres: [1, 2]
+
+- model: library.book
+  pk: 2
+  fields:
+    gutenberg_id: 345
+    title: Dracula
+    lang: en
+    highlight: 1
+    size: 800
+    author_id: 2
+    genres: [1, 2, 3]
+
+- model: library.book
+  pk: 3
+  fields:
+    gutenberg_id: 42455
+    title: The Mystery of the Sea
+    lang: en
+    highlight: 1
+    size: 800
+    author_id: 2
+    genres: [4, 5]

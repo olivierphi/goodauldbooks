@@ -15,6 +15,7 @@ lazy-import = "*"
 pylint = "*"
 black = "==18.9b0"
 mypy = "*"
+coloredlogs = "*"
 
 [requires]
 python_version = "3.7"

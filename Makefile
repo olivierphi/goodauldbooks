@@ -8,22 +8,22 @@ DJANGO_PORT ?= 9000
 
 .PHONY: python-shell
 python-shell:
-	${DC_RUN} --entrypoint bash python
+	@${DC_RUN} --entrypoint bash python
 
 .PHONY: python-pipenv-shell
 python-pipenv-shell:
-	${PIPENV_DC_PREFIX} python \
+	@${PIPENV_DC_PREFIX} python \
 		shell
 
 .PHONY: python-django-runserver
 python-django-runserver:
-	${PIPENV_DC_PREFIX} -p ${DJANGO_PORT}:8000 -w /app/src python \
+	@${PIPENV_DC_PREFIX} -p ${DJANGO_PORT}:8000 -w /app/src python \
 		run python manage.py runserver 0:8000
 
 .PHONY: python-django-manage
 python-django-manage:
 	@[ "${CMD}" ] || ( echo "! Make variable CMD is not set"; exit 1 )
-	${PIPENV_DC_PREFIX} -w /app/src python \
+	@${PIPENV_DC_PREFIX} -w /app/src python \
 		run python manage.py ${CMD}
 
 .PHONY: python-code-quality
@@ -37,17 +37,17 @@ python-code-quality:
 
 .PHONY: python-black
 python-black:
-	${PIPENV_DC_PREFIX} python \
+	@${PIPENV_DC_PREFIX} python \
 		run black src/
 
 .PHONY: python-pylint
 python-pylint:
-	${PIPENV_DC_PREFIX} python \
+	@${PIPENV_DC_PREFIX} python \
 		run pylint project library
 
 .PHONY: python-mypy
 python-mypy:
-	${PIPENV_DC_PREFIX} -e MYPYPATH=/app/src:/app/src/apps python \
+	@${PIPENV_DC_PREFIX} -e MYPYPATH=/app/src:/app/src/apps python \
 		run mypy --config-file=mypy.ini \
 		-p library \
 		-p public_api

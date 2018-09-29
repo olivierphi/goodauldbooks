@@ -1,3 +1,5 @@
+import typing as t
+
 from django.db.models.query import QuerySet
 
 from library.domain import BookRepository as AbstractBookRepository

@@ -103,3 +103,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = "/static/"
+
+# pylint: disable=wildcard-import, unused-wildcard-import, pointless-statement
+
+# Dev settings?
+if DEBUG:
+    from .settings_dev import *
+
+    # that's rather ugly, but I have to do that in order to prevent some code formatters from removing my import:
+    SETTINGS_DEV
