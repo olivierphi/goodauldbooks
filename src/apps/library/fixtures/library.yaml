@@ -1,3 +1,12 @@
+- model: library.author
+  pk: 1
+  fields:
+    gutenberg_id: 123
+    first_name: Mary
+    last_name: Shelley
+    birth_year: 1797
+    death_year: 1851
+
 - model: library.book
   pk: 1
   fields:
@@ -7,3 +16,4 @@
     lang: en
     highlight: 1
     size: 350
+    author_id: 1
