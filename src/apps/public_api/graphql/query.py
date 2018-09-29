@@ -10,3 +10,10 @@ class Query:
         book_id=graphene.ID(),
         resolver=lazy_import.lazy_callable("public_api.graphql.resolvers.resolve_book"),
     )
+    author = graphene.Field(
+        schema.Author,
+        author_id=graphene.ID(),
+        resolver=lazy_import.lazy_callable(
+            "public_api.graphql.resolvers.resolve_author"
+        ),
+    )
