@@ -39,6 +39,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "library",
+    "public_api",
+    "graphene_django",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
 ]

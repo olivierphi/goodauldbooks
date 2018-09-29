@@ -15,6 +15,15 @@ Including another URLconf
 """
 # pylint: disable=invalid-name
 
-from django.urls import path
+from django.conf import settings
+from django.conf.urls import url
+from graphene_django.views import GraphQLView
 
-urlpatterns = []
+from public_api.graphql_schema import schema as public_api_graphql_schema
+
+urlpatterns = [
+    url(
+        r"^graphql",
+        GraphQLView.as_view(graphiql=settings.DEBUG, schema=public_api_graphql_schema),
+    )
+]

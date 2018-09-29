@@ -7,6 +7,9 @@ name = "pypi"
 django = "==2.1.*"
 "psycopg2-binary" = "*"
 pyaml = "==17.*"
+graphene = "==2.*"
+graphene-django = "==2.*"
+lazy-import = "*"
 
 [dev-packages]
 pylint = "*"
