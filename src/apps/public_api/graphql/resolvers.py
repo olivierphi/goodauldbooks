@@ -8,7 +8,7 @@ from graphene_django.utils import maybe_queryset
 from public_api.graphql import schema
 from library import domain
 from library import models as library_models
-from library.repository import author_repository, book_repository
+from library import query_handlers
 
 
 def resolve_book(parent, info: graphql.ResolveInfo, **kwargs) -> library_models.Book:
@@ -17,9 +17,10 @@ def resolve_book(parent, info: graphql.ResolveInfo, **kwargs) -> library_models.
     fetch_author = _is_field_requested_by_graphql_ast(info, "author")
     fetch_genres = _is_field_requested_by_graphql_ast(info, "genres")
 
-    return book_repository.get_book_by_id(
-        book_id, fetch_author=fetch_author, fetch_genres=fetch_genres
+    query = domain.GetBookByIdQuery(
+        book_id=book_id, fetch_author=fetch_author, fetch_genres=fetch_genres
     )
+    return query_handlers.get_book_by_id(query)
 
 
 def resolve_author(
@@ -33,9 +34,12 @@ def resolve_author(
     else:
         fetch_books_genres = False
 
-    return author_repository.get_author_by_id(
-        author_id, fetch_books=fetch_books, fetch_books_genres=fetch_books_genres
+    query = domain.GetAuthorByIdQuery(
+        author_id=author_id,
+        fetch_books=fetch_books,
+        fetch_books_genres=fetch_books_genres,
     )
+    return query_handlers.get_author_by_id(query)
 
 
 def resolve_books(self, info: graphql.ResolveInfo, **kwargs) -> schema.BooksList:
@@ -49,13 +53,14 @@ def resolve_books(self, info: graphql.ResolveInfo, **kwargs) -> schema.BooksList
     fetch_author = _is_field_requested_by_graphql_ast(info, "books.author")
     fetch_genres = _is_field_requested_by_graphql_ast(info, "books.genres")
 
-    books = book_repository.get_books(
+    query = domain.GetBooksQuery(
         author_id=author_id,
         genre=genre,
         pagination=pagination,
         fetch_author=fetch_author,
         fetch_genres=fetch_genres,
     )
+    books = query_handlers.get_books(query)
     books = maybe_queryset(books)
     # TODO: metadata.total_count
     metadata = schema.ItemsListMetadata(

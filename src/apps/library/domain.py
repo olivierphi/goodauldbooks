@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import typing as t
 
 from library.models import Author, Book
@@ -12,29 +11,21 @@ class PaginationRequest(t.NamedTuple):
     nb_per_page: int = DEFAULT_LIMIT
 
 
-class BookRepository(ABC):
-    @abstractmethod
-    def get_book_by_id(
-        self, book_id: str, *, fetch_author: bool = False, fetch_genres: bool = False
-    ) -> Book:
-        pass
-
-    @abstractmethod
-    def get_books(
-        self,
-        *,
-        author_id: t.Optional[str] = None,
-        genre: t.Optional[str] = None,
-        pagination: t.Optional[PaginationRequest] = None,
-        fetch_author: bool = False,
-        fetch_genres: bool = False,
-    ) -> t.List[Book]:
-        pass
+class GetBookByIdQuery(t.NamedTuple):
+    book_id: str
+    fetch_author: bool = False
+    fetch_genres: bool = False
 
 
-class AuthorRepository(ABC):
-    @abstractmethod
-    def get_author_by_id(
-        self, author_id: str, *, fetch_books: bool = False, fetch_books_genres=False
-    ) -> Author:
-        pass
+class GetBooksQuery(t.NamedTuple):
+    author_id: t.Optional[str] = None
+    genre: t.Optional[str] = None
+    pagination: t.Optional[PaginationRequest] = None
+    fetch_author: bool = False
+    fetch_genres: bool = False
+
+
+class GetAuthorByIdQuery(t.NamedTuple):
+    author_id: str
+    fetch_books: bool = False
+    fetch_books_genres: bool = False
