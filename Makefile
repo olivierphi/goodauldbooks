@@ -26,6 +26,12 @@ python-django-manage:
 	@${PIPENV_DC_PREFIX} -w /app/src python \
 		run python manage.py ${CMD}
 
+.PHONY: python-pytest
+python-pytest: ARGS ?=
+python-pytest:
+	@${PIPENV_DC_PREFIX} python \
+		run pytest ${ARGS}
+
 .PHONY: python-code-quality
 python-code-quality:
 # Bash-Fu is my greatest passion. (NO)

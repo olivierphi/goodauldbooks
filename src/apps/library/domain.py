@@ -1,7 +1,5 @@
 import typing as t
 
-from library.models import Author, Book
-
 DEFAULT_LIMIT = 10
 MAX_LIMIT = 15
 
