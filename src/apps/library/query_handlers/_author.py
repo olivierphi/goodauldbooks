@@ -1,9 +1,12 @@
 from django.db.models.query import QuerySet
 
+from core import messagebus
+
 from library.domain import GetAuthorByIdQuery
 from library.models import Author
 
 
+@messagebus.register_query_handler(GetAuthorByIdQuery)
 def get_author_by_id(query: GetAuthorByIdQuery) -> Author:
     author_qs: QuerySet = Author.objects  # pylint: disable=no-member
 

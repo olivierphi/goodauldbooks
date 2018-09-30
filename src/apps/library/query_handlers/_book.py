@@ -2,10 +2,12 @@ import typing as t
 
 from django.db.models.query import QuerySet
 
+from core import messagebus
 from library.domain import GetBookByIdQuery, GetBooksQuery, PaginationRequest, MAX_LIMIT
 from library.models import Book
 
 
+@messagebus.register_query_handler(GetBookByIdQuery)
 def get_book_by_id(query: GetBookByIdQuery) -> Book:
     book_qs: QuerySet = Book.objects  # pylint: disable=no-member
 
@@ -19,6 +21,7 @@ def get_book_by_id(query: GetBookByIdQuery) -> Book:
     return book
 
 
+@messagebus.register_query_handler(GetBooksQuery)
 def get_books(query: GetBooksQuery) -> t.List[Book]:
     books_qs: QuerySet = Book.objects  # pylint: disable=no-member
 

@@ -33,6 +33,7 @@ LOGGING = {
             "propagate": False,
         },
         "django": {"handlers": ["logfile"], "level": "DEBUG", "propagate": True},
+        "message_bus": {"handlers": ["logfile"], "level": "DEBUG", "propagate": True},
     },
 }
 

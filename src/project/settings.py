@@ -39,8 +39,8 @@ ALLOWED_HOSTS: t.List[str] = []
 # Application definition
 
 INSTALLED_APPS = [
-    "library",
-    "public_api",
+    "library.apps.LibraryConfig",
+    "public_api.apps.PublicAPIConfig",
     "graphene_django",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",

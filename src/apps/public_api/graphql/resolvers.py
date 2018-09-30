@@ -5,10 +5,11 @@ import graphql
 from graphql.language.ast import Field
 from graphene_django.utils import maybe_queryset
 
+from core import messagebus
+
 from public_api.graphql import schema
 from library import domain
 from library import models as library_models
-from library import query_handlers
 
 
 def resolve_book(parent, info: graphql.ResolveInfo, **kwargs) -> library_models.Book:
@@ -20,7 +21,9 @@ def resolve_book(parent, info: graphql.ResolveInfo, **kwargs) -> library_models.
     query = domain.GetBookByIdQuery(
         book_id=book_id, fetch_author=fetch_author, fetch_genres=fetch_genres
     )
-    return query_handlers.get_book_by_id(query)
+    result = messagebus.handle_query(query)
+
+    return result
 
 
 def resolve_author(
@@ -39,7 +42,9 @@ def resolve_author(
         fetch_books=fetch_books,
         fetch_books_genres=fetch_books_genres,
     )
-    return query_handlers.get_author_by_id(query)
+    result = messagebus.handle_query(query)
+
+    return result
 
 
 def resolve_books(self, info: graphql.ResolveInfo, **kwargs) -> schema.BooksList:
@@ -60,7 +65,7 @@ def resolve_books(self, info: graphql.ResolveInfo, **kwargs) -> schema.BooksList
         fetch_author=fetch_author,
         fetch_genres=fetch_genres,
     )
-    books = query_handlers.get_books(query)
+    books = messagebus.handle_query(query)
     books = maybe_queryset(books)
     # TODO: metadata.total_count
     metadata = schema.ItemsListMetadata(

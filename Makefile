@@ -58,6 +58,21 @@ python-mypy:
 		-p library \
 		-p public_api
 
+
+.PHONY: python-add-package
+python-add-package: PKG ?=
+python-add-package:
+	@[ "${PKG}" ] || ( echo "! variable PKG is not set"; exit 1 )
+	@${PIPENV_DC_PREFIX} python \
+		install ${PKG}
+
+.PHONY: python-add-package-dev
+python-add-package-dev: PKG ?=
+python-add-package-dev:
+	@[ "${PKG}" ] || ( echo "! variable PKG is not set"; exit 1 )
+	@${PIPENV_DC_PREFIX} python \
+		install --dev ${PKG}
+
 .PHONY: psql
 psql:
 	${PSQL}

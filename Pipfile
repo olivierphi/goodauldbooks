@@ -10,6 +10,7 @@ pyaml = "==17.*"
 graphene = "==2.*"
 graphene-django = "==2.*"
 lazy-import = "*"
+pymessagebus = "==1.2.*"
 
 [dev-packages]
 pylint = "*"
