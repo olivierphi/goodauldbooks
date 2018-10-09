@@ -11,9 +11,9 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-from pathlib import Path
 import sys
 import typing as t
+from pathlib import Path
 
 # We put our apps in an "apps/" sub-folder: let's first append this path to the Python path:
 ROOT_DIR = (Path(__file__) / "../..").resolve()
@@ -35,12 +35,12 @@ DEBUG = True
 
 ALLOWED_HOSTS: t.List[str] = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
     "library.apps.LibraryConfig",
     "public_api.apps.PublicAPIConfig",
+    "pg_import.apps.ProjectGutenbergImportConfig",
     "graphene_django",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
@@ -70,7 +70,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "project.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
@@ -84,7 +83,6 @@ DATABASES = {
     }
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -97,7 +95,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/

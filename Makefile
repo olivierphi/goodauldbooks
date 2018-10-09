@@ -56,7 +56,8 @@ python-mypy:
 	@${PIPENV_DC_PREFIX} -e MYPYPATH=/app/src:/app/src/apps python \
 		run mypy --config-file=mypy.ini \
 		-p library \
-		-p public_api
+		-p public_api \
+		-p pg_import
 
 
 .PHONY: python-add-package
@@ -72,6 +73,15 @@ python-add-package-dev:
 	@[ "${PKG}" ] || ( echo "! variable PKG is not set"; exit 1 )
 	@${PIPENV_DC_PREFIX} python \
 		install --dev ${PKG}
+
+.PHONY: pg-import-books
+pg-import-books: ARGS ?= --generate-library
+pg-import-books:
+	@[ "${DIR}" ] || ( echo "! variable DIR is not set"; exit 1 )
+	@${PIPENV_DC_PREFIX} -w /app/src \
+		-v ${DIR}:/gutenberg-mirror/generated-collection \
+		python \
+		run python manage.py import_pg_books /gutenberg-mirror/generated-collection ${ARGS}
 
 .PHONY: psql
 psql:
