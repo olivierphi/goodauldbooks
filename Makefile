@@ -37,6 +37,10 @@ python-django-manage:
 	@${PIPENV_DC_PREFIX} -w /app/src python \
 		run python manage.py ${CMD}
 
+.PHONY: python-django-shell
+python-django-shell:
+	@${MAKE} python-django-manage CMD=shell
+
 .PHONY: python-pytest
 python-pytest: ARGS ?=
 python-pytest:
