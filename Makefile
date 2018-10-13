@@ -6,6 +6,17 @@ PYTHON_DC_PREFIX ?= ${DC_RUN} --entrypoint python -e PYTHONPATH=/app/src
 PIPENV_DC_PREFIX ?= ${DC_RUN} --entrypoint pipenv -e PYTHONPATH=/app/src:/app/src/apps -e TERM=xterm-256color  -e PIPENV_DONT_LOAD_ENV=1  -e PIPENV_CACHE_DIR=/app/pipenv/.pipenv-cache -e PIPENV_SHELL=/bin/bash
 DJANGO_PORT ?= 9000
 
+.PHONY: install
+install:
+	@${MAKE} python-install
+	@${MAKE} db-refresh-materialized-views
+	@${MAKE} db-update-computed-data-tables
+
+.PHONY: python-install
+python-install:
+	@${PIPENV_DC_PREFIX} python \
+		install
+
 .PHONY: python-shell
 python-shell:
 	@${DC_RUN} --entrypoint bash python
@@ -82,6 +93,25 @@ pg-import-books:
 		-v ${DIR}:/gutenberg-mirror/generated-collection \
 		python \
 		run python manage.py import_pg_books /gutenberg-mirror/generated-collection ${ARGS}
+
+.phony: db-refresh-materialized-views
+db-refresh-materialized-views: VIEWS=library_view_genre_with_related_data
+db-refresh-materialized-views:
+	@echo "\033[36mRefreshing library materialized views...\033[0m"
+	@$(foreach materialized_view,$(VIEWS),\
+		(echo "\033[36m*******\nRefreshing '$(materialized_view)'...\n*******\033[0m" && \
+		${PSQL} --no-psqlrc -q -b -c "refresh materialized view concurrently $(materialized_view);") || exit 1; \
+	)
+
+
+.phony: db-update-computed-data-tables
+db-update-computed-data-tables: PG_FUNCTIONS=library_view_update_all_books_computed_data library_view_update_all_authors_computed_data
+db-update-computed-data-tables:
+	@echo "\033[36mUpdating computed data tables via our custom Postgres functions...\033[0m"
+	@$(foreach function,$(PG_FUNCTIONS),\
+		(echo "\033[36m*******\nCalling function '$(function)'...\n*******\033[0m" && \
+		${PSQL} --no-psqlrc -q -b -c "select * from $(function)();") || exit 1; \
+	)
 
 .PHONY: psql
 psql:
