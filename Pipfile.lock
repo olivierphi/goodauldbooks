@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "254ecbb8fe4715ec05990a21c2303c79710a1ad3715f8d0e7e6d8ac59d006172"
+            "sha256": "726066d3a273133f41ad6e43afde3d3efa9e83c663d7447b52683510d8b5e8a3"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,6 +16,21 @@
         ]
     },
     "default": {
+        "redis": {
+            "hashes": [
+                "sha256:8a1900a9f2a0a44ecf6e8b5eb3e967a9909dfed219ad66df094f27f7d6f330fb",
+                "sha256:a22ca993cea2962dbb588f9f30d0015ac4afcc45bee27d3978c0dbe9e97c6c0f"
+            ],
+            "index": "pypi",
+            "version": "==2.10.6"
+        },
+        "walrus": {
+            "hashes": [
+                "sha256:2473ad6707f9cb9437ad9c2476fdf576447d666cc20c3d6b5df65b1a37fd4ea5"
+            ],
+            "index": "pypi",
+            "version": "==0.6.4"
+        },
         "xmltodict": {
             "hashes": [
                 "sha256:8f8d7d40aa28d83f4109a7e8aa86e67a4df202d9538be40c0cb1d70da527b0df",
