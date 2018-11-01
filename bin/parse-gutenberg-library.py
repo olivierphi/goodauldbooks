@@ -26,7 +26,6 @@ if __name__ == "__main__":
 
     autocomplete_db = Database(redis_host).autocomplete()
 
-
     def _on_book_parsed(book: Book, author: t.Optional[Author]):
         book_id = f"book:pg:{book.gutenberg_id}"
         book_dict = book._asdict()
@@ -37,8 +36,12 @@ if __name__ == "__main__":
             # save "genres:hashes_mapping" keys for this book
             redis_client.hmset("genres:hashes_mapping", genres_hashes_mapping)
             # save "genres:hashes_mapping_reversed" keys for this book
-            genres_hashes_mapping_reversed = {title: hash for hash, title in genres_hashes_mapping.items()}
-            redis_client.hmset("genres:hashes_mapping_reversed", genres_hashes_mapping_reversed)
+            genres_hashes_mapping_reversed = {
+                title: hash for hash, title in genres_hashes_mapping.items()
+            }
+            redis_client.hmset(
+                "genres:hashes_mapping_reversed", genres_hashes_mapping_reversed
+            )
 
             # save "genres:stats:books_by_lang:[genre_hash]" keys for this book
             for genre_hash in genres_hashes_mapping:
@@ -74,7 +77,6 @@ if __name__ == "__main__":
             author_dict = author._asdict()
             # save "author:pg:[id]"
             redis_client.set(author_id, json.dumps(author_dict))
-
 
     nb_pg_rdf_files_found = pg_import.traverse_library(base_folder, _on_book_parsed)
 

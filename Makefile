@@ -46,3 +46,8 @@ redis-get-genre-stats:
 	@echo "Genre \033[93m$$(${REDIS} hget genres:hashes_mapping '${GENRE_HASH}')\033[0m"
 	@echo "Number of books per language:"
 	@${REDIS} --csv hgetall 'genres:stats:books_by_lang:${GENRE_HASH}'
+
+.PHONY: black
+black:
+	@${DC_RUN} --entrypoint pipenv \
+	 	python run black src/ bin/
