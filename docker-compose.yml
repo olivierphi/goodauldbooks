@@ -4,7 +4,7 @@ services:
   redis:
     image: redis:3.2-alpine
     ports:
-      - "16379:6379"
+    - "16379:6379"
 
   python:
     build: .docker/python/
@@ -17,3 +17,9 @@ services:
     environment:
       # @link https://pipenv.readthedocs.io/en/latest/install/#virtualenv-mapping-caveat
       PIPENV_VENV_IN_PROJECT: 1
+
+  redis-browser:
+    image: birkof/redis-browser
+    command: --url redis://redis:6379 --bind 0.0.0.0
+    ports:
+    - "4567:4567"
