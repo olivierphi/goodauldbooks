@@ -56,18 +56,25 @@ if __name__ == "__main__":
         objects = redis_client.mget(library_items_ids)
         for i, library_item_serialised in enumerate(objects):
             library_item = json.loads(library_item_serialised)
+
             if "author_ids" in library_item:
                 authors_serialised = redis_client.mget(library_item["author_ids"])
                 authors = [json.loads(auth) for auth in authors_serialised]
                 library_item["authors"] = authors
-            genres_hashes = library_item["genres"]
-            library_item["genres"] = get_genres_from_hashes(genres_hashes)
-            genres_stats_raw = [
-                redis_client.hgetall(f"genres:stats:books_by_lang:{h}")
-                for h in genres_hashes
-            ]
-            library_item["genres_stats"] = [
-                {lang.decode(): nb.decode() for lang, nb in genre_stats_raw.items()}
-                for genre_stats_raw in genres_stats_raw
-            ]
+
+            if "genres" in library_item and library_item["genres"]:
+                genres_hashes = library_item["genres"]
+                genres_titles = get_genres_from_hashes(genres_hashes)
+                genres_stats_raw = [
+                    redis_client.hgetall(f"genres:stats:books_by_lang:{h}")
+                    for h in genres_hashes
+                ]
+                library_item["genres_with_stats"] = {
+                    genres_titles[i]: {
+                        lang.decode(): nb.decode()
+                        for lang, nb in genre_stats_raw.items()
+                    }
+                    for i, genre_stats_raw in enumerate(genres_stats_raw)
+                }
+
             print(library_items_ids[i], json.dumps(library_item, indent=2))
