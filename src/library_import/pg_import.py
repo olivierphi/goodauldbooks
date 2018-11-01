@@ -1,12 +1,17 @@
 import re
 import typing as t
 from pathlib import Path
+from string import Template
 
 import xmltodict
-from .domain import Author, Book
+from .domain import Author, Book, BookAsset, BookAssetType
 
 RDF_FILE_REGEX = re.compile(r"^pg(\d+)\.rdf$")
 AUTHOR_ID_FROM_PG_AGENT_REGEX = re.compile(r"/(\d+)$")
+ASSETS_TEMPLATES = {
+    BookAssetType.EPUB: Template("pg${pg_book_id}.epub"),
+    BookAssetType.MOBI: Template("pg${pg_book_id}.mobi"),
+}
 
 OnBookParsed = t.Callable[[Book, t.Optional[Author]], t.Any]
 
@@ -36,26 +41,50 @@ def traverse_library(base_folder: Path, on_book_parsed: OnBookParsed = None) -> 
 def _handle_book(pg_book_id: int, rdf_path: Path, on_book_parsed: OnBookParsed = None):
     with rdf_path.open() as rdf_file:
         rdf_content = rdf_file.read()
-        book, author = _parse_book(pg_book_id, rdf_content)
+        book, author = _parse_book(rdf_path, pg_book_id, rdf_content)
         if on_book_parsed:
             on_book_parsed(book, author)
 
 
-def _parse_book(pg_book_id: int, rdf_content: str) -> t.Tuple[Book, t.Optional[Author]]:
+def _parse_book(
+    rdf_path: Path, pg_book_id: int, rdf_content: str
+) -> t.Tuple[Book, t.Optional[Author]]:
     rdf_as_dict = xmltodict.parse(rdf_content)
 
-    book = _get_book(pg_book_id, rdf_as_dict)
+    book = _get_book(rdf_path, pg_book_id, rdf_as_dict)
     author = _get_author(rdf_as_dict)
     return (book, author)
 
 
-def _get_book(pg_book_id: int, rdf_as_dict: dict) -> Book:
+def _get_book(rdf_path: Path, pg_book_id: int, rdf_as_dict: dict) -> Book:
     # Quick'n'dirty parsing :-)
     title = _get_value_from_dict(
         rdf_as_dict, ("rdf:RDF", "pgterms:ebook", "dcterms:title")
     )
+    lang = _get_value_from_dict(
+        rdf_as_dict,
+        (
+            "rdf:RDF",
+            "pgterms:ebook",
+            "dcterms:language",
+            "rdf:Description",
+            "rdf:value",
+            "#text",
+        ),
+    )
+    genres_container = _get_value_from_dict(
+        rdf_as_dict, ("rdf:RDF", "pgterms:ebook", "dcterms:subject")
+    )
+    if genres_container:
+        genres = [g["rdf:Description"]["rdf:value"] for g in genres_container]
+    else:
+        genres = []
 
-    return Book(gutenberg_id=pg_book_id, title=title)
+    assets = _get_book_assets(rdf_path, pg_book_id)
+
+    return Book(
+        gutenberg_id=pg_book_id, title=title, lang=lang, genres=genres, assets=assets
+    )
 
 
 def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
@@ -123,6 +152,16 @@ def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
         birth_year=birth_year,
         death_year=death_year,
     )
+
+
+def _get_book_assets(rdf_path: Path, pg_book_id: int) -> t.List[BookAsset]:
+    assets = []
+    for asset_type, tpl in ASSETS_TEMPLATES.items():
+        file_name = tpl.substitute({"pg_book_id": pg_book_id})
+        file_path = rdf_path.parent / file_name
+        if file_path.exists():
+            assets.append(BookAsset(type=asset_type, size=file_path.stat().st_size))
+    return assets
 
 
 def _get_value_from_dict(src: dict, path: t.Tuple[str, ...]) -> t.Optional[str]:

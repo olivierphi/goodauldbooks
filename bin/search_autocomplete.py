@@ -1,17 +1,26 @@
-import json
-import os
 import sys
+from pathlib import Path
 
-import redis
-from walrus import Database
+
+def _init_path():
+    src_path = str((Path(__file__) / ".." / ".." / "src").resolve())
+    if src_path not in sys.path:
+        sys.path.append(src_path)
+
 
 if __name__ == "__main__":
+    import json
+    from walrus import Database
+
+    _init_path()
+
+    from infra.redis import redis_host, redis_client
+    from library.utils import get_genres_from_hashes
+
     search = sys.argv[1]
     limit = None
     if len(sys.argv) > 2:
         limit = int(sys.argv[2])
-
-    redis_host = os.getenv("REDIS_HOST", "redis")
 
     boosts = {
         # Marry Shelley rocks
@@ -39,7 +48,6 @@ if __name__ == "__main__":
     else:
         library_items_ids = results_list
 
-        redis_client = redis.StrictRedis(host=redis_host)
         objects = redis_client.mget(library_items_ids)
         for i, library_item_serialised in enumerate(objects):
             library_item = json.loads(library_item_serialised)
@@ -47,4 +55,14 @@ if __name__ == "__main__":
                 authors_serialised = redis_client.mget(library_item["author_ids"])
                 authors = [json.loads(auth) for auth in authors_serialised]
                 library_item["authors"] = authors
+            genres_hashes = library_item["genres"]
+            library_item["genres"] = get_genres_from_hashes(genres_hashes)
+            genres_stats_raw = [
+                redis_client.hgetall(f"genres:stats:books_by_lang:{h}")
+                for h in genres_hashes
+            ]
+            library_item["genres_stats"] = [
+                {lang.decode(): nb.decode() for lang, nb in genre_stats_raw.items()}
+                for genre_stats_raw in genres_stats_raw
+            ]
             print(library_items_ids[i], json.dumps(library_item, indent=2))
