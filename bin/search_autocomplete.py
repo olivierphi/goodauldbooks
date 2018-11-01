@@ -10,6 +10,8 @@ def _init_path():
 
 if __name__ == "__main__":
     import json
+    import time
+
     from walrus import Database
 
     _init_path()
@@ -41,7 +43,10 @@ if __name__ == "__main__":
     for boost_obj_full_id, boost_score in boosts.items():
         autocomplete_db.boost_object(obj_id=boost_obj_full_id, multiplier=boost_score)
 
+    start_time = time.time_ns()
     results = autocomplete_db.search(search, limit=limit)
+    print(f"Redis search done in {(time.time_ns() - start_time) / 1000}µs.", flush=True)
+
     results_list = list(results)
     if not results_list:
         print("No results.")
