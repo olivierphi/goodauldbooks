@@ -1,14 +1,7 @@
-import sys
 from logging.config import dictConfig
 from pathlib import Path
 
 root_dir = Path(__file__).parent.parent
-
-
-def init_path():
-    src_path = str((root_dir / "src").resolve())
-    if src_path not in sys.path:
-        sys.path.append(src_path)
 
 
 def init_import_logging():

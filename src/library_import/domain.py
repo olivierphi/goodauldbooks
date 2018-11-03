@@ -12,18 +12,21 @@ class BookAsset(t.NamedTuple):
     size: int
 
 
-class Book(t.NamedTuple):
-    gutenberg_id: int
-    title: str
-    lang: str
-    genres: t.List[str]
-    assets: t.List[BookAsset]
-
-
 class Author(t.NamedTuple):
-    gutenberg_id: int
+    provider: str
+    id: str
     name: str
     first_name: str = None
     last_name: str = None
     birth_year: int = None
     death_year: int = None
+
+
+class Book(t.NamedTuple):
+    provider: str
+    id: str
+    title: str
+    lang: str
+    genres: t.List[str]
+    assets: t.List[BookAsset]
+    authors: t.List[Author]

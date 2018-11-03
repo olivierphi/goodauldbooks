@@ -1,22 +1,23 @@
 GENERATED_COLLECTION_PATH ?= ~/gutenberg-mirror/generated-collection/
 DC_RUN = docker-compose run --rm --user $$(id -u):$(id -g)
+PIPENV_RUN_PREFIX = ${DC_RUN} -e PYTHONPATH=/app/src --entrypoint pipenv
 SQLITE_DB_PATH ?= /app/raw_books.db
 REDIS_HOST ?= localhost
 REDIS_PORT ?= 16379
 REDIS ?= redis-cli -h '${REDIS_HOST}' -p ${REDIS_PORT}
 
-.PHONY: import-store-raw-library-in-db
-import-store-raw-library-in-db:
-	@${DC_RUN} --entrypoint pipenv \
+.PHONY: store-raw-gutenberg-library-in-transitional-db
+store-raw-gutenberg-library-in-transitional-db:
+	@${PIPENV_RUN_PREFIX} \
 		-v ${GENERATED_COLLECTION_PATH}:/collection \
 	 	python run python \
-	 	bin/store-raw-gutenberg-library-in-db.py /collection '${SQLITE_DB_PATH}'
+	 	bin/store-raw-gutenberg-library-in-transitional-db.py /collection '${SQLITE_DB_PATH}'
 
-.PHONY: import-store-library-in-redis-from-raw-db
-import-store-library-in-redis-from-raw-db:
-	@${DC_RUN} --entrypoint pipenv \
+.PHONY: set-redis-db-from-transitional-db
+set-redis-db-from-transitional-db:
+	@${PIPENV_RUN_PREFIX} \
 	 	python run python \
-	 	bin/parse-and-store-gutenberg-library-in-redis-from-raw-db.py '${SQLITE_DB_PATH}'
+	 	bin/set-redis-db-from-transitional-db.py '${SQLITE_DB_PATH}'
 
 .PHONY: redis-flush
 redis-flush:
@@ -26,7 +27,7 @@ redis-flush:
 test-autocomplete: PATTERN ?=
 test-autocomplete:
 	@[ "${PATTERN}" ] || ( echo "\033[41m! Make variable PATTERN is not set\033[0m"; exit 1 )
-	@${DC_RUN} --entrypoint pipenv --no-deps \
+	@${PIPENV_RUN_PREFIX} --no-deps \
 	 	python run python \
 		bin/search_autocomplete.py '${PATTERN}'
 
