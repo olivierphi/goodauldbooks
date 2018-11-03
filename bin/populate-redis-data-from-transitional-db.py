@@ -5,9 +5,9 @@ import time
 from _import_common import init_import_logging
 
 from infra.redis import redis_host, redis_client
-from library_import.domain import Book
+from library.domain import Book
 from library_import.gutenberg.transitional_db import parse_books_from_transitional_db
-from library_import.redis import store_book_in_redis
+from library_import.redis import store_book_in_redis, compute_books_by_genre
 from walrus import Database
 
 sqlite_db_path_str = sys.argv[1]
@@ -54,4 +54,8 @@ print(
     f"\n{nb_pg_rdf_files_found} books parsed from raw data in DB, and injected into Redis, in {duration}s."
 )
 
-print(list(autocomplete_db.search("well")))
+start_time = time.monotonic()
+print("Now computing the 'library:books_by:genre:[genre_hash]' sets...")
+compute_books_by_genre(redis_client)
+duration = round(time.monotonic() - start_time, 1)
+print(f"'Books by genre' sorted sets computed. ({duration}s.)")

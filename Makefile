@@ -23,19 +23,11 @@ populate-redis-data-from-transitional-db:
 redis-flush:
 	@${REDIS} flushdb
 
-.PHONY: test-autocomplete
-test-autocomplete: PATTERN ?=
-test-autocomplete:
-	@[ "${PATTERN}" ] || ( echo "\033[41m! Make variable PATTERN is not set\033[0m"; exit 1 )
-	@${PIPENV_RUN_PREFIX} --no-deps \
-	 	python run python \
-		bin/search_autocomplete.py '${PATTERN}'
-
 .PHONY: redis-get-book
 redis-get-book: BOOK_ID ?=
 redis-get-book:
 	@[ "${BOOK_ID}" ] || ( echo "\033[41m! Make variable BOOK_ID is not set\033[0m"; exit 1 )
-	@${REDIS} --raw get book:pg:${BOOK_ID} | jq
+	@${REDIS} --raw hgetall book:pg:${BOOK_ID}
 
 .PHONY: redis-get-nb-genres
 redis-get-nb-genres:
@@ -59,3 +51,29 @@ redis-get-genre-stats:
 black:
 	@${DC_RUN} --entrypoint pipenv \
 	 	python run black src/ bin/
+
+.PHONY: dev-test-autocomplete
+dev-test-autocomplete: PATTERN ?=
+dev-test-autocomplete:
+	@[ "${PATTERN}" ] || ( echo "\033[41m! Make variable PATTERN is not set\033[0m"; exit 1 )
+	@${PIPENV_RUN_PREFIX} --no-deps \
+	 	python run python \
+		bin/dev/test-autocomplete.py '${PATTERN}'
+
+.PHONY: dev-get-book
+dev-get-book: ID ?=
+dev-get-book:
+	@[ "${ID}" ] || ( echo "\033[41m! Make variable ID is not set\033[0m"; exit 1 )
+	@${PIPENV_RUN_PREFIX} --no-deps \
+	 	python run python \
+		bin/dev/get-book.py '${ID}'
+
+.PHONY: dev-test-get-books-by-genre
+dev-test-get-books-by-genre: GENRE ?=
+dev-test-get-books-by-genre: START ?= 0
+dev-test-get-books-by-genre: LIMIT ?= 3
+dev-test-get-books-by-genre:
+	@[ "${GENRE}" ] || ( echo "\033[41m! Make variable GENRE is not set\033[0m"; exit 1 )
+	@${PIPENV_RUN_PREFIX} --no-deps \
+	 	python run python \
+		bin/dev/test-get-books-by-genre.py '${GENRE}' ${START} ${LIMIT}

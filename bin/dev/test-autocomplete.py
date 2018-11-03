@@ -41,22 +41,14 @@ else:
     library_items_ids = results_list
 
     for i, library_item_id in enumerate(library_items_ids):
-        library_item = {
-            key.decode(): value.decode() for key, value in
-            redis_client.hgetall(library_item_id).items()
-        }
+        library_item = redis_client.hgetall(library_item_id)
 
         if "author_ids" in library_item and library_item["author_ids"]:
             author_ids = json.loads(library_item["author_ids"])
-            authors_redis_keys = [
-                f"author:{author_id}" for author_id in author_ids
-            ]
+            authors_redis_keys = [f"author:{author_id}" for author_id in author_ids]
             library_item["authors"] = []
             for author_redis_key in authors_redis_keys:
-                author_library_item = {
-                    key.decode(): value.decode() for key, value in
-                    redis_client.hgetall(author_redis_key).items()
-                }
+                author_library_item = redis_client.hgetall(author_redis_key)
                 library_item["authors"].append(author_library_item)
 
         if "genres" in library_item and library_item["genres"]:
@@ -67,9 +59,7 @@ else:
                 for h in genres_hashes
             ]
             library_item["genres_with_stats"] = {
-                genres_titles[i]: {
-                    lang.decode(): nb.decode() for lang, nb in genre_stats_raw.items()
-                }
+                genres_titles[i]: genre_stats_raw
                 for i, genre_stats_raw in enumerate(genres_stats_raw)
             }
 

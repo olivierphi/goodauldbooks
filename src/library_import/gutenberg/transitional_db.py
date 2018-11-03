@@ -13,6 +13,7 @@ from . import (
 )
 
 RAW_BOOKS_STORAGE_IN_DB_BATCH_SIZE = 100
+PARSE_BOOK_FROM_DB_LIMIT = 0
 
 _RAW_BOOKS_DB_SQL_TABLE_CREATION = """\
 create table raw_book(
@@ -108,6 +109,9 @@ def parse_books_from_transitional_db(
         on_book_parsed(book)
 
         nb_books_parsed += 1
+
+        if nb_books_parsed == PARSE_BOOK_FROM_DB_LIMIT:
+            break
 
     return nb_books_parsed
 

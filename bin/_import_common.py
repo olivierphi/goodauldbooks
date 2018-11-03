@@ -15,8 +15,6 @@ def init_import_logging():
                     "filename": str(root_dir / "log" / "library-parsing.log"),
                 }
             },
-            "loggers": {
-                "library_import": {"level": "DEBUG", "handlers": ["console"]}
-            },
+            "loggers": {"library_import": {"level": "DEBUG", "handlers": ["console"]}},
         }
     )

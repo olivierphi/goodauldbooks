@@ -8,6 +8,7 @@ xmltodict = "==0.11.*"
 redis = "==2.10.*"
 walrus = "==0.6.*"
 hashids = "==1.2.*"
+python-slugify = "==1.2.*"
 
 [dev-packages]
 black = "==18.9b0"

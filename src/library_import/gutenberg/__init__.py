@@ -5,7 +5,7 @@ from pathlib import Path
 from string import Template
 
 import xmltodict
-from ..domain import Author, Book, BookAsset, BookAssetType
+from library.domain import Author, Book, BookAsset, BookAssetType
 
 BOOK_INTRO_SIZE = 5000
 RDF_FILE_REGEX = re.compile(r"^pg(\d+)\.rdf$")
@@ -100,7 +100,7 @@ def parse_book(book_to_parse: BookToParse) -> t.Optional[Book]:
 
 
 def _get_book(
-        pg_book_id: int, rdf_as_dict: dict, book_files_sizes: t.Dict[str, int]
+    pg_book_id: int, rdf_as_dict: dict, book_files_sizes: t.Dict[str, int]
 ) -> t.Optional[Book]:
     # Quick'n'dirty parsing :-)
     title = _get_value_from_dict(
@@ -183,7 +183,7 @@ def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
     if name:
         name_list = name.split(",")
         if len(name_list) == 2:
-            first_name, last_name = [item.strip() for item in name_list]
+            last_name, first_name = [item.strip() for item in name_list]
     birth_year = _get_value_from_dict(
         rdf_as_dict,
         (
@@ -223,7 +223,7 @@ def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
 
 
 def _get_book_assets(
-        pg_book_id: int, book_files_sizes: t.Dict[str, int]
+    pg_book_id: int, book_files_sizes: t.Dict[str, int]
 ) -> t.List[BookAsset]:
     assets = []
     for asset_type, tpl in _ASSETS_TEMPLATES.items():

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "143ed11026cbadac1a44dee2725ce6d7d72d944f5e60a0a4974d5ae32b973ea1"
+            "sha256": "fe1151691b35dbdc12710758ce7f4050889599cf0c34495e081fd15eaf4265b3"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,6 +23,13 @@
             "index": "pypi",
             "version": "==1.2.0"
         },
+        "python-slugify": {
+            "hashes": [
+                "sha256:7723daf30996db26573176bddcdf5fcb98f66dc70df05c9cb29f2c79b8193245"
+            ],
+            "index": "pypi",
+            "version": "==1.2.6"
+        },
         "redis": {
             "hashes": [
                 "sha256:8a1900a9f2a0a44ecf6e8b5eb3e967a9909dfed219ad66df094f27f7d6f330fb",
@@ -30,6 +37,13 @@
             ],
             "index": "pypi",
             "version": "==2.10.6"
+        },
+        "unidecode": {
+            "hashes": [
+                "sha256:72f49d3729f3d8f5799f710b97c1451c5163102e76d64d20e170aedbbd923582",
+                "sha256:8c33dd588e0c9bc22a76eaa0c715a5434851f726131bd44a6c26471746efabf5"
+            ],
+            "version": "==1.0.22"
         },
         "walrus": {
             "hashes": [
