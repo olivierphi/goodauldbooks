@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 import sqlite3
 import typing as t
@@ -10,8 +11,10 @@ from .domain import Author, Book, BookAsset, BookAssetType
 
 BOOK_INTRO_SIZE = 5000
 RDF_FILE_REGEX = re.compile(r"^pg(\d+)\.rdf$")
-RAW_BOOKS_STORAGE_IN_DB_BATCH_SIZE = 80
+RAW_BOOKS_STORAGE_IN_DB_BATCH_SIZE = 100
 LIBRARY_TRAVERSAL_LIMIT = 0
+
+logger = logging.getLogger(__name__)
 
 _RAW_BOOKS_DB_SQL_TABLE_CREATION = """\
 create table raw_book(
@@ -41,8 +44,12 @@ OnBookRdf = t.Callable[[int, Path], t.Any]
 OnBookParsed = t.Callable[[Book, t.Optional[Author]], t.Any]
 
 
-def traverse_library_and_store_raw_data_in_db(base_folder: Path, db_con: sqlite3.Connection,
-                                              on_book_batch_stored: OnBookBatchStored = None) -> int:
+def traverse_library_and_store_raw_data_in_db(
+    base_folder: Path,
+    db_con: sqlite3.Connection,
+    filter: t.Callable[[dict], bool] = None,
+    on_book_batch_stored: OnBookBatchStored = None,
+) -> int:
     nb_books_processed = 0
 
     current_books_raw_data_batch: t.List[dict] = []
@@ -51,7 +58,14 @@ def traverse_library_and_store_raw_data_in_db(base_folder: Path, db_con: sqlite3
         nonlocal current_books_raw_data_batch, nb_books_processed
 
         book_raw_data = get_book_raw_data(pg_book_id, rdf_path)
-        current_books_raw_data_batch.append(book_raw_data)
+        append_book = True
+        if filter:
+            book_satisfies_filter = filter(book_raw_data)
+            if not book_satisfies_filter:
+                append_book = False
+                logger.warning("%s:skipped_by_filter", str(pg_book_id).rjust(5))
+        if append_book:
+            current_books_raw_data_batch.append(book_raw_data)
         nb_books_processed += 1
 
         if len(current_books_raw_data_batch) == RAW_BOOKS_STORAGE_IN_DB_BATCH_SIZE:
@@ -92,7 +106,9 @@ def traverse_library(base_folder: Path, on_book_rdf: OnBookRdf) -> int:
     return nb_pg_rdf_files_found
 
 
-def parse_books_from_raw_db(db_con: sqlite3.Connection, on_book_parsed: OnBookParsed) -> int:
+def parse_books_from_raw_db(
+    db_con: sqlite3.Connection, on_book_parsed: OnBookParsed
+) -> int:
     nb_books_parsed = 0
 
     db_con.row_factory = sqlite3.Row
@@ -102,7 +118,12 @@ def parse_books_from_raw_db(db_con: sqlite3.Connection, on_book_parsed: OnBookPa
     """
     for raw_book_row in db_con.execute(SQL):
         dir_content = json.loads(raw_book_row["dir_content"])
-        book, author = _parse_book(raw_book_row["pg_book_id"], raw_book_row["rdf_content"], dir_content)
+        book_parsing_res = _parse_book(
+            raw_book_row["pg_book_id"], raw_book_row["rdf_content"], dir_content
+        )
+        if book_parsing_res is None:
+            continue
+        book, author = book_parsing_res
         on_book_parsed(book, author)
 
         nb_books_parsed += 1
@@ -114,7 +135,9 @@ def init_raw_books_db(db_con: sqlite3.Connection) -> None:
     db_con.execute(_RAW_BOOKS_DB_SQL_TABLE_CREATION)
 
 
-def _store_raw_books_data_batch_in_db(books_raw_data: t.List[dict], db_con: sqlite3.Connection) -> None:
+def _store_raw_books_data_batch_in_db(
+    books_raw_data: t.List[dict], db_con: sqlite3.Connection
+) -> None:
     def _get_book_values_for_sql(book_raw_data: dict) -> dict:
         return {
             "pg_book_id": book_raw_data["pg_book_id"],
@@ -125,24 +148,22 @@ def _store_raw_books_data_batch_in_db(books_raw_data: t.List[dict], db_con: sqli
             "has_cover": int(book_raw_data["has_cover"]),
         }
 
-    books_data_for_sql = (_get_book_values_for_sql(book_raw_data) for book_raw_data in books_raw_data)
-
-    db_con.executemany(
-        _RAW_BOOKS_DB_SQL_INSERT,
-        books_data_for_sql
+    books_data_for_sql = (
+        _get_book_values_for_sql(book_raw_data) for book_raw_data in books_raw_data
     )
+
+    db_con.executemany(_RAW_BOOKS_DB_SQL_INSERT, books_data_for_sql)
     db_con.commit()
 
 
 def get_book_raw_data(pg_book_id: int, rdf_path: Path) -> dict:
-    book_raw_data = {
-        "pg_book_id": pg_book_id,
-    }
+    book_raw_data = {"pg_book_id": pg_book_id}
 
     book_raw_data["rdf_content"] = rdf_path.read_text()
 
     book_raw_data["dir_content"] = [
-        {"name": file.name, "size": file.stat().st_size} for file in rdf_path.parent.iterdir()
+        {"name": file.name, "size": file.stat().st_size}
+        for file in rdf_path.parent.iterdir()
     ]
 
     intro_file_path: Path = rdf_path.parent / f"pg{pg_book_id}.txt.utf8"
@@ -157,20 +178,30 @@ def get_book_raw_data(pg_book_id: int, rdf_path: Path) -> dict:
     return book_raw_data
 
 
-def _parse_book(pg_book_id: int, rdf_content: str, book_files: t.List[t.Dict[str, t.Any]]) -> t.Tuple[
-    Book, t.Optional[Author]]:
+def _parse_book(
+    pg_book_id: int, rdf_content: str, book_files: t.List[t.Dict[str, t.Any]]
+) -> t.Optional[t.Tuple[Book, t.Optional[Author]]]:
     rdf_as_dict = xmltodict.parse(rdf_content)
 
     book = _get_book(pg_book_id, rdf_as_dict, book_files)
+    if book is None:
+        return None
+
     author = _get_author(rdf_as_dict)
     return (book, author)
 
 
-def _get_book(pg_book_id: int, rdf_as_dict: dict, book_files: t.List[t.Dict[str, t.Any]]) -> Book:
+def _get_book(
+    pg_book_id: int, rdf_as_dict: dict, book_files: t.List[t.Dict[str, t.Any]]
+) -> t.Optional[Book]:
     # Quick'n'dirty parsing :-)
     title = _get_value_from_dict(
         rdf_as_dict, ("rdf:RDF", "pgterms:ebook", "dcterms:title")
     )
+    if not isinstance(title, str):
+        logger.warning("%s:unexpected_title:%s", str(pg_book_id).rjust(5), title)
+        return None
+
     lang = _get_value_from_dict(
         rdf_as_dict,
         (
@@ -187,6 +218,12 @@ def _get_book(pg_book_id: int, rdf_as_dict: dict, book_files: t.List[t.Dict[str,
     )
     if genres_container:
         genres = [g["rdf:Description"]["rdf:value"] for g in genres_container]
+        for genre in genres:
+            if not isinstance(genre, str):
+                logger.warning(
+                    "%s:unexpected_genre:%s", str(pg_book_id).rjust(5), genre
+                )
+                return None
     else:
         genres = []
 
@@ -264,7 +301,9 @@ def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
     )
 
 
-def _get_book_assets(pg_book_id: int, book_files: t.List[t.Dict[str, t.Any]]) -> t.List[BookAsset]:
+def _get_book_assets(
+    pg_book_id: int, book_files: t.List[t.Dict[str, t.Any]]
+) -> t.List[BookAsset]:
     assets = []
     for asset_type, tpl in _ASSETS_TEMPLATES.items():
         file_name = tpl.substitute({"pg_book_id": pg_book_id})

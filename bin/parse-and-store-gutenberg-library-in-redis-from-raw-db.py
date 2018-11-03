@@ -1,30 +1,25 @@
 import sys
-from pathlib import Path
-
-
-def _init_path():
-    src_path = str((Path(__file__) / ".." / ".." / "src").resolve())
-    if src_path not in sys.path:
-        sys.path.append(src_path)
-
 
 if __name__ == "__main__":
     import json
+
     import sqlite3
     import time
     import typing as t
 
     from walrus import Database
 
-    _init_path()
+    from _import_common import init_path, init_import_logging
+
+    init_path()
 
     from infra.redis import redis_host, redis_client
     from library_import import pg_import
     from library_import.domain import Book, Author
     from library.utils import get_genre_hash
 
-    db_path = Path(__file__).parent.parent / "raw_books.db"
-    db_con = sqlite3.connect(db_path)
+    sqlite_db_path_str = sys.argv[1]
+    db_con = sqlite3.connect(sqlite_db_path_str)
 
     nb_books_in_db = db_con.execute("select count(*) from raw_book").fetchone()[0]
     if nb_books_in_db == 0:
@@ -33,8 +28,12 @@ if __name__ == "__main__":
 
     autocomplete_db = Database(redis_host).autocomplete()
 
+    start_time = time.monotonic()
     nb_books_parsed = 0
 
+    print(
+        f"Starting parsing and storage (in Redis) of {nb_books_in_db} books from the SQLite database."
+    )
 
     def _on_book_parsed(book: Book, author: t.Optional[Author]):
         global nb_books_parsed
@@ -92,16 +91,22 @@ if __name__ == "__main__":
 
         nb_books_parsed += 1
 
-        progress_end = "\n" if nb_books_parsed % 80 == 0 else ""
-        print(".", end=progress_end, flush=True)
+        if nb_books_parsed % 100 == 0:
+            percent = round(nb_books_parsed * 100 / nb_books_in_db)
+            duration = round(time.monotonic() - start_time, 1)
+            print(
+                f"{str(percent).rjust(3)}% - {nb_books_parsed} books parsed ({duration}s)...",
+                end="\r",
+                flush=True,
+            )
 
-
-    start_time = time.monotonic()
-    print(f"Starting parsing and storage (in Redis) of {nb_books_in_db} books from the SQLite database.")
+    init_import_logging()
 
     nb_pg_rdf_files_found = pg_import.parse_books_from_raw_db(db_con, _on_book_parsed)
 
     duration = round(time.monotonic() - start_time, 1)
-    print(f"\n{nb_pg_rdf_files_found} books parsed from raw data in DB, and injected into Redis, in {duration}s.")
+    print(
+        f"\n{nb_pg_rdf_files_found} books parsed from raw data in DB, and injected into Redis, in {duration}s."
+    )
 
     print(list(autocomplete_db.search("well")))

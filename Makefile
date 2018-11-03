@@ -1,5 +1,6 @@
 GENERATED_COLLECTION_PATH ?= ~/gutenberg-mirror/generated-collection/
 DC_RUN = docker-compose run --rm --user $$(id -u):$(id -g)
+SQLITE_DB_PATH ?= /app/raw_books.db
 REDIS_HOST ?= localhost
 REDIS_PORT ?= 16379
 REDIS ?= redis-cli -h '${REDIS_HOST}' -p ${REDIS_PORT}
@@ -9,13 +10,13 @@ import-store-raw-library-in-db:
 	@${DC_RUN} --entrypoint pipenv \
 		-v ${GENERATED_COLLECTION_PATH}:/collection \
 	 	python run python \
-	 	bin/store-raw-gutenberg-library-in-db.py /collection
+	 	bin/store-raw-gutenberg-library-in-db.py /collection '${SQLITE_DB_PATH}'
 
 .PHONY: import-store-library-in-redis-from-raw-db
 import-store-library-in-redis-from-raw-db:
 	@${DC_RUN} --entrypoint pipenv \
 	 	python run python \
-	 	bin/parse-and-store-gutenberg-library-in-redis-from-raw-db.py
+	 	bin/parse-and-store-gutenberg-library-in-redis-from-raw-db.py '${SQLITE_DB_PATH}'
 
 .PHONY: redis-flush
 redis-flush:

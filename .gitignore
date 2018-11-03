@@ -1,3 +1,6 @@
-/raw_books.db
+/*.db
+
+/log/*
+!/log/.gitkeep
 
 /.venv/*
