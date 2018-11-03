@@ -1,4 +1,6 @@
+import json
 import re
+import sqlite3
 import typing as t
 from pathlib import Path
 from string import Template
@@ -6,17 +8,71 @@ from string import Template
 import xmltodict
 from .domain import Author, Book, BookAsset, BookAssetType
 
+BOOK_INTRO_SIZE = 5000
 RDF_FILE_REGEX = re.compile(r"^pg(\d+)\.rdf$")
-AUTHOR_ID_FROM_PG_AGENT_REGEX = re.compile(r"/(\d+)$")
-ASSETS_TEMPLATES = {
+RAW_BOOKS_STORAGE_IN_DB_BATCH_SIZE = 80
+LIBRARY_TRAVERSAL_LIMIT = 0
+
+_RAW_BOOKS_DB_SQL_TABLE_CREATION = """\
+create table raw_book(
+    pg_book_id int not null, 
+    rdf_content text not null,
+    dir_content text not null,
+    has_intro int(1) not null, 
+    intro text,
+    has_cover int(1) not null
+);
+"""
+_RAW_BOOKS_DB_SQL_INSERT = """\
+insert into raw_book
+    (pg_book_id, rdf_content, dir_content, has_intro, intro, has_cover)
+values
+    (:pg_book_id, :rdf_content, :dir_content, :has_intro, :intro, :has_cover);
+"""
+
+_AUTHOR_ID_FROM_PG_AGENT_REGEX = re.compile(r"/(\d+)$")
+_ASSETS_TEMPLATES = {
     BookAssetType.EPUB: Template("pg${pg_book_id}.epub"),
     BookAssetType.MOBI: Template("pg${pg_book_id}.mobi"),
 }
 
+OnBookBatchStored = t.Callable[[int, Path], t.Any]
+OnBookRdf = t.Callable[[int, Path], t.Any]
 OnBookParsed = t.Callable[[Book, t.Optional[Author]], t.Any]
 
 
-def traverse_library(base_folder: Path, on_book_parsed: OnBookParsed = None) -> int:
+def traverse_library_and_store_raw_data_in_db(base_folder: Path, db_con: sqlite3.Connection,
+                                              on_book_batch_stored: OnBookBatchStored = None) -> int:
+    nb_books_processed = 0
+
+    current_books_raw_data_batch: t.List[dict] = []
+
+    def _on_book_rdf(pg_book_id: int, rdf_path: Path):
+        nonlocal current_books_raw_data_batch, nb_books_processed
+
+        book_raw_data = get_book_raw_data(pg_book_id, rdf_path)
+        current_books_raw_data_batch.append(book_raw_data)
+        nb_books_processed += 1
+
+        if len(current_books_raw_data_batch) == RAW_BOOKS_STORAGE_IN_DB_BATCH_SIZE:
+            _store_books_batch()
+
+    def _store_books_batch():
+        nonlocal current_books_raw_data_batch
+        _store_raw_books_data_batch_in_db(current_books_raw_data_batch, db_con)
+        if on_book_batch_stored:
+            on_book_batch_stored(len(current_books_raw_data_batch))
+        current_books_raw_data_batch = []
+
+    traverse_library(base_folder, _on_book_rdf)
+
+    if current_books_raw_data_batch:
+        _store_books_batch()
+
+    return nb_books_processed
+
+
+def traverse_library(base_folder: Path, on_book_rdf: OnBookRdf) -> int:
     nb_pg_rdf_files_found = 0
 
     for rdf_file in base_folder.glob("*/*.rdf"):
@@ -25,38 +81,92 @@ def traverse_library(base_folder: Path, on_book_parsed: OnBookParsed = None) -> 
             continue
 
         nb_pg_rdf_files_found += 1
+
         pg_book_id = rdf_file_match[1]
 
-        _handle_book(int(pg_book_id), rdf_file, on_book_parsed)
+        on_book_rdf(int(pg_book_id), rdf_file)
 
-        print(".", end="", flush=True)
-        if False and nb_pg_rdf_files_found > 1000:
+        if nb_pg_rdf_files_found == LIBRARY_TRAVERSAL_LIMIT:
             break
-        if nb_pg_rdf_files_found % 80 == 0:
-            print("")
 
     return nb_pg_rdf_files_found
 
 
-def _handle_book(pg_book_id: int, rdf_path: Path, on_book_parsed: OnBookParsed = None):
-    with rdf_path.open() as rdf_file:
-        rdf_content = rdf_file.read()
-        book, author = _parse_book(rdf_path, pg_book_id, rdf_content)
-        if on_book_parsed:
-            on_book_parsed(book, author)
+def parse_books_from_raw_db(db_con: sqlite3.Connection, on_book_parsed: OnBookParsed) -> int:
+    nb_books_parsed = 0
+
+    db_con.row_factory = sqlite3.Row
+
+    SQL = """\
+        select pg_book_id, rdf_content, dir_content, has_intro, intro, has_cover from raw_book order by pg_book_id;
+    """
+    for raw_book_row in db_con.execute(SQL):
+        dir_content = json.loads(raw_book_row["dir_content"])
+        book, author = _parse_book(raw_book_row["pg_book_id"], raw_book_row["rdf_content"], dir_content)
+        on_book_parsed(book, author)
+
+        nb_books_parsed += 1
+
+    return nb_books_parsed
 
 
-def _parse_book(
-    rdf_path: Path, pg_book_id: int, rdf_content: str
-) -> t.Tuple[Book, t.Optional[Author]]:
+def init_raw_books_db(db_con: sqlite3.Connection) -> None:
+    db_con.execute(_RAW_BOOKS_DB_SQL_TABLE_CREATION)
+
+
+def _store_raw_books_data_batch_in_db(books_raw_data: t.List[dict], db_con: sqlite3.Connection) -> None:
+    def _get_book_values_for_sql(book_raw_data: dict) -> dict:
+        return {
+            "pg_book_id": book_raw_data["pg_book_id"],
+            "rdf_content": book_raw_data["rdf_content"],
+            "dir_content": json.dumps(book_raw_data["dir_content"]),
+            "has_intro": int(book_raw_data["has_intro"]),
+            "intro": book_raw_data["intro"] if book_raw_data["has_intro"] else None,
+            "has_cover": int(book_raw_data["has_cover"]),
+        }
+
+    books_data_for_sql = (_get_book_values_for_sql(book_raw_data) for book_raw_data in books_raw_data)
+
+    db_con.executemany(
+        _RAW_BOOKS_DB_SQL_INSERT,
+        books_data_for_sql
+    )
+    db_con.commit()
+
+
+def get_book_raw_data(pg_book_id: int, rdf_path: Path) -> dict:
+    book_raw_data = {
+        "pg_book_id": pg_book_id,
+    }
+
+    book_raw_data["rdf_content"] = rdf_path.read_text()
+
+    book_raw_data["dir_content"] = [
+        {"name": file.name, "size": file.stat().st_size} for file in rdf_path.parent.iterdir()
+    ]
+
+    intro_file_path: Path = rdf_path.parent / f"pg{pg_book_id}.txt.utf8"
+    book_raw_data["has_intro"] = intro_file_path.exists()
+    if book_raw_data["has_intro"]:
+        with intro_file_path.open() as intro_file:
+            book_raw_data["intro"] = intro_file.read(BOOK_INTRO_SIZE)
+
+    cover_file_path: Path = rdf_path.parent / f"pg{pg_book_id}.cover.medium.jpg"
+    book_raw_data["has_cover"] = cover_file_path.exists()
+
+    return book_raw_data
+
+
+def _parse_book(pg_book_id: int, rdf_content: str, book_files: t.List[t.Dict[str, t.Any]]) -> t.Tuple[
+    Book, t.Optional[Author]]:
     rdf_as_dict = xmltodict.parse(rdf_content)
 
-    book = _get_book(rdf_path, pg_book_id, rdf_as_dict)
+    book = _get_book(pg_book_id, rdf_as_dict, book_files)
     author = _get_author(rdf_as_dict)
     return (book, author)
 
 
-def _get_book(rdf_path: Path, pg_book_id: int, rdf_as_dict: dict) -> Book:
+def _get_book(pg_book_id: int, rdf_as_dict: dict, book_files: t.List[t.Dict[str, t.Any]]) -> Book:
     # Quick'n'dirty parsing :-)
     title = _get_value_from_dict(
         rdf_as_dict, ("rdf:RDF", "pgterms:ebook", "dcterms:title")
@@ -80,7 +190,7 @@ def _get_book(rdf_path: Path, pg_book_id: int, rdf_as_dict: dict) -> Book:
     else:
         genres = []
 
-    assets = _get_book_assets(rdf_path, pg_book_id)
+    assets = _get_book_assets(pg_book_id, book_files)
 
     return Book(
         gutenberg_id=pg_book_id, title=title, lang=lang, genres=genres, assets=assets
@@ -100,7 +210,7 @@ def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
         # TODO: handle books with multiple authors (like pg10620) properly
         return None
 
-    pg_author_id = int(AUTHOR_ID_FROM_PG_AGENT_REGEX.search(pg_agent_str).group(1))
+    pg_author_id = int(_AUTHOR_ID_FROM_PG_AGENT_REGEX.search(pg_agent_str).group(1))
 
     name = _get_value_from_dict(
         rdf_as_dict,
@@ -154,13 +264,13 @@ def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
     )
 
 
-def _get_book_assets(rdf_path: Path, pg_book_id: int) -> t.List[BookAsset]:
+def _get_book_assets(pg_book_id: int, book_files: t.List[t.Dict[str, t.Any]]) -> t.List[BookAsset]:
     assets = []
-    for asset_type, tpl in ASSETS_TEMPLATES.items():
+    for asset_type, tpl in _ASSETS_TEMPLATES.items():
         file_name = tpl.substitute({"pg_book_id": pg_book_id})
-        file_path = rdf_path.parent / file_name
-        if file_path.exists():
-            assets.append(BookAsset(type=asset_type, size=file_path.stat().st_size))
+        for file_data in book_files:
+            if file_name == file_data["name"]:
+                assets.append(BookAsset(type=asset_type, size=file_data["size"]))
     return assets
 
 

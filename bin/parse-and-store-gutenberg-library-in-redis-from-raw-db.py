@@ -10,6 +10,8 @@ def _init_path():
 
 if __name__ == "__main__":
     import json
+    import sqlite3
+    import time
     import typing as t
 
     from walrus import Database
@@ -21,12 +23,22 @@ if __name__ == "__main__":
     from library_import.domain import Book, Author
     from library.utils import get_genre_hash
 
-    base_folder_str = sys.argv[1]
-    base_folder = Path(base_folder_str)
+    db_path = Path(__file__).parent.parent / "raw_books.db"
+    db_con = sqlite3.connect(db_path)
+
+    nb_books_in_db = db_con.execute("select count(*) from raw_book").fetchone()[0]
+    if nb_books_in_db == 0:
+        print("No books round in 'raw_book' SQLite table. Exiting.")
+        sys.exit(1)
 
     autocomplete_db = Database(redis_host).autocomplete()
 
+    nb_books_parsed = 0
+
+
     def _on_book_parsed(book: Book, author: t.Optional[Author]):
+        global nb_books_parsed
+
         book_id = f"book:pg:{book.gutenberg_id}"
         book_dict = book._asdict()
 
@@ -78,7 +90,18 @@ if __name__ == "__main__":
             # save "author:pg:[id]"
             redis_client.set(author_id, json.dumps(author_dict))
 
-    nb_pg_rdf_files_found = pg_import.traverse_library(base_folder, _on_book_parsed)
+        nb_books_parsed += 1
 
-    print("\n", nb_pg_rdf_files_found, " RDF files found and parsed")
+        progress_end = "\n" if nb_books_parsed % 80 == 0 else ""
+        print(".", end=progress_end, flush=True)
+
+
+    start_time = time.monotonic()
+    print(f"Starting parsing and storage (in Redis) of {nb_books_in_db} books from the SQLite database.")
+
+    nb_pg_rdf_files_found = pg_import.parse_books_from_raw_db(db_con, _on_book_parsed)
+
+    duration = round(time.monotonic() - start_time, 1)
+    print(f"\n{nb_pg_rdf_files_found} books parsed from raw data in DB, and injected into Redis, in {duration}s.")
+
     print(list(autocomplete_db.search("well")))
