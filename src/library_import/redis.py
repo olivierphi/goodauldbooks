@@ -7,11 +7,12 @@ from .domain import Book
 
 
 def store_book_in_redis(
-    redis_client: StrictRedis, autocomplete_db: Autocomplete, book: Book
+        redis_client: StrictRedis, autocomplete_db: Autocomplete, book: Book
 ):
     book_id = f"{book.provider}:{book.id}"
     book_redis_key = f"book:{book_id}"
     book_dict = book._asdict()
+    book_dict["author_ids"] = []
 
     if book_dict["genres"]:
         genres_hashes_mapping = {get_genre_hash(g): g for g in book_dict["genres"]}
@@ -52,9 +53,9 @@ def store_book_in_redis(
     if book.authors:
         # TODO: handle multiple authors
         author = book.authors[0]
-        author_redis_key = f"author:{author}"
         author_id = f"{author.provider}:{author.id}"
-        book_dict["author_ids"] = [author_id]
+        author_redis_key = f"author:{author_id}"
+        book_dict["author_ids"].append(author_id)
         autocomplete_db.store(
             obj_type="author",
             obj_id=author_redis_key,
@@ -62,8 +63,12 @@ def store_book_in_redis(
             data=author_redis_key,
         )
         author_dict = author._asdict()
-        # save "author:[provider]:[id]"
-        redis_client.set(author_redis_key, json.dumps(author_dict))
+        # Save the "author:[provider]:[id]" hash
+        redis_client.hmset(author_redis_key, author_dict)
 
-    # save "book:[provider]:[id]"
-    redis_client.set(book_redis_key, json.dumps(book_dict))
+    # Save the "book:[provider]:[id]" hash, after a bit of serialisation and cleaning
+    del book_dict["authors"]
+    book_dict["genres"] = json.dumps(book_dict["genres"])
+    book_dict["assets"] = json.dumps(book_dict["assets"])
+    book_dict["author_ids"] = json.dumps(book_dict["author_ids"])
+    redis_client.hmset(book_redis_key, book_dict)

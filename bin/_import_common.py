@@ -16,7 +16,7 @@ def init_import_logging():
                 }
             },
             "loggers": {
-                "library_import.pg_import": {"level": "DEBUG", "handlers": ["console"]}
+                "library_import": {"level": "DEBUG", "handlers": ["console"]}
             },
         }
     )

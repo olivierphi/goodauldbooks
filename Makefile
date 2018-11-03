@@ -13,11 +13,11 @@ store-raw-gutenberg-library-in-transitional-db:
 	 	python run python \
 	 	bin/store-raw-gutenberg-library-in-transitional-db.py /collection '${SQLITE_DB_PATH}'
 
-.PHONY: set-redis-db-from-transitional-db
-set-redis-db-from-transitional-db:
+.PHONY: populate-redis-data-from-transitional-db
+populate-redis-data-from-transitional-db:
 	@${PIPENV_RUN_PREFIX} \
 	 	python run python \
-	 	bin/set-redis-db-from-transitional-db.py '${SQLITE_DB_PATH}'
+	 	bin/populate-redis-data-from-transitional-db.py '${SQLITE_DB_PATH}'
 
 .PHONY: redis-flush
 redis-flush:

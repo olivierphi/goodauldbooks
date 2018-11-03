@@ -39,22 +39,28 @@ if not results_list:
     print("No results.")
 else:
     library_items_ids = results_list
-    print("library_items_ids=", library_items_ids)
 
-    objects = redis_client.mget(library_items_ids)
-    for i, library_item_serialised in enumerate(objects):
-        library_item = json.loads(library_item_serialised)
+    for i, library_item_id in enumerate(library_items_ids):
+        library_item = {
+            key.decode(): value.decode() for key, value in
+            redis_client.hgetall(library_item_id).items()
+        }
 
-        if "author_ids" in library_item:
+        if "author_ids" in library_item and library_item["author_ids"]:
+            author_ids = json.loads(library_item["author_ids"])
             authors_redis_keys = [
-                f"author:{author_id}" for author_id in library_item["author_ids"]
+                f"author:{author_id}" for author_id in author_ids
             ]
-            authors_serialised = redis_client.mget(authors_redis_keys)
-            authors = [json.loads(auth) for auth in authors_serialised]
-            library_item["authors"] = authors
+            library_item["authors"] = []
+            for author_redis_key in authors_redis_keys:
+                author_library_item = {
+                    key.decode(): value.decode() for key, value in
+                    redis_client.hgetall(author_redis_key).items()
+                }
+                library_item["authors"].append(author_library_item)
 
         if "genres" in library_item and library_item["genres"]:
-            genres_hashes = library_item["genres"]
+            genres_hashes = json.loads(library_item["genres"])
             genres_titles = get_genres_from_hashes(genres_hashes)
             genres_stats_raw = [
                 redis_client.hgetall(f"genres:stats:books_by_lang:{h}")

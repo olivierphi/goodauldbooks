@@ -28,7 +28,7 @@ class BookToParse(t.NamedTuple):
     intro: str = None
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("library_import")
 
 OnBookRdf = t.Callable[[int, Path], t.Any]
 OnBookParsed = t.Callable[[Book], t.Any]
@@ -100,7 +100,7 @@ def parse_book(book_to_parse: BookToParse) -> t.Optional[Book]:
 
 
 def _get_book(
-    pg_book_id: int, rdf_as_dict: dict, book_files_sizes: t.Dict[str, int]
+        pg_book_id: int, rdf_as_dict: dict, book_files_sizes: t.Dict[str, int]
 ) -> t.Optional[Book]:
     # Quick'n'dirty parsing :-)
     title = _get_value_from_dict(
@@ -121,6 +121,11 @@ def _get_book(
             "#text",
         ),
     )
+    if not isinstance(lang, str):
+        # TODO: Handle books with multiple langs?
+        logger.warning("%s:unexpected_lang:%s", str(pg_book_id).rjust(5), lang)
+        return None
+
     genres_container = _get_value_from_dict(
         rdf_as_dict, ("rdf:RDF", "pgterms:ebook", "dcterms:subject")
     )
@@ -157,8 +162,9 @@ def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
     if pg_agent_str is None:
         return None
 
-    if isinstance(pg_agent_str, list):
+    if not isinstance(pg_agent_str, str):
         # TODO: handle books with multiple authors (like pg10620) properly
+        logger.warning("%s:unexpected_author_agent", pg_agent_str)
         return None
 
     pg_author_id = int(_AUTHOR_ID_FROM_PG_AGENT_REGEX.search(pg_agent_str).group(1))
@@ -217,7 +223,7 @@ def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
 
 
 def _get_book_assets(
-    pg_book_id: int, book_files_sizes: t.Dict[str, int]
+        pg_book_id: int, book_files_sizes: t.Dict[str, int]
 ) -> t.List[BookAsset]:
     assets = []
     for asset_type, tpl in _ASSETS_TEMPLATES.items():
