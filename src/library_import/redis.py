@@ -1,13 +1,8 @@
 import json
 
 from infra import redis_key
+from library import utils
 from library.domain import Book, LANG_ALL
-from library.utils import (
-    get_genre_hash,
-    get_provider_and_id_from_book_slug,
-    get_book_slug,
-    get_author_slug,
-)
 from redis import StrictRedis
 from walrus import Autocomplete
 
@@ -15,18 +10,25 @@ BOOKS_BY_GENRE_COMPUTATION_NB_GENRES_BY_BATCH = 30
 
 
 def store_book_in_redis(
-    redis_client: StrictRedis, autocomplete_db: Autocomplete, book: Book
+        redis_client: StrictRedis, autocomplete_db: Autocomplete, book: Book
 ):
-    book_redis_key = redis_key.book(book.provider, book.id)
-    book_dict = book._asdict()
-    book_dict["authors_ids"] = []
+    # TODO: split that ugly function into separate elegant functions :-)
+    book_dict = {
+        "provider": book.provider,
+        "id": book.id,
+        "title": book.title,
+        "lang": book.lang,
+        "genres": [],
+        "assets": [],
+        "authors_ids": [],
+    }
 
-    if book_dict["genres"]:
-        genres_hashes_mapping = {get_genre_hash(g): g for g in book_dict["genres"]}
+    if book.genres:
+        genres_hashes_mapping = {utils.get_genre_hash(g): g for g in book.genres}
 
         # save "genres:hashes_mapping" keys for this book
         redis_client.hmset(redis_key.genres_hashes_mapping(), genres_hashes_mapping)
-        # save "genres:hashes_mapping_reversed" keys for this book
+        # save "genres:hashes_mapping_reversed" keys for this book (could be useful)
         genres_hashes_mapping_reversed = {
             title: hash for hash, title in genres_hashes_mapping.items()
         }
@@ -45,16 +47,8 @@ def store_book_in_redis(
         book_dict["genres"] = list(genres_hashes_mapping.keys())
 
     book_dict["assets"] = {
-        asset_type.type.name: asset_type.size for asset_type in book_dict["assets"]
+        asset_type.type.name: asset_type.size for asset_type in book.assets
     }
-
-    if book.title:
-        autocomplete_db.store(
-            obj_type="book",
-            obj_id=book_redis_key,
-            title=book.title,
-            data=book_redis_key,
-        )
 
     if book.authors:
         # TODO: handle multiple authors
@@ -72,18 +66,26 @@ def store_book_in_redis(
         # Save the "author:[provider]:[id]" hash
         redis_client.hmset(author_redis_key, author_dict)
         # Save the slugified name of that author in our authors names Redis sorted set
-        author_slug = get_author_slug(author)
+        author_slug = utils.get_author_slug(author)
         redis_client.zadd(redis_key.authors_slugs(), 0, author_slug)
 
+    book_redis_key = redis_key.book(book.provider, book.id)
+    if book.title:
+        autocomplete_db.store(
+            obj_type="book",
+            obj_id=book_redis_key,
+            title=book.title,
+            data=book_redis_key,
+        )
+
     # Save the "book:[provider]:[id]" hash, after a bit of serialisation and cleaning
-    del book_dict["authors"]
     book_dict["genres"] = json.dumps(book_dict["genres"])
     book_dict["assets"] = json.dumps(book_dict["assets"])
     book_dict["authors_ids"] = json.dumps(book_dict["authors_ids"])
     redis_client.hmset(book_redis_key, book_dict)
 
     # Save the slugified title of that book in our books titles Redis sorted set
-    book_slug = get_book_slug(book)
+    book_slug = utils.get_book_slug(book)
     redis_client.zadd(redis_key.books_slugs(), 0, book_slug)
 
 
@@ -93,7 +95,7 @@ def compute_books_by_genre(redis_client: StrictRedis):
     while True:
         current_batch_start = nb_genres_computed
         current_batch_stop = (
-            current_batch_start + BOOKS_BY_GENRE_COMPUTATION_NB_GENRES_BY_BATCH
+                current_batch_start + BOOKS_BY_GENRE_COMPUTATION_NB_GENRES_BY_BATCH
         )
 
         # Take the next n items of our alphabetically sorted (by Redis) books slugs
@@ -105,7 +107,7 @@ def compute_books_by_genre(redis_client: StrictRedis):
             break  # all books done! :-)
 
         for i, book_slug in enumerate(next_books_batch):
-            provider, id = get_provider_and_id_from_book_slug(book_slug)
+            provider, id = utils.get_provider_and_id_from_book_slug(book_slug)
             book_id = f"{provider}:{id}"
             book_lang = redis_client.hget(redis_key.book(provider, id), "lang")
             # For each book, get its genres:

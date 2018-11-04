@@ -21,6 +21,12 @@ if not exists:
     sys.exit(1)
 print("Checked.")
 
+nb_books_for_that_genre_and_lang = redis_client.zcard(redis_key.books_by_genre(genre_hash, lang))
+print(
+    f"We have \033[93m{nb_books_for_that_genre_and_lang}\033[0m books for that genre and lang (\033[93m{lang}\033[0m).",
+    f"Let's display \033[93m{limit}\033[0m items from index \033[93m{start}\033[0m."
+)
+
 start_time = time.monotonic()
 print(get_books_by_genre(genre_hash, lang, start, limit))
 duration = round(time.monotonic() - start_time, 1)
