@@ -1,6 +1,7 @@
 import json
 import typing as t
 
+from infra import redis_key
 from infra.redis import redis_client
 from library.domain import Book, Author
 from library.utils import get_genres_from_hashes
@@ -16,7 +17,7 @@ def get_authors(providers_and_ids_list: t.List[t.Tuple[str, str]]) -> t.List[Aut
 
 
 def get_author(provider: str, id: str) -> t.Optional[Author]:
-    author_redis_key = f"author:{provider}:{id}"
+    author_redis_key = redis_key.author(provider, id)
     author_raw = redis_client.hgetall(author_redis_key)
     if not author_raw:
         return None
@@ -24,15 +25,17 @@ def get_author(provider: str, id: str) -> t.Optional[Author]:
 
 
 def get_book(provider: str, id: str) -> t.Optional[Book]:
-    book_redis_key = f"book:{provider}:{id}"
+    book_redis_key = redis_key.book(provider, id)
     book_raw = redis_client.hgetall(book_redis_key)
     if not book_raw:
         return None
     return _get_book_from_redis_hash(book_raw)
 
 
-def get_books_by_genre(genre_hash: str, start: int, limit: int) -> t.List[Book]:
-    books_for_this_genre_redis_key = f"library:books_by:genre:{genre_hash}"
+def get_books_by_genre(
+    genre_hash: str, lang: str, start: int, limit: int
+) -> t.List[Book]:
+    books_for_this_genre_redis_key = redis_key.books_by_genre(genre_hash, lang)
     stop = start + limit - 1
     books_ids = redis_client.zrange(books_for_this_genre_redis_key, start, stop)
     res = []

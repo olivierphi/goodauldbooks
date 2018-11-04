@@ -70,10 +70,11 @@ dev-get-book:
 
 .PHONY: dev-test-get-books-by-genre
 dev-test-get-books-by-genre: GENRE ?=
+dev-test-get-books-by-genre: LNG ?= _all_
 dev-test-get-books-by-genre: START ?= 0
 dev-test-get-books-by-genre: LIMIT ?= 3
 dev-test-get-books-by-genre:
 	@[ "${GENRE}" ] || ( echo "\033[41m! Make variable GENRE is not set\033[0m"; exit 1 )
 	@${PIPENV_RUN_PREFIX} --no-deps \
 	 	python run python \
-		bin/dev/test-get-books-by-genre.py '${GENRE}' ${START} ${LIMIT}
+		bin/dev/test-get-books-by-genre.py '${GENRE}' ${LNG} ${START} ${LIMIT}

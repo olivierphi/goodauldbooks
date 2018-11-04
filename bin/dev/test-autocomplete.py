@@ -2,8 +2,11 @@ import json
 import sys
 import time
 
+from infra import redis_key
 from infra.redis import redis_host, redis_client
-from library.utils import get_genres_from_hashes
+from library.domain import Book, Author
+from library.repository import get_author, get_book
+from library.utils import get_genres_hashes
 from walrus import Database
 
 search = sys.argv[1]
@@ -41,26 +44,29 @@ else:
     library_items_ids = results_list
 
     for i, library_item_id in enumerate(library_items_ids):
-        library_item = redis_client.hgetall(library_item_id)
+        library_item_type = None
+        if library_item_id[0:5] == "book:":
+            library_item_type = Book
+            _, book_provider, book_id = library_item_id.split(":")
+            library_item = get_book(book_provider, book_id)
+        elif library_item_id[0:6] == "author:":
+            library_item_type = Author
+            _, author_provider, author_id = author_id.split(":")
+            library_item = get_author(author_provider, author_id)
+        else:
+            raise Exception(f"Unknown library item id pattern '{library_item_id}'")
 
-        if "author_ids" in library_item and library_item["author_ids"]:
-            author_ids = json.loads(library_item["author_ids"])
-            authors_redis_keys = [f"author:{author_id}" for author_id in author_ids]
-            library_item["authors"] = []
-            for author_redis_key in authors_redis_keys:
-                author_library_item = redis_client.hgetall(author_redis_key)
-                library_item["authors"].append(author_library_item)
+        library_item_dict = library_item._asdict()
 
-        if "genres" in library_item and library_item["genres"]:
-            genres_hashes = json.loads(library_item["genres"])
-            genres_titles = get_genres_from_hashes(genres_hashes)
+        if library_item_type is Book and library_item.genres:
+            genres_hashes = get_genres_hashes(library_item.genres)
             genres_stats_raw = [
-                redis_client.hgetall(f"genres:stats:books_by_lang:{h}")
-                for h in genres_hashes
+                redis_client.hgetall(redis_key.stats_genre_nb_books_by_lang(hash))
+                for hash in genres_hashes
             ]
-            library_item["genres_with_stats"] = {
-                genres_titles[i]: genre_stats_raw
+            library_item_dict["genres_with_stats"] = {
+                library_item.genres[i]: genre_stats_raw
                 for i, genre_stats_raw in enumerate(genres_stats_raw)
             }
 
-        print(library_items_ids[i], json.dumps(library_item, indent=2))
+        print(library_items_ids[i], json.dumps(library_item_dict, indent=2))

@@ -3,7 +3,10 @@ import typing as t
 from zlib import adler32
 
 from hashids import Hashids
+from infra import redis_key
 from infra.redis import redis_client
+from library.domain import Book, Author
+from slugify import slugify
 
 _hashids = Hashids()
 
@@ -26,8 +29,12 @@ def get_genre_hash(genre: str) -> str:
     return genre_hash
 
 
+def get_genres_hashes(genres: t.List[str]) -> t.List[str]:
+    return [get_genre_hash(genre) for genre in genres]
+
+
 def get_genres_from_hashes(genres_hashes: t.List[str]) -> t.List[str]:
-    return redis_client.hmget("genres:hashes_mapping", genres_hashes)
+    return redis_client.hmget(redis_key.genres_hashes_mapping(), genres_hashes)
 
 
 def get_provider_and_id_from_book_slug(slug: str) -> t.Tuple[str, str]:
@@ -35,3 +42,11 @@ def get_provider_and_id_from_book_slug(slug: str) -> t.Tuple[str, str]:
     if not slug_match:
         raise Exception(f"Book slug '{slug}' doesn't match the expected pattern")
     return slug_match.group("provider"), slug_match.group("id")
+
+
+def get_book_slug(book: Book) -> str:
+    return f"{slugify(book.title)}-{book.provider}-{book.id}"
+
+
+def get_author_slug(author: Author) -> str:
+    return f"{slugify(author.full_name())}-{author.provider}-{author.id}"

@@ -1,6 +1,8 @@
 import typing as t
 from enum import Enum
 
+LANG_ALL = "_all_"
+
 
 class BookAssetType(Enum):
     EPUB = "epub"
