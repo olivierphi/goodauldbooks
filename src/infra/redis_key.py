@@ -28,3 +28,7 @@ def authors_slugs() -> str:
 
 def books_by_genre(genre_hash: str, lang: str) -> str:
     return f"library:books_by:genre:{genre_hash}:{lang}"
+
+
+def books_by_author(author_provider: str, author_id: str, lang: str) -> str:
+    return f"library:books_by:author:{author_provider}:{author_id}:{lang}"

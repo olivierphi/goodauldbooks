@@ -1,4 +1,5 @@
 import json
+import typing as t
 
 from infra import redis_key
 from library import utils
@@ -10,7 +11,7 @@ BOOKS_BY_GENRE_COMPUTATION_NB_GENRES_BY_BATCH = 30
 
 
 def store_book_in_redis(
-        redis_client: StrictRedis, autocomplete_db: Autocomplete, book: Book
+    redis_client: StrictRedis, autocomplete_db: Autocomplete, book: Book
 ):
     # TODO: split that ugly function into separate elegant functions :-)
     book_dict = {
@@ -90,39 +91,75 @@ def store_book_in_redis(
 
 
 def compute_books_by_genre(redis_client: StrictRedis):
-    nb_genres_computed = 0
+    def _on_book_slug(book_ranking: int, book_slug: str) -> None:
+        provider, id = utils.get_provider_and_id_from_book_slug(book_slug)
+        book_id = f"{provider}:{id}"
+        book_lang = redis_client.hget(redis_key.book(provider, id), "lang")
+        # For each book, get its genres:
+        book_genres_raw = redis_client.hget(redis_key.book(provider, id), "genres")
+        books_genres_hashes = json.loads(book_genres_raw)
+        for genre_hash in books_genres_hashes:
+            # And add this book to this genre "book_by_genre" sorted set,
+            # with the current book position in the alphabetically sorted set as score.
+            for lang in (book_lang, LANG_ALL):
+                books_for_this_genre_and_lang_redis_key = redis_key.books_by_genre(
+                    genre_hash, lang
+                )
+                book_score = book_ranking
+                redis_client.zadd(
+                    books_for_this_genre_and_lang_redis_key, book_score, book_id
+                )
+
+    scan_sorted_books_slugs(redis_client, _on_book_slug)
+
+
+def compute_books_by_author(redis_client: StrictRedis):
+    def _on_book_slug(book_ranking: int, book_slug: str) -> None:
+        provider, id = utils.get_provider_and_id_from_book_slug(book_slug)
+        book_id = f"{provider}:{id}"
+        book_lang = redis_client.hget(redis_key.book(provider, id), "lang")
+        # For each book, get its authors:
+        book_authors_ids_raw = redis_client.hget(
+            redis_key.book(provider, id), "authors_ids"
+        )
+        books_authors_ids = json.loads(book_authors_ids_raw)
+        for author_id in books_authors_ids:
+            provider, id = author_id.split(":")
+            # And add this book to this author "book_by_author" sorted set,
+            # with the current book position in the alphabetically sorted set as score.
+            for lang in (book_lang, LANG_ALL):
+                books_for_this_author_and_lang_redis_key = redis_key.books_by_author(
+                    provider, id, lang
+                )
+                book_score = book_ranking
+                redis_client.zadd(
+                    books_for_this_author_and_lang_redis_key, book_score, book_id
+                )
+
+    scan_sorted_books_slugs(redis_client, _on_book_slug)
+
+
+def scan_sorted_books_slugs(
+    redis_client: StrictRedis, on_book_slug: t.Callable[[int, str], t.Any]
+):
+    nb_slugs_scanned = 0
     books_slugs_redis_key = redis_key.books_slugs()
     while True:
-        current_batch_start = nb_genres_computed
+        current_batch_start = nb_slugs_scanned
         current_batch_stop = (
-                current_batch_start + BOOKS_BY_GENRE_COMPUTATION_NB_GENRES_BY_BATCH
+            current_batch_start + BOOKS_BY_GENRE_COMPUTATION_NB_GENRES_BY_BATCH
         )
 
         # Take the next n items of our alphabetically sorted (by Redis) books slugs
-        next_books_batch = redis_client.zrange(
+        current_books_slugs_batch = redis_client.zrange(
             books_slugs_redis_key, current_batch_start, current_batch_stop
         )
 
-        if not next_books_batch:
+        if not current_books_slugs_batch:
             break  # all books done! :-)
 
-        for i, book_slug in enumerate(next_books_batch):
-            provider, id = utils.get_provider_and_id_from_book_slug(book_slug)
-            book_id = f"{provider}:{id}"
-            book_lang = redis_client.hget(redis_key.book(provider, id), "lang")
-            # For each book, get its genres:
-            book_genres_raw = redis_client.hget(redis_key.book(provider, id), "genres")
-            books_genres_hashes = json.loads(book_genres_raw)
-            for genre_hash in books_genres_hashes:
-                # And add this book to this genre "book_by_genre" sorted set,
-                # with the current book position in the alphabetically sorted set as score.
-                for lang in (book_lang, LANG_ALL):
-                    books_for_this_genre__and_lang_redis_key = redis_key.books_by_genre(
-                        genre_hash, lang
-                    )
-                    book_score = current_batch_start + i
-                    redis_client.zadd(
-                        books_for_this_genre__and_lang_redis_key, book_score, book_id
-                    )
+        for i, book_slug in enumerate(current_books_slugs_batch):
+            current_position = current_batch_start + i
+            on_book_slug(current_position, book_slug)
 
-        nb_genres_computed += len(next_books_batch)
+        nb_slugs_scanned += len(current_books_slugs_batch)

@@ -47,6 +47,23 @@ def get_books_by_genre(
     return res
 
 
+def get_books_by_author(
+    author_provider: str, author_id: str, lang: str, start: int, limit: int
+) -> t.List[Book]:
+    books_for_this_author_redis_key = redis_key.books_by_author(
+        author_provider, author_id, lang
+    )
+    stop = start + limit - 1
+    books_ids = redis_client.zrange(books_for_this_author_redis_key, start, stop)
+    res = []
+    for book_id in books_ids:
+        provider, id = book_id.split(":")
+        book = get_book(provider, id)
+        if book:
+            res.append(book)
+    return res
+
+
 def _get_book_from_redis_hash(book_redis_hash: dict) -> Book:
     authors_providers_and_ids = [
         author_id.split(":") for author_id in json.loads(book_redis_hash["authors_ids"])

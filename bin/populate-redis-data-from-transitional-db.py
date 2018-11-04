@@ -7,7 +7,11 @@ from _import_common import init_import_logging
 from infra.redis import redis_host, redis_client
 from library.domain import Book
 from library_import.gutenberg.transitional_db import parse_books_from_transitional_db
-from library_import.redis import store_book_in_redis, compute_books_by_genre
+from library_import.redis import (
+    store_book_in_redis,
+    compute_books_by_genre,
+    compute_books_by_author,
+)
 from walrus import Database
 
 sqlite_db_path_str = sys.argv[1]
@@ -55,7 +59,15 @@ print(
 )
 
 start_time = time.monotonic()
-print("Now computing the 'library:books_by:genre:[genre_hash]' sets...")
+print("Now computing the 'library:books_by:genre:{genre_hash}':{lang} sets...")
 compute_books_by_genre(redis_client)
 duration = round(time.monotonic() - start_time, 1)
 print(f"'Books by genre' sorted sets computed. ({duration}s.)")
+
+start_time = time.monotonic()
+print(
+    "Now computing the 'library:books_by:author:{author_provider}:{author_id}:{lang}' sets..."
+)
+compute_books_by_author(redis_client)
+duration = round(time.monotonic() - start_time, 1)
+print(f"'Books by author' sorted sets computed. ({duration}s.)")

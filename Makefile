@@ -78,3 +78,14 @@ dev-test-get-books-by-genre:
 	@${PIPENV_RUN_PREFIX} --no-deps \
 	 	python run python \
 		bin/dev/test-get-books-by-genre.py '${GENRE}' ${LNG} ${START} ${LIMIT}
+
+.PHONY: dev-test-get-books-by-author
+dev-test-get-books-by-author: AUTHOR_ID ?=
+dev-test-get-books-by-author: LNG ?= _all_
+dev-test-get-books-by-author: START ?= 0
+dev-test-get-books-by-author: LIMIT ?= 3
+dev-test-get-books-by-author:
+	@[ "${AUTHOR_ID}" ] || ( echo "\033[41m! Make variable AUTHOR_ID is not set\033[0m"; exit 1 )
+	@${PIPENV_RUN_PREFIX} --no-deps \
+	 	python run python \
+		bin/dev/test-get-books-by-author.py '${AUTHOR_ID}' ${LNG} ${START} ${LIMIT}
