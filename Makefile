@@ -52,6 +52,11 @@ black:
 	@${DC_RUN} --entrypoint pipenv \
 	 	python run black src/ bin/
 
+.PHONY: test
+test:
+	@${PIPENV_RUN_PREFIX} \
+	 	python run pytest
+
 .PHONY: dev-test-autocomplete
 dev-test-autocomplete: PATTERN ?=
 dev-test-autocomplete:

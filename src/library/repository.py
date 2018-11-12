@@ -3,7 +3,7 @@ import typing as t
 
 from infra import redis_key
 from infra.redis import redis_client
-from library.domain import Book, Author
+from library.domain import Book, Author, BookAsset, BookAssetType
 from library.utils import get_genres_from_hashes
 
 
@@ -69,6 +69,7 @@ def _get_book_from_redis_hash(book_redis_hash: dict) -> Book:
         author_id.split(":") for author_id in json.loads(book_redis_hash["authors_ids"])
     ]
     genres_hashes = json.loads(book_redis_hash["genres"])
+    assets = _get_assets_from_redis_raw(book_redis_hash["assets"])
 
     return Book(
         provider=book_redis_hash["provider"],
@@ -76,7 +77,7 @@ def _get_book_from_redis_hash(book_redis_hash: dict) -> Book:
         title=book_redis_hash["title"],
         lang=book_redis_hash["lang"],
         genres=get_genres_from_hashes(genres_hashes),
-        assets=book_redis_hash["assets"],
+        assets=assets,
         authors=get_authors(authors_providers_and_ids),
     )
 
@@ -91,3 +92,16 @@ def _get_author_from_redis_hash(author_redis_hash: dict) -> Author:
         birth_year=author_redis_hash["birth_year"],
         death_year=author_redis_hash["death_year"],
     )
+
+
+def _get_assets_from_redis_raw(assets_redis: str) -> t.List[BookAsset]:
+    assets_from_json = json.loads(assets_redis)
+
+    res = []
+    for asset_type in BookAssetType:
+        if asset_type.name in assets_from_json:
+            res.append(
+                BookAsset(type=asset_type, size=assets_from_json[asset_type.name])
+            )
+
+    return res
