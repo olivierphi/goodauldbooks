@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "39309c4d3b3315f02c05f2589bd52e1cc6ba8ca5bd3b4bb4f2910cc1e1618a75"
+            "sha256": "51459d9dcae72797b188f8f587e57ac003158c1be3ccdeb8120d1993cb54901d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -50,6 +50,13 @@
             ],
             "index": "pypi",
             "version": "==1.2.0"
+        },
+        "lazy-import": {
+            "hashes": [
+                "sha256:2149aef8579459407c62cfeccf118527939c9931ace124f355236360644f8a3d"
+            ],
+            "index": "pypi",
+            "version": "==0.2.2"
         },
         "promise": {
             "hashes": [

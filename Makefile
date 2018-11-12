@@ -19,6 +19,11 @@ populate-redis-data-from-transitional-db:
 	 	python run python \
 	 	bin/populate-redis-data-from-transitional-db.py '${SQLITE_DB_PATH}'
 
+.PHONY: redis-cli
+redis-cli: ARGS ?=
+redis-cli:
+	@${REDIS} ${ARGS}
+
 .PHONY: redis-flush
 redis-flush:
 	@${REDIS} flushdb
@@ -28,6 +33,12 @@ redis-get-book: BOOK_ID ?=
 redis-get-book:
 	@[ "${BOOK_ID}" ] || ( echo "\033[41m! Make variable BOOK_ID is not set\033[0m"; exit 1 )
 	@${REDIS} --raw hgetall book:pg:${BOOK_ID}
+
+.PHONY: redis-get-author
+redis-get-author: AUTHOR_ID ?=
+redis-get-author:
+	@[ "${AUTHOR_ID}" ] || ( echo "\033[41m! Make variable AUTHOR_ID is not set\033[0m"; exit 1 )
+	@${REDIS} --raw hgetall author:pg:${AUTHOR_ID}
 
 .PHONY: redis-get-nb-genres
 redis-get-nb-genres:
@@ -53,9 +64,10 @@ black:
 	 	python run black src/ bin/
 
 .PHONY: test
+test: ARGS ?=
 test:
 	@${PIPENV_RUN_PREFIX} \
-	 	python run pytest
+	 	python run pytest ${ARGS}
 
 .PHONY: dev-test-autocomplete
 dev-test-autocomplete: PATTERN ?=
