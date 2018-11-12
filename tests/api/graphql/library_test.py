@@ -136,6 +136,60 @@ def test_basic_author_retrieval(redis_client: StrictRedis, autocomplete_db: Auto
     assert book_assets["mobi"] == {"exists": True, "size": 42}
 
 
+def test_recursive_retrieval(redis_client: StrictRedis, autocomplete_db: Autocomplete):
+    test_book_full_id = "pg:84"
+    test_book_provider, test_book_id = test_book_full_id.split(":")
+
+    _store_book_in_redis(redis_client, autocomplete_db, test_book_id, compute_books_by_author=True)
+
+    query = """
+    query bookById($id: ID!) {
+        book(id: $id) {
+            title
+            authors {
+                lastName
+                books {
+                    title
+                    authors {
+                        firstName
+                        books {
+                            id
+                            # don't try this at home
+                        }
+                    }
+                }
+            }
+        }
+    }
+    """
+    result = api_schema.execute(query, variables={"id": test_book_full_id})
+
+    assert isinstance(result.data, dict)
+    assert "book" in result.data
+
+    assert result.data["book"] == {
+        "title": "Frankenstein; Or, The Modern Prometheus",
+        "authors": [
+            {
+                "lastName": "Shelley",
+                "books": [
+                    {
+                        "title": "Frankenstein; Or, The Modern Prometheus",
+                        "authors": [
+                            {
+                                "firstName": "Mary Wollstonecraft",
+                                "books": [
+                                    {"id": test_book_full_id}
+                                ]
+                            }
+                        ]
+                    },
+                ],
+            }
+        ]
+    }
+
+
 def _store_book_in_redis(
         redis_client: StrictRedis,
         autocomplete_db: Autocomplete,
