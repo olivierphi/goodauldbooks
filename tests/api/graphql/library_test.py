@@ -2,6 +2,8 @@ from pathlib import Path
 
 import library_import.redis
 from api.graphql.schema import schema as api_schema
+from library import mutations
+from library.domain import LANG_ALL
 from library_import.gutenberg import get_book_to_parse_data, parse_book
 from redis import StrictRedis
 from walrus import Autocomplete
@@ -188,6 +190,30 @@ def test_recursive_retrieval(redis_client: StrictRedis, autocomplete_db: Autocom
             }
         ]
     }
+
+
+def test_books_homepage(redis_client: StrictRedis, autocomplete_db: Autocomplete):
+    for book_full_id in ("pg:84", "pg:345"):
+        book_provider, book_id = book_full_id.split(":")
+        _store_book_in_redis(redis_client, autocomplete_db, book_id)
+
+    mutations.set_homepage_books(LANG_ALL, ["pg:84"])
+
+    query = """
+        query homepage {
+            homepageBooks {
+                title
+            }
+        }
+        """
+    result = api_schema.execute(query)
+
+    assert isinstance(result.data, dict)
+    assert "homepageBooks" in result.data
+    assert isinstance(result.data["homepageBooks"], list)
+    assert result.data["homepageBooks"] == [
+        {"title": "Frankenstein; Or, The Modern Prometheus"},
+    ]
 
 
 def _store_book_in_redis(

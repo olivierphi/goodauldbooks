@@ -1,15 +1,31 @@
-import graphene
-from library import repository
+import typing as t
 
+import graphene
+import graphql
+from library import repository
+from library.domain import LANG_ALL
 from . import types as gql_types
 
 
 class Query(graphene.ObjectType):
+    homepage_books = graphene.List(gql_types.Book, lang=graphene.String())
+    # books = graphene.Field(gql_types.BooksList, page=graphene.Int(), nb_per_page=graphene.Int())
     book = graphene.Field(gql_types.Book, id=graphene.ID(required=True))
     author = graphene.Field(gql_types.Author, id=graphene.ID(required=True))
 
     @staticmethod
-    def resolve_book(parent, info, **params) -> gql_types.Book:
+    def resolve_homepage_books(
+        parent: None, info: graphql.ResolveInfo, **params
+    ) -> t.Iterator[gql_types.Book]:
+        lang = params.get("lang", LANG_ALL)
+        books = repository.get_books_for_homepage(lang)
+
+        return (gql_types.Book(_book_data=book_data) for book_data in books)
+
+    @staticmethod
+    def resolve_book(
+        parent: None, info: graphql.ResolveInfo, **params
+    ) -> gql_types.Book:
         book_id = params["id"]
         try:
             provider, id = book_id.split(":")
@@ -21,7 +37,9 @@ class Query(graphene.ObjectType):
         return gql_types.Book(_book_data=book_data)
 
     @staticmethod
-    def resolve_author(parent, info, **params) -> gql_types.Author:
+    def resolve_author(
+        parent: None, info: graphql.ResolveInfo, **params
+    ) -> gql_types.Author:
         author_id = params["id"]
         try:
             provider, id = author_id.split(":")

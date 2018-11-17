@@ -1,0 +1,10 @@
+{% extends "_layout.html" %}
+
+{% block content %}
+    <h1>Hello, World!</h1>
+    <div class="books-container">
+        {% for book in books %}
+            <p>{{ book.title }}</p>
+        {% endfor %}
+    </div>
+{% endblock %}

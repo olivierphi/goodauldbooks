@@ -11,6 +11,7 @@ hashids = "==1.2.*"
 python-slugify = "==1.2.*"
 graphene = "==2.1.*"
 lazy-import = "==0.2.*"
+flask = "==1.0.*"
 
 [dev-packages]
 black = "==18.9b0"

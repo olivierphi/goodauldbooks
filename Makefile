@@ -6,6 +6,16 @@ REDIS_HOST ?= localhost
 REDIS_PORT ?= 16379
 REDIS ?= redis-cli -h '${REDIS_HOST}' -p ${REDIS_PORT}
 
+.PHONY: web-start
+web-start:
+	${PIPENV_RUN_PREFIX} \
+		-p 5000:5000 \
+		-e FLASK_APP=website.app \
+		-e FLASK_ENV=development \
+		-e WERKZEUG_DEBUG_PIN=off \
+		-e USERNAME=root \
+		python run flask run --host=0.0.0.0
+
 .PHONY: store-raw-gutenberg-library-in-transitional-db
 store-raw-gutenberg-library-in-transitional-db:
 	@${PIPENV_RUN_PREFIX} \
@@ -68,6 +78,13 @@ test: ARGS ?=
 test:
 	@${PIPENV_RUN_PREFIX} \
 	 	python run pytest ${ARGS}
+
+.PHONY: dev-install-python-pkg
+dev-install-python-pkg: PKG ?= # mandatory
+dev-install-python-pkg:
+	@[ "${PKG}" ] || ( echo "\033[41m! Make variable PKG is not set\033[0m"; exit 1 )
+	${PIPENV_RUN_PREFIX} \
+	 	python pipenv install ${PKG}
 
 .PHONY: dev-test-autocomplete
 dev-test-autocomplete: PATTERN ?=

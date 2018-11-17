@@ -7,7 +7,7 @@ from . import DEFAULT_LIMIT, MAX_LIMIT
 
 
 def resolve_author_books(
-        parent: gql_types.Author, info, **params
+    parent: gql_types.Author, info, **params
 ) -> t.Iterator[gql_types.Book]:
     if params and "lang" in params:
         lang = params["lang"]

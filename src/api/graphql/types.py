@@ -105,3 +105,20 @@ class Book(graphene.ObjectType):
             epub=assets_graphql[library_domain.BookAssetType.EPUB],
             mobi=assets_graphql[library_domain.BookAssetType.MOBI],
         )
+
+
+class ListMetadata(graphene.ObjectType):
+    page = graphene.Int(required=True)
+    nb_per_page = graphene.Int(required=True)
+    total_count = graphene.Int(required=True)
+
+
+class BooksList(graphene.ObjectType):
+    data = graphene.List(Book, required=True)
+    meta = graphene.Field(ListMetadata, required=True)
+
+    _books_data: t.List[library_domain.Book] = None
+
+    @staticmethod
+    def resolve_data(parent: "BooksList", info) -> t.List[Book]:
+        return parent._books_data

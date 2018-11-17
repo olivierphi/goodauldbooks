@@ -5,7 +5,8 @@ import time
 from _import_common import init_import_logging
 
 from infra.redis import redis_host, redis_client
-from library.domain import Book
+from library.domain import Book, LANG_ALL
+from library.mutations import set_homepage_books
 from library_import.gutenberg.transitional_db import parse_books_from_transitional_db
 from library_import.redis import (
     store_book_in_redis,
@@ -71,3 +72,9 @@ print(
 compute_books_by_author(redis_client)
 duration = round(time.monotonic() - start_time, 1)
 print(f"'Books by author' sorted sets computed. ({duration}s.)")
+
+start_time = time.monotonic()
+print("Now computing the 'library:books_by:homepage:{lang}' sets...")
+set_homepage_books(LANG_ALL, ["pg:84", "pg:345"])
+duration = round(time.monotonic() - start_time, 1)
+print(f"Homepage editorial lists computed. ({duration}s.)")

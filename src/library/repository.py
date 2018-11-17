@@ -16,6 +16,15 @@ def get_authors(providers_and_ids_list: t.List[t.Tuple[str, str]]) -> t.List[Aut
     return res
 
 
+def get_books(providers_and_ids_list: t.List[t.Tuple[str, str]]) -> t.List[Book]:
+    res = []
+    for provider, id in providers_and_ids_list:
+        book = get_book(provider, id)
+        if bool:
+            res.append(book)
+    return res
+
+
 def get_author(provider: str, id: str) -> t.Optional[Author]:
     author_redis_key = redis_key.author(provider, id)
     author_raw = redis_client.hgetall(author_redis_key)
@@ -62,6 +71,15 @@ def get_books_by_author(
         if book:
             res.append(book)
     return res
+
+
+def get_books_for_homepage(lang: str) -> t.List[Book]:
+    books_redis_key = redis_key.books_homepage(lang)
+    books_providers_and_ids_list = [
+        book_id.split(":") for book_id in redis_client.lrange(books_redis_key, 0, -1)
+    ]
+
+    return get_books(books_providers_and_ids_list)
 
 
 def _get_book_from_redis_hash(book_redis_hash: dict) -> Book:
