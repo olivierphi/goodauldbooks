@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "workspaces": [
+    "react-app",
+    "api"
+  ],
+  "dependencies": {
+    "prettier": "^1.15.3"
+  }
+}
