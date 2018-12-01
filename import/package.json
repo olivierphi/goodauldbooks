@@ -1,7 +1,9 @@
 {
   "name": "import",
+  "private": true,
   "dependencies": {
-    "fast-glob": "^2.2.4"
+    "fast-glob": "^2.2.4",
+    "sqlite": "^3.0.0"
   },
   "devDependencies": {
     "typescript": "^3.2.1"
