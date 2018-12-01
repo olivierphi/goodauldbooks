@@ -4,8 +4,6 @@ import { getBookToParseData } from "../project-gutenberg/parsing";
 import * as transitionalDb from "../project-gutenberg/transitional-db";
 import { traverseGeneratedCollectionDirectory } from "../project-gutenberg/traversing";
 
-const localFolderPath = "/home/oliv/gutenberg-mirror/generated-collection";
-
 async function onRdfCallback(
   db: sqlite.Database,
   rdfFilePath: string,
@@ -22,14 +20,19 @@ async function onRdfCallback(
 
 (async () => {
   if (process.argv.length < 3) {
+    console.error("Mandatory Projet Gutenberg 'generated collection' path argument missing.");
+    process.abort();
+  }
+  if (process.argv.length < 4) {
     console.error("Mandatory database path argument missing.");
     process.abort();
   }
-  const dbPath = process.argv[2];
+  const collectionPath = process.argv[2];
+  const dbPath = process.argv[3];
   const db = await sqlite.open(dbPath);
   transitionalDb.initBooksTransitionalDb(db);
   const nbBooksFound = await traverseGeneratedCollectionDirectory(
-    localFolderPath,
+    collectionPath,
     onRdfCallback.bind(null, db)
   );
   console.log("nbBooksFound:", nbBooksFound);
