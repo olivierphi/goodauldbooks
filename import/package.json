@@ -1,0 +1,9 @@
+{
+  "name": "import",
+  "dependencies": {
+    "fast-glob": "^2.2.4"
+  },
+  "devDependencies": {
+    "typescript": "^3.2.1"
+  }
+}

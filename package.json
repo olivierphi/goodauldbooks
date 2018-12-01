@@ -2,9 +2,11 @@
   "private": true,
   "workspaces": [
     "react-app",
-    "api"
+    "api",
+    "import"
   ],
   "dependencies": {
-    "prettier": "^1.15.3"
+    "prettier": "^1.15.3",
+    "tslint": "^5.11.0"
   }
 }
