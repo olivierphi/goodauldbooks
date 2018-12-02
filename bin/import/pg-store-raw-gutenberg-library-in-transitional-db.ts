@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
+import { getBookToParseData } from "@goodauldbooks/import/project-gutenberg/parsing";
+import * as transitionalDb from "@goodauldbooks/import/project-gutenberg/transitional-db";
+import { traverseGeneratedCollectionDirectory } from "@goodauldbooks/import/project-gutenberg/traversing";
 import sqlite from "sqlite";
-import { getBookToParseData } from "../project-gutenberg/parsing";
-import * as transitionalDb from "../project-gutenberg/transitional-db";
-import { traverseGeneratedCollectionDirectory } from "../project-gutenberg/traversing";
 
 async function onRdfCallback(
   db: sqlite.Database,

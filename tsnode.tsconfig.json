@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@goodauldbooks/import/*": ["packages/@goodauldbooks/import/src/*"],
+      "@goodauldbooks/library/*": ["packages/@goodauldbooks/library/src/*"],
+      "*": [
+        "*",
+        "packages/@goodauldbooks/import/node_modules/*",
+        "packages/@goodauldbooks/library/node_modules/*"
+      ]
+    },
+    "typeRoots": ["./node_modules/@types", "./packages/@goodauldbooks/import/node_modules/@types"],
+    "target": "es2017",
+    "lib": ["es2017", "dom"],
+    "types": ["node"],
+    "allowJs": true,
+    "skipLibCheck": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true
+  }
+}

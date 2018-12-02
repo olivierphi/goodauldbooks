@@ -1,5 +1,5 @@
-#!/usr/bin/env node
-import { getBookToParseData, parseBook } from "../project-gutenberg/parsing";
+#!/usr/bin/env ts-node
+import { getBookToParseData, parseBook } from "@goodauldbooks/import/project-gutenberg/parsing";
 
 (async () => {
   if (process.argv.length < 3) {

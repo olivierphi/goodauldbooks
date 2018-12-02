@@ -1,13 +1,15 @@
 #!/usr/bin/env node
+import * as transitionalDb from "@goodauldbooks/import/project-gutenberg/transitional-db";
 import { Book } from "@goodauldbooks/library/domain";
 import sqlite from "sqlite";
-import * as transitionalDb from "../project-gutenberg/transitional-db";
 
 async function onBookFromDb(book: Book): Promise<void> {
   console.log(
     "book=",
     book.title,
-    book.authors.map(author => (author ? `${author.firstName} ${author.lastName}` : null))
+    book.authors.map(author =>
+      author ? `${author.firstName} ${author.lastName ? author.lastName.toUpperCase() : ""}` : null
+    )
   );
 }
 
