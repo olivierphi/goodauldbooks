@@ -9,7 +9,6 @@ from app.library.domain import Author, Book, BookAsset, BookAssetType
 
 BOOK_INTRO_SIZE = 5000
 RDF_FILE_REGEX = re.compile(r"^pg(\d+)\.rdf$")
-LIBRARY_TRAVERSAL_LIMIT = 0
 PROVIDER_ID = "pg"
 
 _AUTHOR_ID_FROM_PG_AGENT_REGEX = re.compile(r"/(\d+)$")
@@ -36,7 +35,9 @@ OnBookParsed = t.Callable[[Book], t.Any]
 # pylint: disable=no-value-for-parameter
 
 
-def traverse_library(base_folder: Path, on_book_rdf: OnBookRdf) -> int:
+def traverse_library(
+    base_folder: Path, on_book_rdf: OnBookRdf, *, limit: int = None
+) -> int:
     nb_pg_rdf_files_found = 0
 
     for rdf_file in base_folder.glob("*/*.rdf"):
@@ -50,7 +51,8 @@ def traverse_library(base_folder: Path, on_book_rdf: OnBookRdf) -> int:
 
         on_book_rdf(int(pg_book_id), rdf_file)
 
-        if nb_pg_rdf_files_found == LIBRARY_TRAVERSAL_LIMIT:
+        if nb_pg_rdf_files_found == limit:
+            logger.warning(f"Stopping library traversal because of limit '{limit}'")
             break
 
     return nb_pg_rdf_files_found

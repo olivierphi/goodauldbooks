@@ -43,6 +43,8 @@ def traverse_library_and_store_raw_data_in_db(
     db_con: sqlite3.Connection,
     filter_func: t.Callable[[dict], bool] = None,
     on_book_batch_stored: OnBookBatchStored = None,
+    *,
+    limit: int = None,
 ) -> int:
     nb_books_processed = 0
 
@@ -74,7 +76,7 @@ def traverse_library_and_store_raw_data_in_db(
             on_book_batch_stored(len(current_books_raw_data_batch))
         current_books_raw_data_batch = []
 
-    traverse_library(base_folder, _on_book_rdf)
+    traverse_library(base_folder, _on_book_rdf, limit=limit)
 
     if current_books_raw_data_batch:
         _save_books_batch_to_db()

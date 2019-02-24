@@ -15,6 +15,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("pg_collection_path", type=str)
         parser.add_argument("sqlite_db_path", type=str)
+        parser.add_argument("--limit", type=int, dest="limit")
 
     def handle(self, *args, **options):
         pg_collection_path = Path(options["pg_collection_path"])
@@ -30,7 +31,11 @@ class Command(BaseCommand):
 
         start_time = time.monotonic()
         nb_pg_rdf_files_found = store_raw_gutenberg_library_in_transitional_db(
-            pg_collection_path, sqlite_db_path, start_time=start_time, logger=logger
+            pg_collection_path,
+            sqlite_db_path,
+            limit=options["limit"] or None,
+            start_time=start_time,
+            logger=logger,
         )
 
         self.stdout.write(
@@ -71,6 +76,7 @@ def store_raw_gutenberg_library_in_transitional_db(
     pg_collection_path: Path,
     sqlite_db_path: Path,
     *,
+    limit: int = None,
     start_time: float,
     logger: logging.Logger,
 ) -> int:
@@ -89,7 +95,7 @@ def store_raw_gutenberg_library_in_transitional_db(
         logger.info(f"{nb_books_stored} books stored. In progress... ({duration}s)")
 
     transitional_db.traverse_library_and_store_raw_data_in_db(
-        pg_collection_path, db_con, filter_book, on_book_batch_stored
+        pg_collection_path, db_con, filter_book, on_book_batch_stored, limit=limit
     )
 
     return db_con.execute("select count(*) from raw_book").fetchone()[0]

@@ -54,10 +54,11 @@ psql:
 
 .PHONY: store-raw-gutenberg-library-in-transitional-db
 store-raw-gutenberg-library-in-transitional-db: GENERATED_COLLECTION_PATH ?= ~/gutenberg-mirror/generated-collection/
+store-raw-gutenberg-library-in-transitional-db: OPTS ?=
 store-raw-gutenberg-library-in-transitional-db:
 	@${MAKE} --no-print-directory django-manage \
 		DOCKER_COMPOSE_OPTS="-v ${GENERATED_COLLECTION_PATH}:/collection" \
-	 	CMD="store_rsynced_library_in_transitional_db /collection '${SQLITE_DB_PATH}'"
+	 	CMD="store_rsynced_library_in_transitional_db /collection '${SQLITE_DB_PATH}' ${OPTS}"
 
 .PHONY: populate-postgres-from-transitional-db
 populate-postgres-from-transitional-db: OPTS ?=
