@@ -11,6 +11,7 @@ class Book(models.Model):
     lang = models.CharField(max_length=3)
     highlight = models.PositiveIntegerField(default=0)
     size = models.PositiveIntegerField(null=True)
+    slug = models.SlugField(max_length=255, unique=True)
 
     authors = models.ManyToManyField("Author", related_name="books")
     genres = models.ManyToManyField("Genre", related_name="books")
@@ -30,6 +31,7 @@ class Author(models.Model):
     last_name = models.CharField(max_length=255, null=True)
     birth_year = models.SmallIntegerField(null=True)
     death_year = models.SmallIntegerField(null=True)
+    slug = models.SlugField(max_length=255, unique=True)
 
     def __str__(self):
         return f"{self.public_id}: {self.first_name} {self.last_name}"
@@ -42,6 +44,7 @@ class Author(models.Model):
 class Genre(models.Model):
     id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
 
     def __str__(self):
         return f"{self.id}: {self.name}"

@@ -41,7 +41,12 @@ class Command(BaseCommand):
         if options["truncate"]:
             self.stdout.write("Truncating existing Postgres data first...")
             with connection.cursor() as cursor:
-                cursor.execute("truncate book cascade")
+                for sql in (
+                    "truncate book cascade",
+                    "truncate genre cascade",
+                    "truncate author cascade",
+                ):
+                    cursor.execute(sql)
             self.stdout.write("Truncated.")
 
         start_time = time.monotonic()
