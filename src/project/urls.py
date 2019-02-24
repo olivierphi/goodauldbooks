@@ -18,4 +18,5 @@ from django.urls import path
 
 import library.views
 
+# pylint: disable=invalid-name
 urlpatterns = [path("admin/", admin.site.urls), path("", library.views.hello_world)]

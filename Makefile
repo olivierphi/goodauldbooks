@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 DC_RUN ?= docker-compose run --rm --user $$(id -u):$$(id -g)
-POETRY ?= ${DC_RUN} --entrypoint poetry -e PIP_NO_BINARY=psycopg2 python
+POETRY ?= ${DC_RUN} --entrypoint poetry -e PIP_NO_BINARY=psycopg2 -e PYTHONPATH=/app/src:/app/src/apps python
 DJANGO_MANAGE ?= ${DC_RUN} --workdir=/app/src --entrypoint /app/.venv/bin/python python manage.py
 
 .PHONY: install
@@ -30,6 +30,10 @@ python-add-pkg:
 .PHONY: python-black
 python-black:
 	@${POETRY} run black src/
+
+.PHONY: python-pylint
+python-pylint:
+	@${POETRY} run pylint project library
 
 .venv:
 	${DC_RUN} python -m venv "/app/.venv"
