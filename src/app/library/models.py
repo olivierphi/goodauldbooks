@@ -13,6 +13,7 @@ class Book(models.Model):
     size = models.PositiveIntegerField(null=True)
 
     authors = models.ManyToManyField("Author", related_name="books")
+    genres = models.ManyToManyField("Genre", related_name="books")
 
     def __str__(self):
         return f"{self.public_id}: {self.title}"
@@ -36,3 +37,14 @@ class Author(models.Model):
     class Meta:
         db_table = "author"
         indexes = [models.Index(fields=["public_id"])]
+
+
+class Genre(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.id}: {self.name}"
+
+    class Meta:
+        db_table = "genre"
