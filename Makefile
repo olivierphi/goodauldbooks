@@ -1,14 +1,20 @@
 SHELL := /bin/bash
 DC_RUN ?= docker-compose run --rm --user $$(id -u):$$(id -g)
-POETRY ?= ${DC_RUN} --entrypoint poetry python
+POETRY ?= ${DC_RUN} --entrypoint poetry -e PIP_NO_BINARY=psycopg2 python
+DJANGO_MANAGE ?= ${DC_RUN} --workdir=/app/src --entrypoint /app/.venv/bin/python python manage.py
 
 .PHONY: install
 install:
 	@${MAKE} python-install
 
+.PHONY: dev
+dev:
+	@${DC_RUN} -p 8000:8000 --workdir=/app/src --entrypoint /app/.venv/bin/python python manage.py runserver 0:8000
+
 .PHONY: python-install
 python-install: .venv
-	@{POETRY} install
+	@${DC_RUN} --entrypoint /app/.venv/bin/pip python install --upgrade pip
+	@${POETRY} install
 
 .PHONY: python-venv-shell
 python-venv-shell: .venv
@@ -16,9 +22,20 @@ python-venv-shell: .venv
 
 .PHONY: python-add-pkg
 python-add-pkg: PKG ?=
+python-add-pkg: OPTS ?=
 python-add-pkg:
 	@[ "${PKG}" ] || ( echo "! Make variable PKG is not set"; exit 1 )
-	@source .venv/bin/activate && ${POETRY} add "${PKG}" && deactivate
+	${POETRY} add ${OPTS} "${PKG}"
+
+.PHONY: python-black
+python-black:
+	@${POETRY} run black src/
 
 .venv:
 	${DC_RUN} python -m venv "/app/.venv"
+
+.PHONY: django-manage
+django-manage: CMD ?=
+django-manage:
+	@[ "${CMD}" ] || ( echo "! Make variable CMD is not set"; exit 1 )
+	@${DJANGO_MANAGE} ${CMD}
