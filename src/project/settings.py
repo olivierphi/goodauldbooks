@@ -29,7 +29,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    "library.apps.LibraryConfig",
+    "app.library.apps.LibraryConfig",
+    "app.import.apps.ImportConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
