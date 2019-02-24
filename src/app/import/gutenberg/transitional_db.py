@@ -83,7 +83,7 @@ def traverse_library_and_store_raw_data_in_db(
 
 
 def parse_books_from_transitional_db(
-    db_con: sqlite3.Connection, on_book_parsed: OnBookParsed
+    db_con: sqlite3.Connection, on_book_parsed: OnBookParsed, *, limit: int = None
 ) -> int:
     nb_books_parsed = 0
 
@@ -96,8 +96,11 @@ def parse_books_from_transitional_db(
         from 
             raw_book
         order by
-         pg_book_id;
+         pg_book_id
     """
+    if limit:
+        SQL = f"{SQL} limit {limit}"
+
     for raw_book_row in db_con.execute(SQL):
         # pylint: disable=no-value-for-parameter
         book_to_parse = BookToParse(

@@ -14,6 +14,9 @@ class Book(models.Model):
 
     authors = models.ManyToManyField("Author", related_name="books")
 
+    def __str__(self):
+        return f"{self.public_id}: {self.title}"
+
     class Meta:
         db_table = "book"
         indexes = [models.Index(fields=["public_id"])]
@@ -26,6 +29,9 @@ class Author(models.Model):
     last_name = models.CharField(max_length=255, null=True)
     birth_year = models.SmallIntegerField(null=True)
     death_year = models.SmallIntegerField(null=True)
+
+    def __str__(self):
+        return f"{self.public_id}: {self.first_name} {self.last_name}"
 
     class Meta:
         db_table = "author"

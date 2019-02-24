@@ -58,3 +58,9 @@ store-raw-gutenberg-library-in-transitional-db:
 	@${MAKE} --no-print-directory django-manage \
 		DOCKER_COMPOSE_OPTS="-v ${GENERATED_COLLECTION_PATH}:/collection" \
 	 	CMD="store_rsynced_library_in_transitional_db /collection '${SQLITE_DB_PATH}'"
+
+.PHONY: populate-postgres-from-transitional-db
+populate-postgres-from-transitional-db: LIMIT ?=
+populate-postgres-from-transitional-db:
+	@${MAKE} --no-print-directory django-manage \
+	 	CMD="populate_postgres_from_transitional_db '${SQLITE_DB_PATH}' --limit=${LIMIT}"
