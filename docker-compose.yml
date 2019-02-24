@@ -14,7 +14,8 @@ services:
     volumes:
     - .:/app
     - ./.cache:/.cache
-    - ./.docker/python/venv-shell.sh:/venv-shell.sh
+    - ./.cache/.pylint.d:/.pylint.d
+    - ./.docker/python/venv-shell.sh:/venv-shell.sh:ro
     working_dir: /app
     env_file:
     - .dev.env

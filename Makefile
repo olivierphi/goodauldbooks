@@ -1,7 +1,10 @@
 SHELL := /bin/bash
-DC_RUN ?= docker-compose run --rm --user $$(id -u):$$(id -g)
-POETRY ?= ${DC_RUN} --entrypoint poetry -e PIP_NO_BINARY=psycopg2 -e PYTHONPATH=/app/src:/app/src/apps python
+DOCKER_COMPOSE_OPTS ?=
+DC_RUN ?= docker-compose run --rm --user $$(id -u):$$(id -g) ${DOCKER_COMPOSE_OPTS}
+POETRY ?= ${DC_RUN} --entrypoint poetry -e PIP_NO_BINARY=psycopg2 -e PYTHONPATH=/app/src python
 DJANGO_MANAGE ?= ${DC_RUN} --workdir=/app/src --entrypoint /app/.venv/bin/python python manage.py
+PSQL ?= psql 'postgresql://goodauldbooks:goodauldbooks@localhost:5433/goodauldbooks' -v ON_ERROR_STOP=1
+SQLITE_DB_PATH ?= /app/raw_books.db
 
 .PHONY: install
 install:
@@ -33,7 +36,7 @@ python-black:
 
 .PHONY: python-pylint
 python-pylint:
-	@${POETRY} run pylint project library
+	@${POETRY} run pylint project app
 
 .venv:
 	${DC_RUN} python -m venv "/app/.venv"
@@ -43,3 +46,15 @@ django-manage: CMD ?=
 django-manage:
 	@[ "${CMD}" ] || ( echo "! Make variable CMD is not set"; exit 1 )
 	@${DJANGO_MANAGE} ${CMD}
+
+.PHONY: psql
+psql:
+	${PSQL}
+
+
+.PHONY: store-raw-gutenberg-library-in-transitional-db
+store-raw-gutenberg-library-in-transitional-db: GENERATED_COLLECTION_PATH ?= ~/gutenberg-mirror/generated-collection/
+store-raw-gutenberg-library-in-transitional-db:
+	@${MAKE} --no-print-directory django-manage \
+		DOCKER_COMPOSE_OPTS="-v ${GENERATED_COLLECTION_PATH}:/collection" \
+	 	CMD="store_rsynced_library_in_transitional_db /collection '${SQLITE_DB_PATH}'"

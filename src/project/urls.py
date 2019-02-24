@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-import library.views
+import app.library.views
 
 # pylint: disable=invalid-name
-urlpatterns = [path("admin/", admin.site.urls), path("", library.views.hello_world)]
+urlpatterns = [path("admin/", admin.site.urls), path("", app.library.views.hello_world)]
