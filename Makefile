@@ -11,11 +11,13 @@ install:
 	@${MAKE} python-install
 
 .PHONY: dev
+dev: OPTS ?=
 dev:
-	@${DC_RUN} -p 8000:8000 --workdir=/app/src --entrypoint /app/.venv/bin/python python manage.py runserver 0:8000
+	@${DC_RUN} -p 8000:8000 --workdir=/app/src --entrypoint /app/.venv/bin/python python manage.py runserver 0:8000 ${OPTS}
 
 .PHONY: python-install
 python-install: .venv
+	@touch ./.cache/.pythonhist
 	@${DC_RUN} --entrypoint /app/.venv/bin/pip python install --upgrade pip
 	@${POETRY} install
 

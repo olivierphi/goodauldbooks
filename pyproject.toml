@@ -15,6 +15,13 @@ xmltodict = "^0.12.0"
 black = "=18.9b0"
 pylint = "^2.2"
 coloredlogs = "^10.0"
+# Let's install pyinotify!
+# "This offers better scaling to large projects,
+# reduction in response time to code modification,
+# more robust change detection, and battery usage reduction."
+# @link https://docs.djangoproject.com/en/2.1/ref/django-admin/#runserver
+pyinotify = "^0.9.6"
+bpython = "^0.17.1"
 
 [build-system]
 requires = ["poetry>=0.12"]

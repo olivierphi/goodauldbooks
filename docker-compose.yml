@@ -14,6 +14,7 @@ services:
     volumes:
     - .:/app
     - ./.cache:/.cache
+    - ./.cache/.pythonhist:/.pythonhist
     - ./.cache/.pylint.d:/.pylint.d
     - ./.docker/python/venv-shell.sh:/venv-shell.sh:ro
     working_dir: /app
