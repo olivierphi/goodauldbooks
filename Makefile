@@ -60,7 +60,7 @@ store-raw-gutenberg-library-in-transitional-db:
 	 	CMD="store_rsynced_library_in_transitional_db /collection '${SQLITE_DB_PATH}'"
 
 .PHONY: populate-postgres-from-transitional-db
-populate-postgres-from-transitional-db: LIMIT ?=
+populate-postgres-from-transitional-db: OPTS ?=
 populate-postgres-from-transitional-db:
 	@${MAKE} --no-print-directory django-manage \
-	 	CMD="populate_postgres_from_transitional_db '${SQLITE_DB_PATH}' --limit=${LIMIT}"
+	 	CMD="populate_postgres_from_transitional_db '${SQLITE_DB_PATH}' ${OPTS}"

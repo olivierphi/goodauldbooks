@@ -5,6 +5,7 @@ from functools import partial
 from pathlib import Path
 
 from django.core.management import BaseCommand, CommandError
+from django.db import connection
 
 from app.library.domain import Book, Author
 from ...gutenberg import transitional_db, logger
@@ -17,6 +18,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("sqlite_db_path", type=str)
         parser.add_argument("--limit", type=int, dest="limit")
+        parser.add_argument(
+            "--truncate",
+            action="store_true",
+            dest="truncate",
+            help="truncate Postgres database first",
+        )
 
     def handle(self, *args, **options):
         sqlite_db_path = Path(options["sqlite_db_path"])
@@ -31,6 +38,12 @@ class Command(BaseCommand):
         if nb_books_in_db == 0:
             self.stdout.write("No books round in 'raw_book' SQLite table. Exiting.")
             return
+
+        if options["truncate"]:
+            self.stdout.write("Truncating existing Postgres data first...")
+            with connection.cursor() as cursor:
+                cursor.execute("truncate book cascade")
+            self.stdout.write("Truncated.")
 
         start_time = time.monotonic()
         on_book_parsed = partial(
