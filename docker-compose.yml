@@ -19,5 +19,7 @@ services:
     working_dir: /app
     env_file:
     - .dev.env
+    environment:
+      DJANGO_SETTINGS_MODULE: project.settings.dev
     depends_on:
     - postgres
