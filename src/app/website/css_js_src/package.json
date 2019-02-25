@@ -1,0 +1,26 @@
+{
+  "name": "frontend_src",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev:watch:js": "webpack --watch",
+    "build:js": "webpack",
+    "prettier": "prettier --trailing-comma=es5 --write '{webpack.config.js,src/**/*.{scss,js}}'"
+  },
+  "devDependencies": {
+    "prettier": "^1.16.4",
+    "webpack": "^4.29.5",
+    "webpack-cli": "^3.2.3"
+  },
+  "dependencies": {
+    "css-loader": "^2.1.0",
+    "mini-css-extract-plugin": "^0.5.0",
+    "node-sass": "^4.11.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",
+    "sass-loader": "^7.1.0",
+    "style-loader": "^0.23.1",
+    "uglifyjs-webpack-plugin": "^2.1.2"
+  }
+}

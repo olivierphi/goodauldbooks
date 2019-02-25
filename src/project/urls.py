@@ -14,9 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-
-import app.library.views
+from django.urls import path, include
 
 # pylint: disable=invalid-name
-urlpatterns = [path("admin/", admin.site.urls), path("", app.library.views.hello_world)]
+urlpatterns = [path("admin/", admin.site.urls), path("", include("app.website.urls"))]

@@ -1,0 +1,12 @@
+{% extends "website/layout/layout.html" %}
+
+{% block body %}
+    hi there!
+    <ul>
+        {% for book in books %}
+            <li>
+                <h4>{{ book.title }}</h4>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock body %}
