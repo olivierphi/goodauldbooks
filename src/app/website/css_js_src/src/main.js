@@ -1,3 +1,5 @@
 import "./scss/main.scss";
 
-alert("Hello world!!!");
+window.addEventListener("load", () => {
+  console.log("Hello world!");
+});

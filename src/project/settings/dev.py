@@ -2,6 +2,15 @@ from pathlib import Path
 
 from ._base import *
 
+# Django debug toolbar stuff:
+MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware"] + MIDDLEWARE
+INSTALLED_APPS += ["debug_toolbar"]
+DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": "project.settings.dev.show_toolbar"}
+
+
+def show_toolbar(req) -> bool:
+    return True
+
 
 LOGGING = {
     "version": 1,
