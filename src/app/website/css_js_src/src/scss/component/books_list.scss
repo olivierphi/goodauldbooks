@@ -14,7 +14,22 @@
 
       .card-content {
         flex-grow: 1;
+        position: relative;
+        margin-bottom: 3em;//let's leave some room for the absolute-positioned genres :-)
+
+        .genres {
+          position: absolute;
+          bottom: -1em;
+
+          span {
+            display: inline-block;
+            float: none;
+            margin: 0 1em 0 0;
+            padding: 0 1em;
+          }
+        }
       }
+
     }
   }
 }
