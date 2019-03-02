@@ -23,6 +23,12 @@ class Command(BaseCommand):
             dest="truncate",
             help="truncate Postgres database first",
         )
+        parser.add_argument(
+            "--only-new",
+            action="store_true",
+            dest="only_if_new",
+            help="store only books that don't already exist in the database (based on its public_id)",
+        )
 
     def handle(self, *args, **options):
         sqlite_db_path = Path(options["sqlite_db_path"])
@@ -53,6 +59,7 @@ class Command(BaseCommand):
         on_book_parsed: transitional_db.OnBookParsed = partial(
             _on_book_parsed,
             nb_books_total=options["limit"] or nb_books_in_db,
+            only_if_new=options["only_if_new"],
             start_time=start_time,
             logger=logger,
         )
@@ -72,6 +79,7 @@ def _on_book_parsed(
     book: library_domain.Book,
     *,
     nb_books_total: int,
+    only_if_new: bool,
     start_time: float,
     logger: logging.Logger,
 ) -> None:
@@ -79,7 +87,9 @@ def _on_book_parsed(
 
     nb_books_parsed += 1
 
-    postgres_population.save_book_in_db(book)
+    postgres_population.save_book_in_db(
+        book, only_if_new=only_if_new, return_book_entity=False
+    )
 
     if nb_books_parsed % 100 == 0:
         percent = round(nb_books_parsed * 100 / nb_books_total)

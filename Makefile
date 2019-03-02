@@ -34,7 +34,7 @@ python-add-pkg:
 
 .PHONY: python-black
 python-black:
-	@${POETRY} run black src/
+	@${POETRY} run black src/ --exclude node_modules
 
 .PHONY: python-pylint
 python-pylint:

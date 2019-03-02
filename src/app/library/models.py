@@ -3,7 +3,7 @@ from django.db import models
 
 class Book(models.Model):
     id = models.AutoField(primary_key=True)
-    public_id = models.CharField(max_length=15)
+    public_id = models.CharField(max_length=15, unique=True)
     title = models.CharField(
         max_length=500
     )  # yeah, some books from Project Gutenberg have *really* long names :-)
@@ -21,12 +21,11 @@ class Book(models.Model):
 
     class Meta:
         db_table = "book"
-        indexes = [models.Index(fields=["public_id"])]
 
 
 class Author(models.Model):
     id = models.AutoField(primary_key=True)
-    public_id = models.CharField(max_length=15)
+    public_id = models.CharField(max_length=15, unique=True)
     first_name = models.CharField(max_length=255, null=True)
     last_name = models.CharField(max_length=255, null=True)
     birth_year = models.SmallIntegerField(null=True)
@@ -38,7 +37,6 @@ class Author(models.Model):
 
     class Meta:
         db_table = "author"
-        indexes = [models.Index(fields=["public_id"])]
 
 
 class Genre(models.Model):

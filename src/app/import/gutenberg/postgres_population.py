@@ -1,3 +1,5 @@
+import typing as t
+
 from django.utils.text import slugify
 
 from app.library import (
@@ -7,8 +9,28 @@ from app.library import (
 )
 
 
-def save_book_in_db(book: library_domain.Book) -> library_models.Book:
+def save_book_in_db(
+    book: library_domain.Book,
+    *,
+    only_if_new: bool = False,
+    return_book_entity: bool = True,
+) -> t.Optional[library_models.Book]:
     public_id = f"{book.provider}:{book.id}"
+
+    if only_if_new:
+        if not return_book_entity:
+            # Faster than retrieving the whole entity
+            if library_models.Book.objects.filter(public_id=public_id).exists():
+                return None
+        else:
+            try:
+                existing_book_entity = library_models.Book.objects.get(
+                    public_id=public_id
+                )
+                return existing_book_entity
+            except library_models.Book.DoesNotExist:
+                pass
+
     slug = slugify(f"{book.title or ''}-{public_id}")
     book_entity = library_models.Book(
         public_id=public_id, title=book.title, lang=book.lang, slug=slug
@@ -25,7 +47,7 @@ def save_book_in_db(book: library_domain.Book) -> library_models.Book:
             genre_entity = save_genre_in_db(genre_name)
             book_entity.genres.add(genre_entity)
 
-    return book_entity
+    return book_entity if return_book_entity else None
 
 
 def save_author_in_db(author: library_domain.Author) -> library_models.Author:
