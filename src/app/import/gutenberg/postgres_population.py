@@ -15,7 +15,7 @@ def save_book_in_db(
     only_if_new: bool = False,
     return_book_entity: bool = True,
 ) -> t.Optional[library_models.Book]:
-    public_id = f"{book.provider}:{book.id}"
+    public_id = f"{book.provider}-{book.id}"
 
     if only_if_new:
         if not return_book_entity:
@@ -32,8 +32,13 @@ def save_book_in_db(
                 pass
 
     slug = slugify(f"{book.title or ''}-{public_id}")
+    size = None
+    for asset in book.assets:
+        if asset.type is library_domain.BookAssetType.EPUB:
+            size = asset.size
+            break
     book_entity = library_models.Book(
-        public_id=public_id, title=book.title, lang=book.lang, slug=slug
+        public_id=public_id, title=book.title, lang=book.lang, slug=slug, size=size
     )
     book_entity.save()
 
@@ -51,7 +56,7 @@ def save_book_in_db(
 
 
 def save_author_in_db(author: library_domain.Author) -> library_models.Author:
-    public_id = f"{author.provider}:{author.id}"
+    public_id = f"{author.provider}-{author.id}"
     author_already_exists = library_models.Author.objects.filter(
         public_id=public_id
     ).exists()
