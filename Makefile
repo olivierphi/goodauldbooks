@@ -5,6 +5,7 @@ POETRY ?= ${DC_RUN} --entrypoint poetry -e PIP_NO_BINARY=psycopg2 -e PYTHONPATH=
 DJANGO_MANAGE ?= ${DC_RUN} --workdir=/app/src --entrypoint /app/.venv/bin/python python manage.py
 PSQL ?= psql 'postgresql://goodauldbooks:goodauldbooks@localhost:5433/goodauldbooks' -v ON_ERROR_STOP=1
 SQLITE_DB_PATH ?= /app/raw_books.db
+FRONTEND_ROOT ?= src/app/website/css_js_src
 
 .PHONY: install
 install:
@@ -51,6 +52,14 @@ django-manage:
 .PHONY: psql
 psql:
 	${PSQL}
+
+.PHONY: yarn-install
+yarn-install:
+	cd ${FRONTEND_ROOT} && yarn install
+
+.PHONY: yarn-dev
+yarn-dev:
+	cd ${FRONTEND_ROOT} && yarn dev:watch:js
 
 
 .PHONY: store-raw-gutenberg-library-in-transitional-db

@@ -1,4 +1,5 @@
-body {
-  font-family: Arial, sans-serif;
-  color: darkblue;
-}
+// Let's import the whole UI kit for the moment :-)
+@import "~materialize-css/sass/materialize";
+
+@import "layout";
+@import "component/books_list";

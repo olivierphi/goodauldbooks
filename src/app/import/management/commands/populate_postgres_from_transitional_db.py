@@ -50,9 +50,9 @@ class Command(BaseCommand):
             self.stdout.write("Truncated.")
 
         start_time = time.monotonic()
-        on_book_parsed = partial(
+        on_book_parsed: transitional_db.OnBookParsed = partial(
             _on_book_parsed,
-            nb_books_in_db=nb_books_in_db,
+            nb_books_total=options["limit"] or nb_books_in_db,
             start_time=start_time,
             logger=logger,
         )
@@ -71,7 +71,7 @@ nb_books_parsed = 0
 def _on_book_parsed(
     book: library_domain.Book,
     *,
-    nb_books_in_db: int,
+    nb_books_total: int,
     start_time: float,
     logger: logging.Logger,
 ) -> None:
@@ -82,8 +82,8 @@ def _on_book_parsed(
     postgres_population.save_book_in_db(book)
 
     if nb_books_parsed % 100 == 0:
-        percent = round(nb_books_parsed * 100 / nb_books_in_db)
+        percent = round(nb_books_parsed * 100 / nb_books_total)
         duration = round(time.monotonic() - start_time, 1)
         logger.info(
-            f"{str(percent).rjust(3)}% - {nb_books_parsed} books parsed ({duration}s)..."
+            f"{str(percent).rjust(3)}% - {nb_books_parsed}/{nb_books_total} books parsed ({duration}s)..."
         )

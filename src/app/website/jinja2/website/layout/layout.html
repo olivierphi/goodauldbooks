@@ -4,8 +4,10 @@
     <link rel="stylesheet" href="{{ static("build/main.css") }}">
 </head>
 <body>
-{% block body %}
-{% endblock body %}
-<script src="{{ static("build/main.bundle.js") }}" ></script>
+<div id="container">
+    {% block body %}
+    {% endblock body %}
+</div>
+<script src="{{ static("build/main.bundle.js") }}"></script>
 </body>
 </html>
