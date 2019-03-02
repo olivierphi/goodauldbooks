@@ -17,7 +17,6 @@ dev:
 
 .PHONY: python-install
 python-install: .venv
-	@touch ./.cache/.pythonhist
 	@${DC_RUN} --entrypoint /app/.venv/bin/pip python install --upgrade pip
 	@${POETRY} install
 
@@ -44,7 +43,7 @@ python-pylint:
 	${DC_RUN} python -m venv "/app/.venv"
 
 .PHONY: django-manage
-django-manage: CMD ?=
+django-manage: CMD ?= shell
 django-manage:
 	@[ "${CMD}" ] || ( echo "! Make variable CMD is not set"; exit 1 )
 	@${DJANGO_MANAGE} ${CMD}

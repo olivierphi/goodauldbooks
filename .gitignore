@@ -1,7 +1,7 @@
 /.venv
 
 /.cache/*
-!/.cache/.gitkeep
+/.cache/.ipython/*
 
 /log/*
 !/log/.gitkeep

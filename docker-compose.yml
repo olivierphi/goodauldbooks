@@ -14,7 +14,7 @@ services:
     volumes:
     - .:/app
     - ./.cache:/.cache
-    - ./.cache/.pythonhist:/.pythonhist
+    - ./.cache/.ipython:/.ipython
     - ./.cache/.pylint.d:/.pylint.d
     - ./.docker/python/venv-shell.sh:/venv-shell.sh:ro
     working_dir: /app
@@ -22,5 +22,6 @@ services:
     - .dev.env
     environment:
       DJANGO_SETTINGS_MODULE: project.settings.dev
+      IPYTHONDIR: /.ipython
     depends_on:
     - postgres
