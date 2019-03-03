@@ -1,5 +1,8 @@
 {% extends "website/layout/layout.html" %}
 
 {% block body %}
-    {{ book.title }}
+    <h2 class="book-title">{{ book.title }}</h2>
+    {% if book.subtitle %}
+        <h4 class="book-subtitle">{{ book.subtitle }}</h4>
+    {%  endif %}
 {% endblock body %}

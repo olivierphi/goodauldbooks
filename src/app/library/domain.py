@@ -28,6 +28,7 @@ class Book(t.NamedTuple):
     provider: str
     id: str
     title: str
+    subtitle: str
     lang: str
     genres: t.List[str]
     assets: t.List[BookAsset]

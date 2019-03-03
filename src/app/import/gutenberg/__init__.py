@@ -146,10 +146,19 @@ def _get_book(
 
     assets = _get_book_assets(pg_book_id, book_files_sizes)
 
+    # Do we have a "[title]; [subtitle]" pattern in this book's title?
+    title_list = title.split(";", maxsplit=1)
+    if len(title_list) > 1:
+        title = title_list[0].strip()
+        subtitle = title_list[1].strip()
+    else:
+        subtitle = None
+
     return Book(
         provider=PROVIDER_ID,
         id=str(pg_book_id),
         title=title,
+        subtitle=subtitle,
         lang=lang,
         genres=genres,
         assets=assets,

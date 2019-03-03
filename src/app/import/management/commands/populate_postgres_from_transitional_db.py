@@ -88,7 +88,7 @@ def _on_book_parsed(
     nb_books_parsed += 1
 
     postgres_population.save_book_in_db(
-        book, only_if_new=only_if_new, return_book_entity=False
+        book, only_if_new=only_if_new, return_book_model=False
     )
 
     if nb_books_parsed % 100 == 0:
