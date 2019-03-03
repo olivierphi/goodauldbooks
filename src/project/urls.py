@@ -18,7 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 
 # pylint: disable=invalid-name
-urlpatterns = [path("admin/", admin.site.urls), path("", include("app.website.urls"))]
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("", include("app.website.urls", namespace="library")),
+]
 
 if settings.DEBUG:
     import debug_toolbar

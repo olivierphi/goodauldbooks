@@ -2,4 +2,9 @@ from django.urls import path
 
 from . import views
 
-urlpatterns = [path("", views.homepage)]
+app_name = "library"
+
+urlpatterns = [
+    path("", views.homepage),
+    path("library/book/<slug:slug>", views.book, name="book"),
+]
