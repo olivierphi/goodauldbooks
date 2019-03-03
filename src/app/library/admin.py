@@ -2,7 +2,6 @@ import typing as t
 
 from django.contrib import admin
 from django import forms
-from django.utils.formats import number_format
 
 from . import models
 
@@ -35,10 +34,9 @@ class BookAdmin(admin.ModelAdmin):
     def weight(self, obj: models.Book) -> t.Optional[str]:
         if obj.size is None:
             return None
-        return (
-            number_format(round(obj.size / 1024), use_l10n=True, force_grouping=True)
-            + " kb"
-        )
+        return f"{round(obj.size / 1024):,}K"
+
+    weight.admin_order_field = "size"
 
 
 @admin.register(models.Author)
