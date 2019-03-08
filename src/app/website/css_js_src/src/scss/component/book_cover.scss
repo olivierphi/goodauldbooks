@@ -1,0 +1,30 @@
+.book-cover {
+  $main: map-get($amber, "accent-4");
+
+  height: 24rem;
+  position: relative;
+  @extend .amber, .lighten-5;
+
+  p {
+    position: absolute;
+    width: 100%;
+    padding: 0 8px;
+    font-family: $font-serif;
+    text-align: center;
+  }
+
+  .book-title {
+    top: 3rem;
+    font-size: 2rem;
+    color: $main;
+
+    .book-subtitle {
+      display: block;
+      font-size: 1.5rem;
+    }
+  }
+
+  .author-name {
+    bottom: 0.5rem;
+  }
+}

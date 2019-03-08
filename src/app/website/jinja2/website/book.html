@@ -1,8 +1,35 @@
 {% extends "website/layout/layout.html" %}
 
+{% import 'website/macros/library.html' as library %}
+
 {% block body %}
-    <h2 class="book-title">{{ book.title }}</h2>
-    {% if book.subtitle %}
-        <h4 class="book-subtitle">{{ book.subtitle }}</h4>
-    {%  endif %}
+    <main id="book-page">
+
+        <div class="book-cover-container">
+            {{ library.book_cover(book) }}
+        </div>
+
+        <div class="book-content">
+            <h2 class="book-title">{{ book.title }}</h2>
+            {% if book.subtitle %}
+                <h4 class="book-subtitle">{{ book.subtitle }}</h4>
+            {% endif %}
+
+            {% if book.authors.all()|length %}
+                <div class="authors">
+                    {% for author in book.authors.all() %}
+                        <h6 class="author-name">{{ author|author_full_name }}</h6>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="genres">
+                {% for genre in book.genres.all() %}
+                    <span class="badge new" data-badge-caption="">{{ genre.name }}</span>
+                {% endfor %}
+            </div>
+
+        </div>{# end .book-content #}
+
+    </main>
 {% endblock body %}

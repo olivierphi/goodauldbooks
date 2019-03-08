@@ -1,0 +1,35 @@
+main#book-page {
+
+  display: flex;
+
+  .book-cover-container, .book-content {
+    @extend .z-depth-2;
+  }
+
+  .book-cover-container {
+    width: 30%;
+    margin-right: 3%;
+  }
+
+  .book-content {
+    width: 66%;
+    padding: 1rem;
+
+    .book-title {
+      margin-top: 0;
+    }
+    .book-subtitle {
+      margin-top: 0.5em;
+    }
+
+    .authors {
+      margin: 2rem 0 1rem 0;
+    }
+
+    .genres {
+      .badge {
+        float: none;
+      }
+    }
+  }
+}

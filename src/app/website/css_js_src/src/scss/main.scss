@@ -1,5 +1,10 @@
 // Let's import the whole UI kit for the moment :-)
 @import "~materialize-css/sass/materialize";
 
+$font-serif: "Roboto Slab", serif;
+
 @import "layout";
+@import "global";
 @import "component/books_list";
+@import "component/book_cover";
+@import "page/book_page";

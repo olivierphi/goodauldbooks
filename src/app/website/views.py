@@ -15,7 +15,9 @@ def homepage(request: HttpRequest) -> HttpResponse:
 
 
 def book(request: HttpRequest, slug: str) -> HttpResponse:
-    book = get_object_or_404(library_models.Book, slug=slug)
+    book = get_object_or_404(
+        library_models.Book.objects.prefetch_related("authors", "genres"), slug=slug
+    )
 
     view_vars = {"book": book}
 

@@ -1,0 +1,31 @@
+{% macro book_list_item(book) -%}
+    <div class="card">
+        <div class="card-image">
+            {{ book_cover(book) }}
+        </div>
+        <div class="card-content">
+            <p class="genres">
+                {% for genre in book.genres.all()[0:2] %}
+                    <span class="badge new" data-badge-caption="">{{ genre.name }}</span>
+                {% endfor %}
+            </p>
+        </div>
+        <div class="card-action">
+            <a href="{{ url("library:book", kwargs={"slug": book.slug}) }}">View book</a>
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro book_cover(book) -%}
+    <div class="book-cover">
+        <p class="book-title">
+            {{ book.title }}
+            {% if book.subtitle %}
+                <span class="book-subtitle">{{ book.subtitle }}</span>
+            {% endif %}
+        </p>
+        {% if book.authors.all()|length %}
+            <p class="author-name">{{ book.authors.all()[0]|author_full_name }}</p>
+        {% endif %}
+    </div>
+{%- endmacro %}
