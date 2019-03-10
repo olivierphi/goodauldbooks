@@ -3,6 +3,11 @@ a:hover {
   text-decoration: none;
 }
 
+ul {
+  margin: 0;
+  padding: 0;
+}
+
 #breadcrumb {
   margin: 1rem 0;
 
@@ -12,6 +17,8 @@ a:hover {
 
   & a,
   span {
+    white-space: nowrap;
+
     &:after {
       content: ">";
       padding: 0 1rem;

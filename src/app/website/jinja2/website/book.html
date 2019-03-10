@@ -24,6 +24,8 @@
                 <h4 class="book-subtitle">{{ book.subtitle }}</h4>
             {% endif %}
 
+            {{ library.language(book.lang) }}
+
             {% if book.authors.all()|length %}
                 <div class="authors">
                     {% for author in book.authors.all() %}

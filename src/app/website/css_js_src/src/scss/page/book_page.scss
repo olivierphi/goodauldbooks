@@ -17,6 +17,7 @@ main#book-page {
     .book-title {
       margin-top: 0;
     }
+
     .book-subtitle {
       margin-top: 0.5em;
     }
@@ -27,9 +28,13 @@ main#book-page {
       .author-name {
         display: flex;
         align-items: center;
+        height: 48px;
 
         & i {
-          margin-right: 1rem;
+          display: inline-block;
+          transform: scale(0.5, 0.5);
+          width: 48px;
+          margin-right: 1.5rem;
         }
       }
     }

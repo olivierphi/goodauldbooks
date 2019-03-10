@@ -5,9 +5,11 @@
 {% block breadcrumb %}
     <div id="breadcrumb">
         <a href="{{ url("library:home") }}" class="nes-text is-primary">Homepage</a>
+        <span>Books by genre</span>
+        <a href="{{ url("library:books_by_genre", kwargs={"slug": genre.slug}) }}" class="nes-text is-primary">{{ genre.name }}</a>
     </div>
 {% endblock breadcrumb %}
 
 {% block body %}
-    {{ library.books_list(books) }}
+    {{ library.books_list(books, books_count=books_count) }}
 {% endblock body %}

@@ -61,6 +61,9 @@ yarn-install:
 yarn-dev:
 	cd ${FRONTEND_ROOT} && yarn dev:watch:js
 
+.PHONY: yarn-prettier
+yarn-prettier:
+	cd ${FRONTEND_ROOT} && yarn prettier
 
 .PHONY: store-raw-gutenberg-library-in-transitional-db
 store-raw-gutenberg-library-in-transitional-db: GENERATED_COLLECTION_PATH ?= ~/gutenberg-mirror/generated-collection/

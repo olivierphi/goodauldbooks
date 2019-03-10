@@ -1,16 +1,29 @@
 .book-cover {
-  background-color: map-get($primary-colors, "shadow");
-  color: map-get($warning-colors, "hover");
+  $blue: map-get($primary-colors, "shadow");
+  $orange: map-get($warning-colors, "hover");
+  $orange-dark: map-get($warning-colors, "shadow");
+
+  background-color: $blue;
+  color: $orange;
 
   height: 24rem;
   position: relative;
 
-  p {
+  p,
+  a {
     position: absolute;
     width: 100%;
     padding: 0 8px;
     font-family: $font-serif;
     text-align: center;
+  }
+
+  a {
+    color: $orange;
+
+    &:hover {
+      color: $orange-dark;
+    }
   }
 
   .book-title {
