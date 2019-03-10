@@ -49,3 +49,13 @@ class Genre(models.Model):
 
     class Meta:
         db_table = "genre"
+
+
+class BookAdditionalData(models.Model):
+    book = models.OneToOneField(
+        Book, on_delete=models.CASCADE, primary_key=True, related_name="additional_data"
+    )
+    intro = models.TextField(null=True)
+
+    class Meta:
+        db_table = "book_additional_data"

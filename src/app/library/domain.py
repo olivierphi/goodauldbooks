@@ -33,3 +33,4 @@ class Book(t.NamedTuple):
     genres: t.List[str]
     assets: t.List[BookAsset]
     authors: t.List[Author]
+    intro: t.Optional[str]
