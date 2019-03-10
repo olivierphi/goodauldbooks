@@ -90,7 +90,10 @@ def parse_book(book_to_parse: BookToParse) -> t.Optional[Book]:
     rdf_as_dict = xmltodict.parse(book_to_parse.rdf_content)
 
     book = _get_book(
-        book_to_parse.pg_book_id, rdf_as_dict, book_to_parse.dir_files_sizes
+        book_to_parse.pg_book_id,
+        rdf_as_dict,
+        book_to_parse.dir_files_sizes,
+        book_to_parse.intro if book_to_parse.has_intro else None,
     )
     if book is None:
         return None
@@ -104,7 +107,10 @@ def parse_book(book_to_parse: BookToParse) -> t.Optional[Book]:
 
 
 def _get_book(
-    pg_book_id: int, rdf_as_dict: dict, book_files_sizes: t.Dict[str, int]
+    pg_book_id: int,
+    rdf_as_dict: dict,
+    book_files_sizes: t.Dict[str, int],
+    intro: t.Optional[str],
 ) -> t.Optional[Book]:
     # Quick'n'dirty parsing :-)
     title = _get_value_from_dict(
@@ -163,6 +169,7 @@ def _get_book(
         genres=genres,
         assets=assets,
         authors=[],
+        intro=intro,
     )
 
 

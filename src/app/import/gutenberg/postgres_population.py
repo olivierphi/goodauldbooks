@@ -47,6 +47,12 @@ def save_book_in_db(
     )
     book_model.save()
 
+    # For the sake of consistency let's always save a "book additional data" model,
+    # even when we have no intro.
+    book_additional_data = library_models.BookAdditionalData(book=book_model)
+    book_additional_data.intro = book.intro
+    book_additional_data.save()
+
     if book.authors:
         for author in book.authors:
             author_model = save_author_in_db(author)
