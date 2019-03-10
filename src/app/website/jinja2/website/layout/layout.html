@@ -5,11 +5,13 @@
 </head>
 <body>
 <div id="container">
-    {% block breadcrumb %}
-    {% endblock breadcrumb %}
+    <div class="barba-container">
+        {% block breadcrumb %}
+        {% endblock breadcrumb %}
 
-    {% block body %}
-    {% endblock body %}
+        {% block body %}
+        {% endblock body %}
+    </div>
 </div>
 <script src="{{ static("build/main.bundle.js") }}"></script>
 </body>
