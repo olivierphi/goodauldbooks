@@ -6,7 +6,7 @@
     <div id="breadcrumb">
         <a href="{{ url("library:home") }}" class="nes-text is-primary">Homepage</a>
         <span>Library</span>
-        <a href="{{ url("library:book", kwargs={"slug": book.slug}) }}" class="nes-text is-primary">{{ book.title }}</a>
+        <a href="{{ url("library:book", kwargs={"slug": book.slug}) }}" class="nes-text is-primary">{{ book.title|truncate(50) }}</a>
     </div>
 {% endblock breadcrumb %}
 
@@ -25,22 +25,35 @@
             {% endif %}
 
             {{ library.language(book.lang) }}
+            {{ library.book_pages_count(book.size) }}
 
             {% if book.authors.all()|length %}
                 <div class="authors">
                     {% for author in book.authors.all() %}
-                        <h3 class="author-name"><i class="nes-kirby is-small"></i> {{ author|author_full_name }}</h3>
+                        <a href="{{ url("library:books_by_author", kwargs={"slug": author.slug}) }}"
+                           class="author-name"><i class="nes-kirby is-small"></i> {{ author|author_full_name }}</a>
                     {% endfor %}
                 </div>
             {% endif %}
 
             {% with genres=book.genres.all() %}
-                {{ library.genres_container(genres, full_width=True) }}
+                {% if genres|length > 0 %}
+                    <p class="genres-label">This book belongs to the following literary genres:</p>
+                    {{ library.genres_container(genres, full_width=True) }}
+                {% endif %}
             {% endwith %}
 
-            <div class="misc-data">
-                {{ library.book_pages_count(book.size) }}
-            </div>
+            {% with intro=book.additional_data.intro %}
+                {% if intro %}
+                    <div class="book-intro-container">
+                        <span class="label">Intro</span>
+                        <div class="book-intro nes-container is-rounded">
+                            <span class="intro">{{ intro }} [...]</span>
+                            <p class="read-more">Download the book to read more! ^_^</p>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
 
         </div>
         {# end .book-content #}

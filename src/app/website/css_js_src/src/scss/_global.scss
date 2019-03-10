@@ -10,6 +10,7 @@ ul {
 
 #breadcrumb {
   margin: 1rem 0;
+  font-size: 0.8rem;
 
   &:before {
     content: "#";
@@ -26,6 +27,10 @@ ul {
     &:last-child:after {
       content: none;
     }
+  }
+
+  a:hover {
+    color: map-get($warning-colors, "shadow");
   }
 }
 
@@ -44,6 +49,10 @@ ul {
 
     & *:first-child {
       padding: 0 0.5rem;
+
+      &:hover {
+        @include badge-style(white, map-get($warning-colors, "shadow"));
+      }
     }
   }
 }

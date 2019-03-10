@@ -16,6 +16,8 @@ main#book-page {
 
     .book-title {
       margin-top: 0;
+      font-size: 2.5rem;
+      color: map_get($error-colors, "shadow");
     }
 
     .book-subtitle {
@@ -29,6 +31,11 @@ main#book-page {
         display: flex;
         align-items: center;
         height: 48px;
+        color: black;
+
+        &:hover {
+          color: map-get($warning-colors, "shadow");
+        }
 
         & i {
           display: inline-block;
@@ -37,12 +44,32 @@ main#book-page {
           margin-right: 1.5rem;
         }
       }
+
     }
 
-    .genres {
-      .badge {
-        float: none;
+    .genres-label {
+      font-size: 0.5rem;
+    }
+
+    .book-intro-container {
+      margin-top: 2rem;
+
+      .label {
+        font-weight: bold;
+      }
+
+      .book-intro {
+        .intro {
+          white-space: pre-line;
+          font-size: 0.8rem;
+        }
+
+        .read-more {
+          margin: 2rem 0;
+          color: map_get($primary-colors, "shadow");
+        }
       }
     }
   }
+
 }
