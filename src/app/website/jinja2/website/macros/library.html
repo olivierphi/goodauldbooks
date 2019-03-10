@@ -4,14 +4,12 @@
             {{ book_cover(book) }}
         </div>
         <div class="card-content">
-            <p class="genres">
-                {% for genre in book.genres.all()[0:2] %}
-                    <span class="badge new" data-badge-caption="">{{ genre.name }}</span>
-                {% endfor %}
-            </p>
+            {% with genres=book.genres.all()[0:2] %}
+                {{ genres_container(genres) }}
+            {% endwith %}
         </div>
         <div class="card-action">
-            <a href="{{ url("library:book", kwargs={"slug": book.slug}) }}">View book</a>
+            <a href="{{ url("library:book", kwargs={"slug": book.slug}) }}" class="view-book-link nes-btn is-primary">View book</a>
         </div>
     </div>
 {%- endmacro %}
@@ -28,4 +26,19 @@
             <p class="author-name">{{ book.authors.all()[0]|author_full_name }}</p>
         {% endif %}
     </div>
+{%- endmacro %}
+
+{% macro genres_container(genres, full_width=False) -%}
+    <div class="genres-container">
+        {% for genre in genres %}
+            <a href="#" class="genre {{ "full" if full_width else "" }} nes-badge">
+                <span class="is-success">{{ genre.name }}</span>
+            </a>
+        {% endfor %}
+    </div>
+{%- endmacro %}
+
+{%- set BOOK_SIZE_NB_PAGES_RATIO = 800 -%}
+{% macro book_pages_count(book_size) %}
+    {{( book_size / BOOK_SIZE_NB_PAGES_RATIO) | int }} pages
 {%- endmacro %}

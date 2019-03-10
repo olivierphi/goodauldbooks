@@ -1,7 +1,11 @@
 // Let's import the whole UI kit for the moment :-)
-@import "~materialize-css/sass/materialize";
+$cursor-url: url(~nes.css/assets/cursor.png);
+$cursor-click-url: url(~nes.css/assets/cursor-click.png) 14 0;
 
-$font-serif: "Roboto Slab", serif;
+@import "~nes.css/scss/nes";
+
+$font-serif: "Press Start 2P", cursive;
+$font-sans-serif: "Press Start 2P", cursive;
 
 @import "layout";
 @import "global";

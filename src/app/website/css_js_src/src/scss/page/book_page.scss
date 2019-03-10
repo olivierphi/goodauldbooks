@@ -1,9 +1,8 @@
 main#book-page {
-
   display: flex;
 
-  .book-cover-container, .book-content {
-    @extend .z-depth-2;
+  .book-cover-container,
+  .book-content {
   }
 
   .book-cover-container {
@@ -24,6 +23,15 @@ main#book-page {
 
     .authors {
       margin: 2rem 0 1rem 0;
+
+      .author-name {
+        display: flex;
+        align-items: center;
+
+        & i {
+          margin-right: 1rem;
+        }
+      }
     }
 
     .genres {

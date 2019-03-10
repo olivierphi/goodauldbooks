@@ -5,6 +5,6 @@ from . import views
 app_name = "library"
 
 urlpatterns = [
-    path("", views.homepage),
+    path("", views.homepage, name="home"),
     path("library/book/<slug:slug>", views.book, name="book"),
 ]

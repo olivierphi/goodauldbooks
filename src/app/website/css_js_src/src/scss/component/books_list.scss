@@ -6,6 +6,7 @@
   .book {
     width: 33%;
     margin: 1em;
+    list-style-type: none;
 
     .card {
       height: 100%;
@@ -14,8 +15,11 @@
 
       .card-content {
         flex-grow: 1;
-      }
+        margin: 1rem 0;
 
+        .view-book-link {
+        }
+      }
     }
   }
 }

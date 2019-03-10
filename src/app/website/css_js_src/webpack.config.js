@@ -11,6 +11,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "../", "static", "build"),
     filename: "main.bundle.js",
+    publicPath: "/assets/build/",
   },
   optimization: {
     minimizer: [
@@ -39,6 +40,10 @@ module.exports = {
           "css-loader",
           "sass-loader",
         ],
+      },
+      {
+        test: /\.(png|svg|jpg|gif)$/,
+        use: "file-loader",
       },
     ],
   },

@@ -1,9 +1,9 @@
 .book-cover {
-  $main: map-get($amber, "accent-4");
+  background-color: map-get($primary-colors, "shadow");
+  color: map-get($warning-colors, "hover");
 
   height: 24rem;
   position: relative;
-  @extend .amber, .lighten-5;
 
   p {
     position: absolute;
@@ -15,16 +15,15 @@
 
   .book-title {
     top: 3rem;
-    font-size: 2rem;
-    color: $main;
+    font-size: 18px;
 
     .book-subtitle {
       display: block;
-      font-size: 1.5rem;
+      font-size: 12px;
     }
   }
 
   .author-name {
-    bottom: 0.5rem;
+    bottom: 10px;
   }
 }
