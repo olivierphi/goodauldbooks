@@ -10,7 +10,7 @@
     "prettier": "prettier --trailing-comma=es5 --write '{webpack.config.js,src/**/*.{scss,js}}'"
   },
   "devDependencies": {
-    "prettier": "^1.16.4",
+    "prettier": "^1.17.0",
     "webpack": "^4.29.5",
     "webpack-cli": "^3.2.3"
   },
