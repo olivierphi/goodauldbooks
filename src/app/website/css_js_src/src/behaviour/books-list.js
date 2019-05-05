@@ -1,4 +1,4 @@
-import Barba from "barba.js/src";
+import Turbolinks from "turbolinks";
 
 export function initBooksListBehaviour() {
   document.addEventListener("click", onDocumentClick);
@@ -6,6 +6,11 @@ export function initBooksListBehaviour() {
 
 function onDocumentClick(event) {
   const clickedNode = event.target;
+
+  if (clickedNode.tagName === "A") {
+    return;
+  }
+
   const parentBookListItem = clickedNode.closest(".books-list .book");
 
   if (!parentBookListItem) {
@@ -14,15 +19,5 @@ function onDocumentClick(event) {
 
   const childLink = parentBookListItem.querySelector("a");
   const targetUrl = childLink.getAttribute("href");
-  Barba.Pjax.goTo(targetUrl);
-
-  /*
-  // The following is not managed correctly by Barba's Pjax handler unfortunately :-/
-  const eventToDispatch = new MouseEvent("click", {
-    view: window,
-    bubbles: true,
-    cancelable: true
-  });
-  childLink.dispatchEvent(eventToDispatch);
-   */
+  Turbolinks.visit(targetUrl);
 }
