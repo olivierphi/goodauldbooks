@@ -10,7 +10,7 @@ _BOOKS_BY_PAGE_COUNT_DEFAULT = 9
 
 def homepage(request: HttpRequest) -> HttpResponse:
     highlighted_books = library_models.Book.objects.filter(
-        public_id__in=["pg-345", "pg-84"]
+        public_id__in=["pg-345", "pg-84", "pg-5200"]
     ).prefetch_related("authors", "genres")
 
     view_vars = {"books": highlighted_books}

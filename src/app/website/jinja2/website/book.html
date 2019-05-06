@@ -11,35 +11,56 @@
 {% endblock breadcrumb %}
 
 {% block body %}
-    <main id="book-page">
-
-        <div class="book-cover-container">
-            {{ library.book_cover(book) }}
-        </div>
+    <main id="book-page" itemscope itemtype="http://schema.org/Book">
 
         <div class="book-content">
 
-            <h2 class="book-title">{{ book.title }}</h2>
-            {% if book.subtitle %}
-                <h4 class="book-subtitle">{{ book.subtitle }}</h4>
-            {% endif %}
+            <section class="book-main-info">
 
-            {{ library.language(book.lang) }}
-            {{ library.book_pages_count(book.size) }}
-
-            {% if book.authors.all()|length %}
-                <div class="authors">
-                    {% for author in book.authors.all() %}
-                        <a href="{{ url("library:books_by_author", kwargs={"slug": author.slug}) }}"
-                           class="author-name"><i class="nes-kirby is-small"></i> {{ author|author_full_name }}</a>
-                    {% endfor %}
+                <div class="book-cover-container">
+                    {{ library.book_cover(book) }}
                 </div>
-            {% endif %}
+
+                <div class="book-main-data">
+
+                    <h2 class="book-title" itemprop="name">{{ book.title }}</h2>
+                    {% if book.subtitle %}
+                        <h4 class="book-subtitle">{{ book.subtitle }}</h4>
+                    {% endif %}
+
+                    {{ library.language(book.lang) }}
+                    {{ library.book_pages_count(book.size) }}
+
+                    {% if book.authors.all()|length %}
+                        <div class="authors">
+                            {% for author in book.authors.all() %}
+                                <a href="{{ url("library:books_by_author", kwargs={"slug": author.slug}) }}"
+                                   class="author-name" itemprop="author">
+                                    <i class="nes-kirby is-small" ></i>
+                                    <span>
+                                        {{ author|author_full_name }}
+                                        {% if author.birth_year or author.death_year %}
+                                            <i class="birth-death-years">(
+                                                {%- if author.birth_year %}<span itemprop="birthDate">{{ author.birth_year}}</span>{% else %}?{% endif %}
+                                                -
+                                                {% if author.death_year %}<span itemprop="deathDate">{{ author.death_year}}</span>{% else %}?{% endif -%}
+                                            )</i>
+                                        {% endif %}
+                                    </span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                </div>
+            </section>
 
             {% with genres=book.genres.all() %}
                 {% if genres|length > 0 %}
-                    <p class="genres-label">This book belongs to the following literary genres:</p>
-                    {{ library.genres_container(genres, full_width=True) }}
+                    <section class="book-genres">
+                        <p class="genres-label">This book belongs to the following literary genres:</p>
+                        {{ library.genres_container(genres, full_width=True) }}
+                    </section>
                 {% endif %}
             {% endwith %}
 

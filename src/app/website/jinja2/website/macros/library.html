@@ -54,17 +54,17 @@
         {% for genre in genres %}
             <a href="{{ url("library:books_by_genre", kwargs={"slug": genre.slug}) }}"
                class="genre {{ "full" if full_width else "" }} nes-badge">
-                <span class="is-success">{{ genre.name }}</span>
+                <span class="is-success" itemprop="genre">{{ genre.name }}</span>
             </a>
         {% endfor %}
     </div>
 {%- endmacro %}
 
 {% macro language(lang_code) -%}
-    <p class="book-lang">Language: <i>{{ lang_code }}</i></p>
+    <p class="book-lang">Language: <i itemprop="inLanguage">{{ lang_code }}</i></p>
 {%- endmacro %}
 
 {%- set BOOK_SIZE_NB_PAGES_RATIO = 800 -%}
 {% macro book_pages_count(book_size) -%}
-    <p class="book-pages-count">{{ ( book_size / BOOK_SIZE_NB_PAGES_RATIO) | int }} pages</p>
+    <p class="book-pages-count" itemprop="numberOfPages">{{ ( book_size / BOOK_SIZE_NB_PAGES_RATIO) | int }} pages</p>
 {%- endmacro %}
