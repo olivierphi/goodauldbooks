@@ -3,27 +3,23 @@
   $orange: map-get($warning-colors, "hover");
   $orange-dark: map-get($warning-colors, "shadow");
 
+  height: 24rem;
+  position: relative;
+  display: block;
+
   background-color: $blue;
   color: $orange;
 
-  height: 24rem;
-  position: relative;
+  &:hover {
+    color: $orange-dark;
+  }
 
-  p,
-  a {
+  & > span {
     position: absolute;
     width: 100%;
     padding: 0 8px;
     font-family: $font-serif;
     text-align: center;
-  }
-
-  a {
-    color: $orange;
-
-    &:hover {
-      color: $orange-dark;
-    }
   }
 
   .book-title {
