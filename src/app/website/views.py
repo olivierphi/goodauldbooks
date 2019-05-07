@@ -1,6 +1,7 @@
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.db import models
+from django.urls import reverse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_http_methods
 
@@ -115,9 +116,8 @@ def _get_books_base_query_set() -> models.QuerySet:
 def _author_to_quick_autocompletion_result(author: library_models.Author) -> dict:
     return dict(
         type="author",
-        author_first_name=author.first_name,
-        author_last_name=author.last_name,
-        author_slug=author.slug,
+        author_name=f"{author.first_name} {author.last_name}",
+        author_url=reverse("library:books_by_author", kwargs={"slug": author.slug}),
         author_nb_books=0,  # todo
         highlight=0,  # todo
     )
@@ -130,10 +130,8 @@ def _book_to_quick_autocompletion_result(book: library_models.Book) -> dict:
         type="book",
         book_title=book.title,
         book_lang=book.lang,
-        book_slug=book.slug,
-        author_first_name=main_author.first_name if main_author else None,
-        author_last_name=main_author.last_name if main_author else None,
-        author_slug=main_author.slug if main_author else None,
+        book_url=reverse("library:book", kwargs={"slug": book.slug}),
+        author_name=f"{main_author.first_name} {main_author.last_name}",
         author_nb_books=0,  # todo
         highlight=0,  # todo
     )

@@ -15,6 +15,7 @@
     "webpack-cli": "^3.2.3"
   },
   "dependencies": {
+    "autocompleter": "^4.0.2",
     "css-loader": "^2.1.0",
     "file-loader": "^3.0.1",
     "mini-css-extract-plugin": "^0.5.0",

@@ -2,17 +2,27 @@
 <html>
 <head>
     <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
-    <script src="{{ static("build/main.bundle.js") }}" async></script>
+    <script src="{{ static("build/main.bundle.js") }}" defer></script>
 </head>
 <body>
 <div id="container">
-    <div class="turbolink-container">
+
+    <header id="header" data-turbolinks-permanent>
+        <h1>Good Auld Books</h1>
+
+        <div class="nes-field">
+          <label for="search_field">Search a book or an author:</label>
+          <input type="text" id="search_field" class="nes-input"/>
+        </div>
+    </header>
+
+    <main>
         {% block breadcrumb %}
         {% endblock breadcrumb %}
 
         {% block body %}
         {% endblock body %}
-    </div>
+    </main>
 </div>
 </body>
 </html>
