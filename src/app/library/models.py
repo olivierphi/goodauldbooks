@@ -1,3 +1,5 @@
+import typing as t
+
 from django.db import models
 
 
@@ -15,6 +17,11 @@ class Book(models.Model):
 
     authors = models.ManyToManyField("Author", related_name="books")
     genres = models.ManyToManyField("Genre", related_name="books")
+
+    @property
+    def main_author(self) -> t.Optional["Author"]:
+        authors = self.authors.all()  # hopefully pre-fetched, if it's a books list :-)
+        return authors[0] if authors else None
 
     def __str__(self):
         return f"{self.public_id}: {self.title}"
