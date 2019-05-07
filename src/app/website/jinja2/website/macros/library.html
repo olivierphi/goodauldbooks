@@ -36,9 +36,9 @@
 {% macro book_cover(book) -%}
     <a href="{{ url("library:book", kwargs={"slug": book.slug}) }}" class="book-cover">
         <span class="book-title">
-            {{ book.title|truncate(100) }}
+            {{ book.title|truncate(50, killwords=False) }}
             {% if book.subtitle %}
-                <span class="book-subtitle">{{ book.subtitle|truncate(100) }}</span>
+                <span class="book-subtitle">{{ book.subtitle|truncate(30, killwords=False) }}</span>
             {% endif %}
         </span>
         {% if book.authors.all()|length %}
