@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -eo pipefail
+echo '**** CUSTOM HEROKU PYTHON BUILD PACK "bin/pre_compile" HOOK'
+
+# @link https://github.com/nigma/heroku-django-cookbook/blob/master/bin/install_nodejs
+
+puts-step() {
+  echo "-----> $@"
+}
+
+NODE_VERSION=10.15.3
+
+puts-step "Downloading and installing Node.js v${NODE_VERSION} in the '.nodejs' folder..."
+mkdir .nodejs
+curl -s https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz | tar xzvf - --exclude CHANGELOG.md --exclude LICENSE --exclude README.md --strip-components 1 -C .nodejs > /dev/null

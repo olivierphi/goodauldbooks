@@ -1,1 +1,1 @@
-web: gunicorn gettingstarted.wsgi --log-file -
+web: DJANGO_SETTINGS_MODULE=project.settings.heroku gunicorn heroku_wsgi --log-file -

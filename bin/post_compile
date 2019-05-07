@@ -1,0 +1,37 @@
+#!/bin/bash
+# Heroku "hidden" post-compilation hook (had to dig into the Heroku Python build pack source code to find that :-)
+# @link https://github.com/heroku/heroku-buildpack-python/blob/master/bin/compile
+set -eo pipefail
+echo '**** CUSTOM HEROKU PYTHON BUILD PACK "bin/post_compile" HOOK'
+
+indent() {
+  sed "s/^/       /"
+}
+
+puts-step() {
+  echo "-----> $@"
+}
+
+ROOT_DIR=$(pwd)
+export PATH=${ROOT_DIR}/.nodejs/bin/:${PATH}
+
+puts-step "Installing dependencies with poetry..."
+poetry config settings.virtualenvs.create false 2>&1 | indent
+poetry install --no-dev 2>&1 | indent
+
+puts-step "Installing Node.js dependencies with Yarn..."
+echo '{"license": "MIT", "dependencies": {"yarn": "1.15.2"}}' > package.json
+npm install
+cd src/app/website/css_js_src && ${ROOT_DIR}/node_modules/.bin/yarn install 2>&1 | indent
+
+puts-step "Building JS & CSS, via Webpack..."
+${ROOT_DIR}/node_modules/.bin/yarn build:js 2>&1 | indent
+cd -
+
+puts-step "Re-installing packages removed by Poetry but actually required by Heroku env..."
+pip install attrs six
+
+puts-step "Collecting static files..."
+export DJANGO_SETTINGS_MODULE=project.settings.heroku
+python src/manage.py collectstatic --no-input 2>&1 | indent
+
