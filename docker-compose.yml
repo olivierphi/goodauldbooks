@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:10-alpine
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_DB: goodauldbooks_db
+      POSTGRES_USER: goodauldbooks_user
+      POSTGRES_PASSWORD: goodauldbooks_pass
