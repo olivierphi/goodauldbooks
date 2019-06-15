@@ -15,12 +15,11 @@ sudo apt install php7.3-xdebug
 
 zend_extension=xdebug.so
 
-xdebug.remote_autostart=1
-xdebug.default_enable=1
-xdebug.remote_port=9000
-xdebug.remote_host=127.0.0.1
-xdebug.remote_connect_back=1
-xdebug.remote_enable=1
-xdebug.idekey=PHPSTORM
+xdebug.remote_enable = 1
+xdebug.remote_autostart = 0
+xdebug.remote_connect_back = 1
+xdebug.idekey = PHPSTORM
+xdebug.remote_port = 9001
+xdebug.max_nesting_level = 200
 
 ```
