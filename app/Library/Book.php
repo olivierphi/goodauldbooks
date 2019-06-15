@@ -17,4 +17,12 @@ class Book extends Model
     {
         return $this->belongsToMany(Author::class, 'authors_books');
     }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 }

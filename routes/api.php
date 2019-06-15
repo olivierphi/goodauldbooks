@@ -10,3 +10,7 @@
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+\Route::resource('books', 'API\BookController')->only([
+    'index', 'show',
+]);

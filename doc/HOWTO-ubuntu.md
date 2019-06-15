@@ -6,6 +6,8 @@ sudo apt-get update
 sudo apt install php7.3-cli php7.3-json php7.3-common php7.3-readline php7.3-zip php7.3-mbstring php7.3-xml  php7.3-pgsql
 # dev only:
 sudo apt install php7.3-xdebug
+# for Telescope:
+sudo apt install php7.3-bcmath
 ```
 
 ### Xdebug config:
