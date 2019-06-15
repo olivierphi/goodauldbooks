@@ -2,8 +2,8 @@
 
 namespace App\Import\ProjectGutenberg;
 
+use App\Import\ParsedAuthor;
 use App\Import\ParsedBook;
-use App\Import\ParsedBookAuthor;
 use App\Import\ParsedGenre;
 use ErrorException;
 use Illuminate\Support\Arr;
@@ -47,7 +47,7 @@ class BookParser
     /**
      * @param SimpleXMLElement $rdfFileXmlContent
      *
-     * @return ParsedBookAuthor[]
+     * @return ParsedAuthor[]
      */
     private static function parseAuthorsFromRdfFileXmlContent(SimpleXMLElement $rdfFileXmlContent): array
     {
@@ -55,7 +55,7 @@ class BookParser
 
         $authors = $rdfFileXmlContent->xpath('//pgterms:agent');
         foreach ($authors as $i => $author) {
-            $parsedAuthor = new ParsedBookAuthor();
+            $parsedAuthor = new ParsedAuthor();
 
             // id
             $authorGutenbergUri = $author->xpath('//pgterms:agent/@rdf:about')[$i];

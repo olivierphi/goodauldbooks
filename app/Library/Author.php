@@ -4,7 +4,7 @@ namespace App\Library;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Book extends Model
+class Author extends Model
 {
     /**
      * The attributes that aren't mass assignable.
@@ -13,8 +13,8 @@ class Book extends Model
      */
     protected $guarded = [];
 
-    public function authors()
+    public function books()
     {
-        return $this->belongsToMany(Author::class, 'authors_books');
+        return $this->belongsToMany(Book::class, 'authors_books');
     }
 }

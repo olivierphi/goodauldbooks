@@ -17,7 +17,7 @@ class ParsedBook
      */
     public $lang;
     /**
-     * @var ParsedBookAuthor[]
+     * @var ParsedAuthor[]
      */
     public $authors = [];
     /**
