@@ -36,6 +36,7 @@ class BookParser
         }
 
         $book->title = (string) $bookTitle[0];
+        $book->id = 'pg:' . Arr::last(explode('/', (string) $rdfFileXmlContent->xpath('/rdf:RDF/pgterms:ebook/@rdf:about')[0]));
         $book->lang = (string) $rdfFileXmlContent->xpath('//dcterms:language/rdf:Description/rdf:value')[0];
         $book->authors = self::parseAuthorsFromRdfFileXmlContent($rdfFileXmlContent);
         $book->genres = self::parseGenresFromRdfFileXmlContent($rdfFileXmlContent);

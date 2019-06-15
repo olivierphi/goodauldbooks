@@ -7,6 +7,10 @@ class ParsedBook
     /**
      * @var string
      */
+    public $id;
+    /**
+     * @var string
+     */
     public $title;
     /**
      * @var string

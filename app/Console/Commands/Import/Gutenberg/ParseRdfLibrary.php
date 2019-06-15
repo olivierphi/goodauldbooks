@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Import\Gutenberg;
 
+use App\Import\LibraryDatabaseBridge;
 use App\Import\ProjectGutenberg\BookParser;
 use Illuminate\Console\Command;
 
@@ -20,13 +21,18 @@ class ParseRdfLibrary extends Command
      * @var string
      */
     protected $description = 'Parses RDF library from Project Gutenberg "generated" collection';
+    /**
+     * @var LibraryDatabaseBridge
+     */
+    private $libraryDatabaseBridge;
 
     /**
      * Create a new command instance.
      */
-    public function __construct()
+    public function __construct(LibraryDatabaseBridge $libraryDatabaseBridge)
     {
         parent::__construct();
+        $this->libraryDatabaseBridge = $libraryDatabaseBridge;
     }
 
     /**
@@ -48,10 +54,17 @@ class ParseRdfLibrary extends Command
         foreach ($iterator as $rdfFile) {
             $this->info($rdfFile->getFileName());
             $book = BookParser::parseBookFromRdf($rdfFile->getRealPath());
-            \dump($book);
-            if ($book && count($book->authors) > 1) {
+
+            if (!$book) {
+                continue;
+            }
+            dump($book);
+            if (count($book->authors) > 1) {
                 exit();
             }
+
+            $this->libraryDatabaseBridge->storeBookInDatabase($book);
+
             ++$nbFilesParsed;
             if ($nbFilesParsed > 50) {
                 break;
