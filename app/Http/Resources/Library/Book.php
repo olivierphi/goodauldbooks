@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Library;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,7 +21,8 @@ class Book extends JsonResource
             'lang' => $this->lang,
             'slug' => $this->slug,
             'url' => \route('books.show', ['slug' => $this->slug]),
-            'authors' => Author::collection($this->whenLoaded('authors')),
+            'authors' => new AuthorCollection($this->whenLoaded('authors')),
+            'genres' => new GenreCollection($this->whenLoaded('genres')),
         ];
     }
 }

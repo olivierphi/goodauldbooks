@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Book as BookResource;
-use App\Http\Resources\BookCollection as BookCollectionResource;
+use App\Http\Resources\Library\Book as BookResource;
+use App\Http\Resources\Library\BookCollection as BookCollectionResource;
 use App\Library\Book;
 use Illuminate\Http\Request;
 
@@ -15,14 +15,19 @@ class BookController extends Controller
      */
     public function index(Request $request): BookCollectionResource
     {
-        if ('authors' === $request->query->get('include')) {
-            // Naive implementation of Authors conditional inclusion for the moment :-)
-            $booksData = Book::with('authors');
-        } else {
-            $booksData = Book::query();
+        $include = $request->query->get('include', '');
+        $includeArray = explode(',', $include);
+
+        $booksQueryBuilder = Book::query();
+
+        if (in_array('authors', $includeArray)) {
+            $booksQueryBuilder = $booksQueryBuilder->with('authors');
+        }
+        if (in_array('genres', $includeArray)) {
+            $booksQueryBuilder = $booksQueryBuilder->with('genres');
         }
 
-        return new BookCollectionResource($booksData->paginate());
+        return new BookCollectionResource($booksQueryBuilder->paginate());
     }
 
     /**
@@ -30,6 +35,6 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-        return new BookResource($book->load('authors'));
+        return new BookResource($book->load('authors', 'genres'));
     }
 }

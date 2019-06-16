@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Library;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class BookCollection extends ResourceCollection
+class GenreCollection extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.

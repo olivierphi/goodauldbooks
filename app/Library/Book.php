@@ -18,6 +18,11 @@ class Book extends Model
         return $this->belongsToMany(Author::class, 'authors_books');
     }
 
+    public function genres()
+    {
+        return $this->belongsToMany(Genre::class, 'books_genres');
+    }
+
     /**
      * Get the route key for the model.
      */

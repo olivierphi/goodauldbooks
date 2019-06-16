@@ -11,6 +11,8 @@ use SimpleXMLElement;
 
 class BookParser
 {
+    public const MODELS_PUBLIC_IDS_PREFIX = 'pg-';
+
     public static function parseBookFromRdf(string $rdfFilePath): ?ParsedBook
     {
         $rdfFileContent = file_get_contents($rdfFilePath);
@@ -36,7 +38,7 @@ class BookParser
         }
 
         $book->title = (string) $bookTitle[0];
-        $book->id = 'pg:' . Arr::last(explode('/', (string) $rdfFileXmlContent->xpath('/rdf:RDF/pgterms:ebook/@rdf:about')[0]));
+        $book->id = self::MODELS_PUBLIC_IDS_PREFIX . Arr::last(explode('/', (string) $rdfFileXmlContent->xpath('/rdf:RDF/pgterms:ebook/@rdf:about')[0]));
         $book->lang = (string) $rdfFileXmlContent->xpath('//dcterms:language/rdf:Description/rdf:value')[0];
         $book->authors = self::parseAuthorsFromRdfFileXmlContent($rdfFileXmlContent);
         $book->genres = self::parseGenresFromRdfFileXmlContent($rdfFileXmlContent);
@@ -60,7 +62,7 @@ class BookParser
             // id
             $authorGutenbergUri = $author->xpath('//pgterms:agent/@rdf:about')[$i];
             if ($authorGutenbergUri) {
-                $parsedAuthor->id = 'pg:' . Arr::last(explode('/', $authorGutenbergUri['about']));
+                $parsedAuthor->id = self::MODELS_PUBLIC_IDS_PREFIX . Arr::last(explode('/', $authorGutenbergUri['about']));
             } else {
                 continue;
             }
@@ -136,7 +138,7 @@ class BookParser
 
             // Since literary genres have no idea in Project Gutenberg, let's compute one ourselves,
             // from their title: (adler32 should be a pretty valid candidate for that)
-            $parsedGenre->id = 'pg:' . hash('adler32', $name);
+            $parsedGenre->id = self::MODELS_PUBLIC_IDS_PREFIX . hash('adler32', $name);
             $parsedGenre->name = $name;
 
             $parsedGenres[] = $parsedGenre;

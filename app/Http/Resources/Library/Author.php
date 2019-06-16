@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Library;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,6 +21,7 @@ class Author extends JsonResource
             'lastName' => $this->last_name,
             'birthYear' => $this->birth_year,
             'deathYear' => $this->death_year,
+            'slug' => $this->slug,
         ];
     }
 }
