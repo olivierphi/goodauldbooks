@@ -1,0 +1,34 @@
+@import "~nes.css/scss/nes";
+
+.autocomplete {
+  // start copy-paste from ness.css' containers :-)
+  margin: $border-size;
+  color: $background-color;
+  background-color: $base-color;
+  border-color: white;
+
+  &::after {
+    position: absolute;
+    top: -$border-size * 1.8;
+    right: -$border-size * 1.8;
+    bottom: -$border-size * 1.8;
+    left: -$border-size * 1.8;
+    z-index: -1;
+    content: "";
+    background-color: $base-color;
+  }
+  // end copy-paste from ness.css' containers
+
+  & > div {
+    &::before {
+      content: " - ";
+    }
+  }
+
+  .group {
+    color: map-get($warning-colors, "shadow");
+    &::before {
+      content: "* ";
+    }
+  }
+}

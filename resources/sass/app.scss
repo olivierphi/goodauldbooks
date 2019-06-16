@@ -1,10 +1,15 @@
-// Fonts
-@import url('https://fonts.googleapis.com/css?family=Nunito');
+// Let's import the whole UI kit for the moment :-)
+$cursor-url: url("~nes.css/assets/cursor.png");
+$cursor-click-url: url("~nes.css/assets/cursor-click.png") 14 0;
 
-// Variables
-@import 'variables';
+@import "~nes.css/scss/nes";
 
-body {
-  font-family: 'Nunito', sans-serif;
-  color: $pink;
-}
+$font-serif: "Press Start 2P", cursive;
+$font-sans-serif: "Press Start 2P", cursive;
+
+@import "layout";
+@import "global";
+@import "component/books_list";
+@import "component/book_cover";
+@import "component/search_field";
+@import "page/book_page";

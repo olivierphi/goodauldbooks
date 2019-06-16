@@ -17,4 +17,9 @@ class Author extends Model
     {
         return $this->belongsToMany(Book::class, 'authors_books');
     }
+
+    public function getFullNameAttribute(): string
+    {
+        return trim(implode(' ', collect([$this->first_name, $this->last_name])->filter()->all()));
+    }
 }

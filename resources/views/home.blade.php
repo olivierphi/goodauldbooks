@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">Dashboard</div>
-
-            </div>
-        </div>
+@section('breadcrumb')
+    <div id="breadcrumb">
+        <a href="{{ route("home") }}" class="nes-text is-primary">Homepage</a>
     </div>
-</div>
 @endsection
+
+@section('body')
+    <ul class="books-list">
+        @each('library._books_list', $highlightedBooks, 'book')
+    </ul>
+@endsection
+

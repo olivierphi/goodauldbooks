@@ -11,8 +11,11 @@
 |
 */
 
-Route::namespace('API\Library')->prefix('library')->group(function () {
-    Route::resource('books', 'BookController')->only([
-        'index', 'show',
-    ]);
-});
+// Not a huge fan of Facades, so let's resolve the Route one to a Laravel router in a IIFE :-)
+(function (\Illuminate\Routing\Router $router) {
+    $router->namespace('API\Library')->prefix('library')->group(function () use ($router) {
+        $router->resource('books', 'BookController')->only([
+            'index', 'show',
+        ]);
+    });
+})(\Route::getFacadeRoot());
