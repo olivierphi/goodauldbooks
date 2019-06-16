@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Import\ProjectGutenberg;
 
-use App\Import\ParsedAuthor;
-use App\Import\ParsedBook;
-use App\Import\ParsedGenre;
+use App\Import\AuthorToImport;
+use App\Import\BookToImport;
+use App\Import\GenreToImport;
 use ErrorException;
 use Illuminate\Support\Arr;
 use SimpleXMLElement;
 
-class BookParser
+class BookRdfParser
 {
     public const MODELS_PUBLIC_IDS_PREFIX = 'pg-';
 
@@ -23,7 +25,7 @@ class BookParser
      */
     private static $genresIdsFromNamesResolution = [];
 
-    public static function parseBookFromRdf(string $rdfFilePath): ?ParsedBook
+    public static function parseBookFromRdf(string $rdfFilePath): ?BookToImport
     {
         $rdfFileContent = file_get_contents($rdfFilePath);
         $rdfFileXmlContent = new SimpleXMLElement($rdfFileContent);
@@ -36,11 +38,11 @@ class BookParser
     /**
      * @param SimpleXMLElement $rdfFileXmlContent
      *
-     * @return ParsedBook|null
+     * @return BookToImport|null
      */
     private static function parseBookFromRdfFileXmlContent(SimpleXMLElement $rdfFileXmlContent)
     {
-        $book = new ParsedBook();
+        $book = new BookToImport();
 
         $bookTitle = $rdfFileXmlContent->xpath('//dcterms:title');
         if (!$bookTitle) {
@@ -59,7 +61,7 @@ class BookParser
     /**
      * @param SimpleXMLElement $rdfFileXmlContent
      *
-     * @return ParsedAuthor[]
+     * @return AuthorToImport[]
      */
     private static function parseAuthorsFromRdfFileXmlContent(SimpleXMLElement $rdfFileXmlContent): array
     {
@@ -67,12 +69,12 @@ class BookParser
 
         $authors = $rdfFileXmlContent->xpath('//pgterms:agent');
         foreach ($authors as $i => $author) {
-            $parsedAuthor = new ParsedAuthor();
+            $parsedAuthor = new AuthorToImport();
 
             // id
             $authorGutenbergUri = $author->xpath('//pgterms:agent/@rdf:about')[$i];
             if ($authorGutenbergUri) {
-                $parsedAuthor->id = self::MODELS_PUBLIC_IDS_PREFIX . Arr::last(explode('/', $authorGutenbergUri['about']));
+                $parsedAuthor->id = self::MODELS_PUBLIC_IDS_PREFIX . Arr::last(explode('/', (string) $authorGutenbergUri['about']));
             } else {
                 continue;
             }
@@ -131,7 +133,7 @@ class BookParser
     /**
      * @param SimpleXMLElement $rdfFileXmlContent
      *
-     * @return ParsedGenre[]
+     * @return GenreToImport[]
      */
     private static function parseGenresFromRdfFileXmlContent(SimpleXMLElement $rdfFileXmlContent): array
     {
@@ -139,7 +141,7 @@ class BookParser
 
         $genres = $rdfFileXmlContent->xpath('//dcterms:subject/rdf:Description/rdf:value');
         foreach ($genres as $i => $genre) {
-            $parsedGenre = new ParsedGenre();
+            $parsedGenre = new GenreToImport();
 
             $name = (string) $genre;
             if (!$name) {

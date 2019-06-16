@@ -2,6 +2,7 @@
 
 namespace App\Library;
 
+use function collect;
 use Illuminate\Database\Eloquent\Model;
 
 class Author extends Model

@@ -23,6 +23,11 @@ class Book extends Model
         return $this->belongsToMany(Genre::class, 'books_genres');
     }
 
+    public function metadata()
+    {
+        return $this->hasOne(BookMetadata::class, 'book_id');
+    }
+
     /**
      * Get the route key for the model.
      */

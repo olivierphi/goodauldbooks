@@ -2,7 +2,7 @@
 
 namespace App\Import;
 
-class ParsedAuthor
+class AuthorToImport
 {
     /**
      * @var string|null

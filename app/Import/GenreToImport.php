@@ -5,7 +5,7 @@ namespace App\Import;
 /**
  * A literary genre.
  */
-class ParsedGenre
+class GenreToImport
 {
     /**
      * @var string

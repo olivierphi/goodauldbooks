@@ -2,7 +2,7 @@
 
 namespace App\Import;
 
-class ParsedBook
+class BookToImport
 {
     /**
      * @var string
@@ -17,11 +17,15 @@ class ParsedBook
      */
     public $lang;
     /**
-     * @var ParsedAuthor[]
+     * @var AuthorToImport[]
      */
     public $authors = [];
     /**
-     * @var ParsedGenre[]
+     * @var GenreToImport[]
      */
     public $genres = [];
+    /**
+     * @var BookAsset[]
+     */
+    public $assets = [];
 }
