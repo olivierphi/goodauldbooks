@@ -10,19 +10,31 @@ use Illuminate\Support\Str;
 class LibraryDatabaseBridge
 {
     /**
-     * If `true`, rather than using SQL queries to check whether a literary genre is already in the database or not
+     * If `true`, rather than using SQL queries to check whether an author is already in the database or not
      * we will store their ids in a (huge) PHP array.
+     *
+     * @var bool
+     */
+    public $keepExistingAuthorsTrackingInMemory = true;
+    /**
+     * Same, for literary genres.
      *
      * @var bool
      */
     public $keepExistingGenresTrackingInMemory = true;
 
     /**
+     * An associate array, where keys are parsed authors ids.
+     *
+     * @var AuthorModel[]
+     */
+    private $existingAuthorsByIds = [];
+    /**
      * An associate array, where keys are parsed genres ids.
      *
      * @var GenreModel[]
      */
-    private $existingGenresIds = [];
+    private $existingGenresByIds = [];
 
     public function storeBookInDatabase(ParsedBook $parsedBook, bool $saveAuthors = true, bool $saveGenres = true): BookModel
     {
@@ -52,6 +64,17 @@ class LibraryDatabaseBridge
 
     public function storeAuthorInDatabase(ParsedAuthor $parsedAuthor): AuthorModel
     {
+        if ($this->keepExistingAuthorsTrackingInMemory) {
+            if (array_key_exists($parsedAuthor->id, $this->existingAuthorsByIds)) {
+                return $this->existingAuthorsByIds[$parsedAuthor->id];
+            }
+        } else {
+            $existingAuthorInDatabaseQuery = AuthorModel::where(['public_id' => $parsedAuthor->id]);
+            if ($existingAuthorInDatabaseQuery->exists()) {
+                return $existingAuthorInDatabaseQuery->first();
+            }
+        }
+
         $authorSlugBase = Str::substr(implode('-', [$parsedAuthor->firstName, $parsedAuthor->lastName]), 0, 240);
         $authorSlug = Str::slug($authorSlugBase . '-' . $parsedAuthor->id);
 
@@ -64,14 +87,18 @@ class LibraryDatabaseBridge
             'slug' => $authorSlug,
         ]);
 
+        if ($this->keepExistingAuthorsTrackingInMemory) {
+            $this->existingAuthorsByIds[$parsedAuthor->id] = $authorModel;
+        }
+
         return $authorModel;
     }
 
     public function storeGenreInDatabase(Parsedgenre $parsedGenre): GenreModel
     {
         if ($this->keepExistingGenresTrackingInMemory) {
-            if (array_key_exists($parsedGenre->id, $this->existingGenresIds)) {
-                return $this->existingGenresIds[$parsedGenre->id];
+            if (array_key_exists($parsedGenre->id, $this->existingGenresByIds)) {
+                return $this->existingGenresByIds[$parsedGenre->id];
             }
         } else {
             $existingGenreInDatabaseQuery = GenreModel::where(['public_id' => $parsedGenre->id]);
@@ -90,7 +117,7 @@ class LibraryDatabaseBridge
         ]);
 
         if ($this->keepExistingGenresTrackingInMemory) {
-            $this->existingGenresIds[$parsedGenre->id] = $genreModel;
+            $this->existingGenresByIds[$parsedGenre->id] = $genreModel;
         }
 
         return $genreModel;

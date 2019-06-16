@@ -4,6 +4,7 @@ namespace App\Console\Commands\Import\Gutenberg;
 
 use App\Import\LibraryDatabaseBridge;
 use App\Import\ProjectGutenberg\BookParser;
+use GlobIterator;
 use Illuminate\Console\Command;
 
 class ParseRdfLibrary extends Command
@@ -48,27 +49,34 @@ class ParseRdfLibrary extends Command
             exit();
         }
 
-        $iterator = new \GlobIterator("${libraryPath}/**/*.rdf");
+        $startTime = microtime(true);
+
+        $iterator = new GlobIterator("${libraryPath}/**/*.rdf");
         $nbFilesParsed = 0;
+        $nbBooksCreated = 0;
         /** @var \SplFileInfo $rdfFile */
         foreach ($iterator as $rdfFile) {
-            $this->info($rdfFile->getFileName());
             $book = BookParser::parseBookFromRdf($rdfFile->getRealPath());
 
-            if (!$book) {
-                continue;
-            }
-            dump($book);
-            if (count($book->authors) > 1) {
-                exit();
-            }
-
-            $this->libraryDatabaseBridge->storeBookInDatabase($book);
-
+            $this->output->write('.');
             ++$nbFilesParsed;
-            if ($nbFilesParsed > 50) {
+
+            if ($book) {
+                $this->libraryDatabaseBridge->storeBookInDatabase($book);
+                ++$nbBooksCreated;
+            }
+
+            if (0 === $nbFilesParsed % 80) {
+                $duration = round(microtime(true) - $startTime);
+                $memory_usage = round(memory_get_usage() / 1000000);
+                $this->info(" ${nbFilesParsed} (${duration}s., ${memory_usage}MB)");
+            }
+            if ($nbFilesParsed > 5000) {
                 break;
             }
         }
+
+        $duration = round(microtime(true) - $startTime, 1);
+        $this->info("\n${nbFilesParsed} files parsed, ${nbBooksCreated} books created in ${duration}s.");
     }
 }

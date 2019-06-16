@@ -11,6 +11,8 @@
 |
 */
 
-\Route::resource('books', 'API\BookController')->only([
-    'index', 'show',
-]);
+Route::namespace('API\Library')->prefix('library')->group(function () {
+    Route::resource('books', 'BookController')->only([
+        'index', 'show',
+    ]);
+});
