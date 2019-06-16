@@ -13,6 +13,16 @@ class BookParser
 {
     public const MODELS_PUBLIC_IDS_PREFIX = 'pg-';
 
+    /**
+     * @var bool
+     */
+    public static $keepGenresIdsFromNamesResolutionInMemory = true;
+
+    /**
+     * @var array a "genre name" => "genre id" associative array
+     */
+    private static $genresIdsFromNamesResolution = [];
+
     public static function parseBookFromRdf(string $rdfFilePath): ?ParsedBook
     {
         $rdfFileContent = file_get_contents($rdfFilePath);
@@ -138,7 +148,15 @@ class BookParser
 
             // Since literary genres have no idea in Project Gutenberg, let's compute one ourselves,
             // from their title: (adler32 should be a pretty valid candidate for that)
-            $parsedGenre->id = self::MODELS_PUBLIC_IDS_PREFIX . hash('adler32', $name);
+            if (self::$keepGenresIdsFromNamesResolutionInMemory && array_key_exists($name, self::$genresIdsFromNamesResolution)) {
+                $parsedGenre->id = self::$genresIdsFromNamesResolution[$name];
+            } else {
+                $parsedGenre->id = self::MODELS_PUBLIC_IDS_PREFIX . hash('adler32', $name);
+                if (self::$keepGenresIdsFromNamesResolutionInMemory) {
+                    self::$genresIdsFromNamesResolution[$name] = $parsedGenre->id;
+                }
+            }
+
             $parsedGenre->name = $name;
 
             $parsedGenres[] = $parsedGenre;
