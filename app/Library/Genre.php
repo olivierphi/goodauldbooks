@@ -14,4 +14,12 @@ class Genre extends Model
      * @var array
      */
     protected $guarded = [];
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 }

@@ -23,4 +23,12 @@ class Author extends Model
     {
         return trim(implode(' ', collect([$this->first_name, $this->last_name])->filter()->all()));
     }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 }
