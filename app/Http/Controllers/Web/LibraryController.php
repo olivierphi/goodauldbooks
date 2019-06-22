@@ -24,8 +24,6 @@ class LibraryController
 
     public function book(Book $book)
     {
-        $book->load('authors', 'genres');
-
         return view('library.book', ['book' => $book]);
     }
 

@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Book extends Model
 {
     /**
+     * The relationships that should always be loaded.
+     *
+     * @var array
+     */
+    protected $with = ['authors', 'genres'];
+
+    /**
      * The attributes that aren't mass assignable.
      *
      * @var array

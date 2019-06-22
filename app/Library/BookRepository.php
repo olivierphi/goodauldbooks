@@ -10,16 +10,14 @@ class BookRepository
 {
     public function booksByAuthor(int $authorId): Builder
     {
-        return Book::with('authors', 'genres')
-            ->join('authors_books', 'authors_books.book_id', '=', 'books.id')
+        return Book::join('authors_books', 'authors_books.book_id', '=', 'books.id')
             ->where('authors_books.author_id', '=', $authorId)
             ->orderBy('books.title');
     }
 
     public function booksByGenre(int $genreId): Builder
     {
-        return Book::with('authors', 'genres')
-            ->join('books_genres', 'books_genres.book_id', '=', 'books.id')
+        return Book::join('books_genres', 'books_genres.book_id', '=', 'books.id')
             ->where('books_genres.genre_id', '=', $genreId)
             ->orderBy('books.title');
     }
