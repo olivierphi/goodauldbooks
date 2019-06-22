@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
-use App\Library\Author as AuthorModel;
-use App\Library\Book as BookModel;
+use App\Library\Author;
+use App\Library\Book;
 use App\Library\BookRepository;
-use App\Library\Genre as GenreModel;
+use App\Library\Genre;
 use function view;
 
 class LibraryController
@@ -22,23 +22,23 @@ class LibraryController
         $this->bookRepository = $bookRepository;
     }
 
-    public function book(BookModel $book)
+    public function book(Book $book)
     {
         $book->load('authors', 'genres');
 
         return view('library.book', ['book' => $book]);
     }
 
-    public function booksByAuthor(AuthorModel $author)
+    public function booksByAuthor(Author $author)
     {
-        $authorBooks = $this->bookRepository->booksByAuthor($author->id)->get();
+        $authorBooks = $this->bookRepository->booksByAuthor($author->id)->paginate();
 
         return view('library.books_by_author', ['author' => $author, 'books' => $authorBooks]);
     }
 
-    public function booksByGenre(GenreModel $genre)
+    public function booksByGenre(Genre $genre)
     {
-        $authorBooks = $this->bookRepository->booksByGenre($genre->id)->get();
+        $authorBooks = $this->bookRepository->booksByGenre($genre->id)->paginate();
 
         return view('library.books_by_genre', ['genre' => $genre, 'books' => $authorBooks]);
     }

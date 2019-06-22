@@ -11,8 +11,10 @@
 @endsection
 
 @section('body')
+    {{ $books->total() }} books.
     <ul class="books-list">
         @each('library._books_list', $books, 'book')
     </ul>
+    {{  $books->links() }}
 @endsection
 
