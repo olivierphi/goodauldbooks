@@ -11,10 +11,6 @@
 @endsection
 
 @section('body')
-    {{ $books->total() }} books.
-    <ul class="books-list">
-        @each('library._books_list', $books, 'book')
-    </ul>
-    {{  $books->links() }}
+    @include("library._books_list_with_pagination", ["books"=>$books])
 @endsection
 
