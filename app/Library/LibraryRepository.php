@@ -2,18 +2,18 @@
 
 namespace App\Library;
 
-use Illuminate\Database\DatabaseManager;
+use Illuminate\Database\ConnectionInterface;
 
-class LibraryRepository
+class LibraryRepository implements LibraryRepositoryInterface
 {
     /**
-     * @var DatabaseManager
+     * @var ConnectionInterface
      */
-    private $databaseManager;
+    private $databaseConnection;
 
-    public function __construct(DatabaseManager $databaseManager)
+    public function __construct(ConnectionInterface $databaseConnection)
     {
-        $this->databaseManager = $databaseManager;
+        $this->databaseConnection = $databaseConnection;
     }
 
     public function quickAutocompletion(string $pattern, string $lang = 'all'): array
@@ -96,6 +96,6 @@ union all
 ;
 SQL;
 
-        return $this->databaseManager->select($SQL, ['pattern' => $pattern, 'lang' => $lang]);
+        return $this->databaseConnection->select($SQL, ['pattern' => $pattern, 'lang' => $lang]);
     }
 }

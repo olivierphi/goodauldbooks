@@ -24,7 +24,7 @@ class HomeController extends Controller
     public function index()
     {
         $highlightedBooksIds = ['pg-345', 'pg-84'];
-        $highlightedBooks = Book::with('authors')->whereIn('public_id', $highlightedBooksIds)->get();
+        $highlightedBooks = Book::query()->with('authors')->whereIn('public_id', $highlightedBooksIds)->get();
 
         return view('home', ['highlightedBooks' => $highlightedBooks]);
     }

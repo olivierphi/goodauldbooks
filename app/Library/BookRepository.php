@@ -6,11 +6,11 @@ namespace App\Library;
 
 use Illuminate\Database\Eloquent\Builder;
 
-class BookRepository
+class BookRepository implements BookRepositoryInterface
 {
     public function booksByAuthor(int $authorId): Builder
     {
-        return Book::whereHas('authors', function (Builder $authorQuery) use ($authorId) {
+        return Book::query()->whereHas('authors', function (Builder $authorQuery) use ($authorId) {
             $authorQuery->where('id', $authorId);
         })
             ->orderBy('books.title');
@@ -18,7 +18,7 @@ class BookRepository
 
     public function booksByGenre(int $genreId): Builder
     {
-        return Book::whereHas('genres', function (Builder $genreQuery) use ($genreId) {
+        return Book::query()->whereHas('genres', function (Builder $genreQuery) use ($genreId) {
             $genreQuery->where('id', $genreId);
         })
             ->orderBy('books.title');

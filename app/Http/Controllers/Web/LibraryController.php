@@ -6,18 +6,18 @@ namespace App\Http\Controllers\Web;
 
 use App\Library\Author;
 use App\Library\Book;
-use App\Library\BookRepository;
+use App\Library\BookRepositoryInterface;
 use App\Library\Genre;
 use function view;
 
 class LibraryController
 {
     /**
-     * @var BookRepository
+     * @var BookRepositoryInterface
      */
     private $bookRepository;
 
-    public function __construct(BookRepository $bookRepository)
+    public function __construct(BookRepositoryInterface $bookRepository)
     {
         $this->bookRepository = $bookRepository;
     }

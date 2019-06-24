@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\API\Library;
 
-use App\Library\LibraryRepository;
+use App\Library\LibraryRepositoryInterface;
 use Illuminate\Http\Request;
 
 class SearchController
 {
     /**
-     * @var LibraryRepository
+     * @var LibraryRepositoryInterface
      */
     private $libraryRepository;
 
-    public function __construct(LibraryRepository $libraryRepository)
+    public function __construct(LibraryRepositoryInterface $libraryRepository)
     {
         $this->libraryRepository = $libraryRepository;
     }

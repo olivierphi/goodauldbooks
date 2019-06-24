@@ -20,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
             // Ok, here comes Telescope!
             $this->app->register(TelescopeServiceProvider::class);
         }
+
+        // Repositories
+        $this->app->singleton(\App\Library\LibraryRepositoryInterface::class, \App\Library\LibraryRepository::class);
+        $this->app->singleton(\App\Library\BookRepositoryInterface::class, \App\Library\BookRepository::class);
     }
 
     /**
