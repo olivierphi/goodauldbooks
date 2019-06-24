@@ -1,2 +1,13 @@
-// Let's start with a smoke test of Laravel Mix + Webpack :-)
-console.log("Laravel Mix + Webpack operational, cap'tain");
+import Turbolinks from "turbolinks";
+import { initialiseSearchField } from "./behaviour/search-field";
+
+window.addEventListener("load", initApp);
+
+function initApp() {
+  initAjaxNav();
+  initialiseSearchField();
+}
+
+function initAjaxNav() {
+  Turbolinks.start();
+}
