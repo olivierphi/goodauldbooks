@@ -22,7 +22,7 @@
             <div class="book-main-data">
                 <h2 class="book-title" itemprop="name">{{ $book->title }}</h2>
                 @isset($book->subtitle)
-                <h4 class="book-subtitle">{{ $book->subtitle }}</h4>
+                    <h4 class="book-subtitle">{{ $book->subtitle }}</h4>
                 @endisset
 
                 @if(count($book->authors))

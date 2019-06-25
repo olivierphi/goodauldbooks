@@ -49,9 +49,22 @@ class BookRdfParser
             return null;
         }
 
+        // Title (could contain a subtitle, with ";" as separator)
         $book->title = (string) $bookTitle[0];
+        if (false !== strpos($book->title, ';')) {
+            [$book->title, $book->subtitle] = explode(';', $book->title);
+        }
+        foreach (['title', 'subtitle'] as $titleField) {
+            if ($book->$titleField) {
+                $book->$titleField = trim($book->$titleField);
+            }
+        }
+
+        // Other books properties
         $book->id = self::MODELS_PUBLIC_IDS_PREFIX . Arr::last(explode('/', (string) $rdfFileXmlContent->xpath('/rdf:RDF/pgterms:ebook/@rdf:about')[0]));
         $book->lang = (string) $rdfFileXmlContent->xpath('//dcterms:language/rdf:Description/rdf:value')[0];
+
+        // related entities
         $book->authors = self::parseAuthorsFromRdfFileXmlContent($rdfFileXmlContent);
         $book->genres = self::parseGenresFromRdfFileXmlContent($rdfFileXmlContent);
 

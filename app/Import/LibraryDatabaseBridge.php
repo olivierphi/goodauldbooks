@@ -49,6 +49,7 @@ class LibraryDatabaseBridge
         $bookModel = BookModel::create([
             'public_id' => $bookToImport->id,
             'title' => $bookToImport->title,
+            'subtitle' => $bookToImport->subtitle ?: null,
             'lang' => $bookToImport->lang,
             'slug' => $bookSlug,
         ]);

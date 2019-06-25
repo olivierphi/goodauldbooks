@@ -16,7 +16,7 @@ class CreateBooksTable extends Migration
             $table->string('public_id')->unique();
             // yeah, some books from Project Gutenberg have *really* long titles/subtitles :-)
             $table->string('title', 500);
-            $table->string('sub_title', 500)->nullable();
+            $table->string('subtitle', 500)->nullable();
             $table->string('lang', 3)->index();
             $table->string('slug')->unique();
             $table->timestamps();

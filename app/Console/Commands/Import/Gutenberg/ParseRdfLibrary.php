@@ -23,7 +23,7 @@ class ParseRdfLibrary extends Command
      *
      * @var string
      */
-    protected $description = 'Parses RDF library from Project Gutenberg "generated" collection';
+    protected $description = 'Parses RDF library from Project Gutenberg\'s "generated" collection';
     /**
      * @var LibraryDatabaseBridge
      */

@@ -13,6 +13,10 @@ class BookToImport
      */
     public $title;
     /**
+     * @var string|null
+     */
+    public $subtitle;
+    /**
      * @var string
      */
     public $lang;
