@@ -3,13 +3,18 @@ import re
 import typing as t
 from pathlib import Path
 from string import Template
+import xml.etree.ElementTree as ET
 
-import xmltodict
 from app.library.domain import Author, Book, BookAsset, BookAssetType
 
 BOOK_INTRO_SIZE = 5000
 RDF_FILE_REGEX = re.compile(r"^pg(\d+)\.rdf$")
 PROVIDER_ID = "pg"
+_GUTENBERG_XML_NAMESPACES = {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "pgterms": "http://www.gutenberg.org/2009/pgterms/",
+}
 
 _AUTHOR_ID_FROM_PG_AGENT_REGEX = re.compile(r"/(\d+)$")
 _ASSETS_TEMPLATES = {
@@ -87,70 +92,37 @@ def get_book_to_parse_data(pg_book_id: int, rdf_path: Path) -> BookToParse:
 
 
 def parse_book(book_to_parse: BookToParse) -> t.Optional[Book]:
-    rdf_as_dict = xmltodict.parse(book_to_parse.rdf_content)
+    rdf_data = ET.fromstring(book_to_parse.rdf_content)
 
     book = _get_book(
         book_to_parse.pg_book_id,
-        rdf_as_dict,
+        rdf_data,
         book_to_parse.dir_files_sizes,
         book_to_parse.intro if book_to_parse.has_intro else None,
     )
-    if book is None:
-        return None
-
-    # TODO: handle multiple authors
-    author = _get_author(rdf_as_dict)
-    if author:
-        book.authors.append(author)
 
     return book
 
 
 def _get_book(
     pg_book_id: int,
-    rdf_as_dict: dict,
+    rdf_data: ET.Element,
     book_files_sizes: t.Dict[str, int],
     intro: t.Optional[str],
 ) -> t.Optional[Book]:
-    # Quick'n'dirty parsing :-)
-    title = _get_value_from_dict(
-        rdf_as_dict, ("rdf:RDF", "pgterms:ebook", "dcterms:title")
-    )
-    if not isinstance(title, str):
-        logger.warning("%s:unexpected_title:%s", str(pg_book_id).rjust(5), title)
+    title = rdf_data.findtext(".//dcterms:title", None, _GUTENBERG_XML_NAMESPACES)
+    if not title:
         return None
 
-    lang = _get_value_from_dict(
-        rdf_as_dict,
-        (
-            "rdf:RDF",
-            "pgterms:ebook",
-            "dcterms:language",
-            "rdf:Description",
-            "rdf:value",
-            "#text",
-        ),
+    lang = rdf_data.findtext(
+        ".//dcterms:language/rdf:Description/rdf:value", None, _GUTENBERG_XML_NAMESPACES
     )
-    if not isinstance(lang, str):
-        # TODO: Handle books with multiple langs?
-        logger.warning("%s:unexpected_lang:%s", str(pg_book_id).rjust(5), lang)
-        return None
-
-    genres_container = _get_value_from_dict(
-        rdf_as_dict, ("rdf:RDF", "pgterms:ebook", "dcterms:subject")
-    )
-    if genres_container:
-        genres = [g["rdf:Description"]["rdf:value"] for g in genres_container]
-        for genre in genres:
-            if not isinstance(genre, str):
-                logger.warning(
-                    "%s:unexpected_genre:%s", str(pg_book_id).rjust(5), genre
-                )
-                return None
-    else:
-        genres = []
-
-    assets = _get_book_assets(pg_book_id, book_files_sizes)
+    genres = [
+        el.text
+        for el in rdf_data.findall(
+            ".//dcterms:subject/rdf:Description/rdf:value", _GUTENBERG_XML_NAMESPACES
+        )
+    ]
 
     # Do we have a "[title]; [subtitle]" pattern in this book's title?
     title_list = title.split(";", maxsplit=1)
@@ -167,79 +139,49 @@ def _get_book(
         subtitle=subtitle,
         lang=lang,
         genres=genres,
-        assets=assets,
-        authors=[],
+        assets=_get_book_assets(pg_book_id, book_files_sizes),
+        authors=_get_authors(rdf_data),
         intro=intro,
     )
 
 
-def _get_author(rdf_as_dict: dict) -> t.Optional[Author]:
-    # Quick'n'dirty parsing :-)
-    pg_agent_str = _get_value_from_dict(
-        rdf_as_dict,
-        ("rdf:RDF", "pgterms:ebook", "dcterms:creator", "pgterms:agent", "@rdf:about"),
-    )
-    if pg_agent_str is None:
-        return None
+def _get_authors(rdf_data: ET.Element) -> t.List[Author]:
+    authors = []
 
-    if not isinstance(pg_agent_str, str):
-        # TODO: handle books with multiple authors (like pg10620) properly
-        logger.warning("%s:unexpected_author_agent", pg_agent_str)
-        return None
+    authors_data = rdf_data.findall(".//pgterms:agent", _GUTENBERG_XML_NAMESPACES)
+    for author_data in authors_data:
+        # Author Id
+        pg_agent_str = author_data.attrib[
+            f"{{{_GUTENBERG_XML_NAMESPACES['rdf']}}}about"
+        ]
+        pg_author_id = int(_AUTHOR_ID_FROM_PG_AGENT_REGEX.search(pg_agent_str).group(1))
+        # Name, first name, last name
+        name = author_data.findtext("./pgterms:name", None, _GUTENBERG_XML_NAMESPACES)
+        last_name, first_name = None, None
+        if name:
+            name_list = name.split(",")
+            if len(name_list) == 2:
+                last_name, first_name = [item.strip() for item in name_list]
+        # Birth and death dates
+        birth_year = author_data.findtext(
+            "./pgterms:birthdate", None, _GUTENBERG_XML_NAMESPACES
+        )
+        death_year = author_data.findtext(
+            "./pgterms:deathdate", None, _GUTENBERG_XML_NAMESPACES
+        )
 
-    pg_author_id = int(_AUTHOR_ID_FROM_PG_AGENT_REGEX.search(pg_agent_str).group(1))
+        author = Author(
+            provider=PROVIDER_ID,
+            id=str(pg_author_id),
+            name=name,
+            first_name=first_name,
+            last_name=last_name,
+            birth_year=birth_year,
+            death_year=death_year,
+        )
+        authors.append(author)
 
-    name = _get_value_from_dict(
-        rdf_as_dict,
-        (
-            "rdf:RDF",
-            "pgterms:ebook",
-            "dcterms:creator",
-            "pgterms:agent",
-            "pgterms:name",
-        ),
-    )
-    last_name, first_name = None, None
-    if name:
-        name_list = name.split(",")
-        if len(name_list) == 2:
-            last_name, first_name = [item.strip() for item in name_list]
-    birth_year = _get_value_from_dict(
-        rdf_as_dict,
-        (
-            "rdf:RDF",
-            "pgterms:ebook",
-            "dcterms:creator",
-            "pgterms:agent",
-            "pgterms:birthdate",
-            "#text",
-        ),
-    )
-    if birth_year:
-        birth_year = int(birth_year)
-    death_year = _get_value_from_dict(
-        rdf_as_dict,
-        (
-            "rdf:RDF",
-            "pgterms:ebook",
-            "dcterms:creator",
-            "pgterms:agent",
-            "pgterms:deathdate",
-            "#text",
-        ),
-    )
-    if death_year:
-        death_year = int(death_year)
-
-    return Author(
-        provider=PROVIDER_ID,
-        id=str(pg_author_id),
-        name=name,
-        first_name=first_name,
-        last_name=last_name,
-        birth_year=birth_year,
-        death_year=death_year,
-    )
+    return authors
 
 
 def _get_book_assets(

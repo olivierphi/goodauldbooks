@@ -1,5 +1,6 @@
 import typing as t
 from enum import Enum
+from dataclasses import dataclass
 
 LANG_ALL = "_all_"
 
@@ -9,12 +10,14 @@ class BookAssetType(Enum):
     MOBI = "mobi"
 
 
-class BookAsset(t.NamedTuple):
+@dataclass
+class BookAsset:
     type: BookAssetType
     size: int
 
 
-class Author(t.NamedTuple):
+@dataclass
+class Author:
     provider: str
     id: str
     name: str
@@ -24,11 +27,12 @@ class Author(t.NamedTuple):
     death_year: int = None
 
 
-class Book(t.NamedTuple):
+@dataclass
+class Book:
     provider: str
     id: str
     title: str
-    subtitle: str
+    subtitle: t.Optional[str]
     lang: str
     genres: t.List[str]
     assets: t.List[BookAsset]

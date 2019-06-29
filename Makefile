@@ -32,6 +32,13 @@ python-add-pkg:
 	@[ "${PKG}" ] || ( echo "! Make variable PKG is not set"; exit 1 )
 	${POETRY} add ${OPTS} "${PKG}"
 
+.PHONY: python-rm-pkg
+python-rm-pkg: PKG ?=
+python-rm-pkg: OPTS ?=
+python-rm-pkg:
+	@[ "${PKG}" ] || ( echo "! Make variable PKG is not set"; exit 1 )
+	${POETRY} remove ${OPTS} "${PKG}"
+
 .PHONY: python-black
 python-black:
 	@${POETRY} run black src/ --exclude node_modules
@@ -78,3 +85,9 @@ populate-postgres-from-transitional-db: OPTS ?=
 populate-postgres-from-transitional-db:
 	@${MAKE} --no-print-directory django-manage \
 	 	CMD="populate_postgres_from_transitional_db '${SQLITE_DB_PATH}' ${OPTS}"
+
+.PHONY: test-book-parsing
+test-book-parsing: OPTS ?=
+test-book-parsing:
+	@${MAKE} --no-print-directory django-manage \
+	 	CMD="test_book_parsing '${SQLITE_DB_PATH}' ${OPTS}"
