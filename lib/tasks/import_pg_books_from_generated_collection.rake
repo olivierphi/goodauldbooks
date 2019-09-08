@@ -1,5 +1,6 @@
 namespace :import do
     namespace :pg do
+        desc "Import library from a Project Gutenberg 'generated' rsync-ed collection"
         task import_books_from_generated_collection: [:environment] do
             rsynced_generated_collection_path = ENV.fetch("PG_COLLECTION_PATH", "")
             if rsynced_generated_collection_path.blank?
@@ -10,6 +11,7 @@ namespace :import do
                 puts "'PG_COLLECTION_PATH' env var is not a valid dir path."
                 exit(false)
             end
+
             ProjectGutenberg::Import::GeneratedCollectionImporter.new.import(rsynced_generated_collection_path)
         end
     end

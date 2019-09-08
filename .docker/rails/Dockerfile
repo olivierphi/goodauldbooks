@@ -1,4 +1,4 @@
-FROM ruby:2.6
+FROM ruby:2.6.3
 
 RUN apt update && apt install -y \
     curl \
@@ -16,3 +16,6 @@ RUN npm i -g yarn
 # Let's fix some encoding issues in IRB:
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-6
+
+# Let our app know that it runs in a Docker container
+ENV IS_DOCKER 1

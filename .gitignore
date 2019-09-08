@@ -6,6 +6,9 @@
 
 /.docker/volumes/
 
+# Ignore local gemsets (@link https://github.com/jf/rbenv-gemset )
+/.gems/
+
 # Ignore bundler config.
 /.bundle
 
