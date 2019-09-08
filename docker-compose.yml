@@ -15,6 +15,11 @@ services:
       - postgres
     env_file:
       - .local.dev.env
+    # Usage examples:
+    #  - Start the Rails dev server with:
+    #    `dc run --rm --user $(id -u) --service-ports rails rails s -b 0.0.0.0`
+    #  - Import books from a Project Gutenberg "generated collection" with:
+    #    `dc run --rm --user $(id -u) -e PG_COLLECTION_PATH=/pg_collection -v ~/gutenberg-mirror/generated-collection:/pg_collection rails rails import:pg:import_books_from_generated_collection`
 
   postgres:
     image: postgres:10-alpine
