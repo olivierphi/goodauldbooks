@@ -8,7 +8,12 @@ class ProjectGutenberg::Import::GeneratedCollectionImporter
 
     def import(pg_collection_path)
         loop_over_books_with_epub_version pg_collection_path do |rdf_path: , book_id:|
-            puts parse_rdf(rdf_path: rdf_path, book_id: book_id)
+            # the following line is a quick-n-dirty test, we'll do proper parsing and storage
+            # in the next phase :-)
+            PgRawBook.create!(pg_book_id: book_id, rdf_content: File.read(rdf_path))
+            
+            raw_book_data = parse_rdf(rdf_path: rdf_path, book_id: book_id)
+            puts raw_book_data
         end
     end
 

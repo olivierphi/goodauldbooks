@@ -1,0 +1,18 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# TODO: create proper PG book fixtures :-)
+
+one:
+  pg_book_id: 1
+  rdf_content: MyText
+  dir_files_sizes: MyText
+  has_intro: 1
+  intro: MyText
+  has_cover:
+
+two:
+  pg_book_id: 1
+  rdf_content: MyText
+  dir_files_sizes: MyText
+  has_intro: 1
+  intro: MyText
+  has_cover:

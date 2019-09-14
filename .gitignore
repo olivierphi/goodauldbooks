@@ -5,6 +5,7 @@
 #   git config --global core.excludesfile '~/.gitignore_global'
 
 /.docker/volumes/
+/db/pg_temp_db.sqlite3
 
 # Ignore local gemsets (@link https://github.com/jf/rbenv-gemset )
 /.gems/
