@@ -12,7 +12,10 @@ namespace :import do
                 exit(false)
             end
 
-            ProjectGutenberg::Import::GeneratedCollectionImporter.new.import(rsynced_generated_collection_path)
+            ProjectGutenberg::Import::GeneratedCollectionImporter.new.import(
+                rsynced_generated_collection_path,
+                wipe_previous_data: true
+            )
         end
     end
 end

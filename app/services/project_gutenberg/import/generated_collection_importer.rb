@@ -1,106 +1,103 @@
+require 'json'
+
 require "library_import/structs"
 
-class ProjectGutenberg::Import::GeneratedCollectionImporter
-    LIBRARY_ITEMS_ID_PREFIX = "pg."
+module ProjectGutenberg
+    module Import 
+        class GeneratedCollectionImporter
+            BOOK_ASSETS = {
+                epub: "pg%<pg_book_id>d.epub",
+                mobi: "pg%<pg_book_id>d.mobi",
+                cover: "pg%<pg_book_id>d.cover.medium.jpg",
+                text: "pg%<pg_book_id>d.txt.utf8",
+            }
+            BOOK_INTRO_SIZE = 50 # we'll store the first N characters of the UTF8 text file
+            BOOKS_LOOP_LIMIT = 30 # set to 0 or Infinity to disable that limit
 
-    @@debug = true
-    @@books_loop_limit = 10
+            DEBUG = true
 
-    def import(pg_collection_path)
-        loop_over_books_with_epub_version pg_collection_path do |rdf_path: , book_id:|
-            # the following line is a quick-n-dirty test, we'll do proper parsing and storage
-            # in the next phase :-)
-            PgRawBook.create!(pg_book_id: book_id, rdf_content: File.read(rdf_path))
-            
-            raw_book_data = parse_rdf(rdf_path: rdf_path, book_id: book_id)
-            puts raw_book_data
-        end
-    end
+            def import(pg_collection_path, wipe_previous_data: false)
+                truncate_existing_import() if wipe_previous_data
 
-    private
+                loop_over_books_with_epub_version pg_collection_path do |book_dir:, rdf_path: , book_id:|
+                    rdf_content = File.read(rdf_path).force_encoding(Encoding::UTF_8)
+                    assets_size = get_book_assets_sizes(book_dir, book_id)
+                    book_has_cover = !assets_size[:cover].nil?
+                    book_has_intro = !assets_size[:text].nil?
+                    book_intro =  book_has_intro ? get_book_intro(book_dir, book_id) : nil 
+                    puts [:book_id, assets_size, book_has_cover, book_has_intro, book_intro, "======"] if debug?
 
-    def loop_over_books_with_epub_version(pg_collection_path, &block)
-        counter = 0
-        Dir.glob("*/*.rdf", base: pg_collection_path) do |rdf_path|
-            counter = counter + 1
-            break if counter >= books_loop_limit
-            break if counter >= 100 # additional security while we're still in "WIP" phase :-)
-
-            book_id = book_id_from_rdf_path(rdf_path)
-            if book_id.nil?
-                puts "Can't extract Gutenberg id from RDF path #{rdf_path}"  if debug?
-                next
+                    PgRawBook.create!(
+                        pg_book_id: book_id,
+                        rdf_content: rdf_content,
+                        dir_files_sizes: JSON.generate(assets_size),
+                        has_intro: book_has_intro,
+                        intro: book_intro,
+                        has_cover: book_has_cover,
+                    )
+                end
             end
 
-            rdf_full_path = File.join(pg_collection_path, rdf_path)
-            book_dir = File.dirname(rdf_full_path)
-            epub_path = File.join(book_dir, "pg#{book_id}.epub")
-            unless File.exists? epub_path
-                puts "No EPUB file '#{epub_path}' for book #{book_id}"  if debug?
-                next
+            private
+
+            def truncate_existing_import
+                PgRawBook.delete_all()
             end
 
-            block.call(rdf_path: rdf_full_path, book_id: book_id)
+            def loop_over_books_with_epub_version(pg_collection_path, &block)
+                counter = 0
+                Dir.glob("*/*.rdf", base: pg_collection_path) do |rdf_path|
+                    counter = counter + 1
+                    break if counter >= BOOKS_LOOP_LIMIT
+                    break if counter >= 100 # additional security while we're still in "WIP" phase :-)
+
+                    book_id = book_id_from_rdf_path(rdf_path)
+                    if book_id.nil?
+                        puts "Can't extract Gutenberg id from RDF path #{rdf_path}"  if debug?
+                        next
+                    end
+
+                    rdf_full_path = File.join(pg_collection_path, rdf_path)
+                    book_dir = File.dirname(rdf_full_path)
+                    epub_path = File.join(book_dir, "pg#{book_id}.epub")
+                    unless File.exists? epub_path
+                        puts "No EPUB file '#{epub_path}' for book #{book_id}"  if debug?
+                        next
+                    end
+
+                    block.call(book_dir: book_dir, rdf_path: rdf_full_path, book_id: book_id)
+                end
+            end
+
+            def book_id_from_rdf_path(rdf_path)
+                book_id_match = rdf_path.match(%r~^\d+/pg(?<pg_id>\d+).rdf$~)
+                return nil if book_id_match.nil?
+                return book_id_match[:pg_id]
+            end
+
+            def get_book_assets_sizes(book_dir, book_id)
+                assets_sizes = {}
+                BOOK_ASSETS.each do |asset_type, file_name_pattern|
+                    file_name = sprintf(file_name_pattern, {pg_book_id: book_id})
+                    file_path = File.join(book_dir, file_name)
+                    if File.exists?(file_path)
+                        assets_sizes[asset_type] = File.size(file_path)
+                    end
+                end
+                assets_sizes
+            end
+
+            def get_book_intro(book_dir, book_id)
+                book_text_file_name = sprintf(BOOK_ASSETS[:text], {pg_book_id: book_id})
+                book_text_file_path = File.join(book_dir, book_text_file_name)
+
+                File.read(book_text_file_path, BOOK_INTRO_SIZE, mode: "rb").force_encoding(Encoding::UTF_8)
+            end
+
+            def debug?
+                !!DEBUG
+            end
+
         end
     end
-
-    def parse_rdf(rdf_path: , book_id:)
-        File.open(rdf_path) do |rdf_file| 
-            xml_doc = Nokogiri::XML(rdf_file)
-            parse_book(xml_doc, book_id)
-        end
-    end
-    
-    def parse_book(book_doc, book_id)
-        book_title = book_doc.at_xpath("//dcterms:title").content
-
-        authors_nodes = book_doc.xpath("//pgterms:agent")
-        puts "Book #{book_id} has multiple authors" if debug? && authors_nodes.length > 1
-        authors = authors_nodes.map &self.method(:parse_author)
-
-        full_book_id = "#{LIBRARY_ITEMS_ID_PREFIX}#{book_id}"
-
-        LibraryImport::Book.new(id: full_book_id, title: book_title, authors: authors)
-    end
-
-    def parse_author(author_node)
-        author_id_node = author_node.at_xpath("./@rdf:about")
-        if author_id_node.nil?
-            puts "Can't extract PG author id from RDF file '#{rdf_path}'" if debug?
-            return nil
-        end
-
-        author_id_raw = author_id_node.content
-        author_id_match = author_id_raw.match(%r~^\d{4}/agents/(?<id>\d+)$~)
-        if author_id_match.nil?
-            puts "Can't extract PG author id from string '#{author_id_raw}'" if debug?
-            return nil
-        end
-
-        full_author_id = "#{LIBRARY_ITEMS_ID_PREFIX}#{author_id_match[:id]}"
-        author_name = author_node.at_xpath(".//pgterms:name").content
-        author_birth_year = nil_if_zero author_node.at_xpath(".//pgterms:birthdate")&.content.to_i
-        author_death_year = nil_if_zero author_node.at_xpath(".//pgterms:deathdate")&.content.to_i
-
-        LibraryImport::Author.new(id: full_author_id, name: author_name, birth_year: author_birth_year, death_year: author_death_year)
-    end
-
-    def book_id_from_rdf_path(rdf_path)
-        book_id_match = rdf_path.match(%r~^\d+/pg(?<pg_id>\d+).rdf$~)
-        return nil if book_id_match.nil?
-        return book_id_match[:pg_id]
-    end
-
-    def nil_if_zero(value)
-        value == 0 ? nil : value
-    end
-
-    def debug?
-        !!@@debug
-    end
-
-    def books_loop_limit
-        @@books_loop_limit ||= Infinity
-    end
-
 end
