@@ -2,11 +2,7 @@
 
 namespace App\Console\Commands\Import\Gutenberg;
 
-use App\Import\LibraryDatabaseBridge;
-use App\Import\ProjectGutenberg\BookAssetsAnalyser;
-use App\Import\ProjectGutenberg\BookRdfParser;
-use FilesystemIterator;
-use GlobIterator;
+use App\Import\ProjectGutenberg\GeneratedCollectionCrawler;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +13,7 @@ class ParseRdfLibrary extends Command
      *
      * @var string
      */
-    protected $signature = 'import:gutenberg:parse_rdf_lib {library_path}';
+    protected $signature = 'import:gutenberg:parse_rdf_lib {collection_path} {--limit=}';
 
     /**
      * The console command description.
@@ -26,17 +22,17 @@ class ParseRdfLibrary extends Command
      */
     protected $description = 'Parses RDF library from Project Gutenberg\'s "generated" collection';
     /**
-     * @var LibraryDatabaseBridge
+     * @var GeneratedCollectionCrawler
      */
-    private $libraryDatabaseBridge;
+    private $generatedCollectionCrawler;
 
     /**
      * Create a new command instance.
      */
-    public function __construct(LibraryDatabaseBridge $libraryDatabaseBridge)
+    public function __construct(GeneratedCollectionCrawler $generatedCollectionCrawler)
     {
         parent::__construct();
-        $this->libraryDatabaseBridge = $libraryDatabaseBridge;
+        $this->generatedCollectionCrawler = $generatedCollectionCrawler;
     }
 
     /**
@@ -46,38 +42,23 @@ class ParseRdfLibrary extends Command
      */
     public function handle()
     {
-        $libraryPath = realpath($this->argument('library_path'));
-        if (!is_dir($libraryPath)) {
-            $this->error("'${libraryPath}' is not a directory.");
+        $collectionPath = realpath($this->argument('collection_path'));
+        if (!is_dir($collectionPath)) {
+            $this->error("'${collectionPath}' is not a directory.");
             exit();
         }
+        $limit = (int) ($this->option('limit') ?? 0);
 
         $startTime = microtime(true);
 
-        $iterator = new GlobIterator("${libraryPath}/**/*.rdf", FilesystemIterator::CURRENT_AS_PATHNAME);
-        $filesParsedCount = 0;
-        $createdBooksCount = 0;
-        /* @var \SplFileInfo $rdfFile */
-        foreach ($iterator as $rdfFilePath) {
-            $book = BookRdfParser::parseBookFromRdf($rdfFilePath);
-
+        $filesParsedCount = $createdBooksCount = 0;
+        $collectionCrawlingGenerator = $this->generatedCollectionCrawler->parseGutenbergGeneratedCollection($collectionPath, $limit);
+        foreach ($collectionCrawlingGenerator as [$filesParsedCount, $createdBooksCount]) {
             $this->output->write('.');
-            ++$filesParsedCount;
-
-            if ($book) {
-                $book->assets = BookAssetsAnalyser::analyseBookAssets($rdfFilePath, $book->id);
-                $this->libraryDatabaseBridge->storeBookInDatabase($book);
-                ++$createdBooksCount;
-            }
-
             if (0 === $filesParsedCount % 80) {
                 $duration = round(microtime(true) - $startTime);
                 $memory_usage = round(memory_get_usage() / 1000000);
                 $this->info(" ${filesParsedCount} (${duration}s., ${memory_usage}MB)");
-            }
-            if ($filesParsedCount > 5000) {
-                $this->warn("Hard-coded limit of books count while we're still in early stages of development :-)");
-                break;
             }
         }
 
