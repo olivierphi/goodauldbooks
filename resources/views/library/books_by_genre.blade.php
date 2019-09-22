@@ -5,7 +5,7 @@
         <a href="{{ route("home") }}" class="nes-text is-primary">Homepage</a>
         <span>Library</span>
         <span>Genres</span>
-        <a href="{{ route("books.by_genre", ["slug"=> $genre->slug]) }}"
+        <a href="{{ route("books.by_genre", ["genre"=> $genre->slug]) }}"
            class="nes-text is-primary">{{ Str::limit($genre->name, 50) }}</a>
     </div>
 @endsection

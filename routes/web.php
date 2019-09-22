@@ -16,7 +16,6 @@
     $router->namespace('Web')->group(function () use ($router) {
         $router->get('/', 'HomeController@index')->name('home');
         $router->get('/library/books/{book}', 'LibraryController@book')->name('book');
-        // Unimplemented controller actions:
         $router->get('/library/authors/{author}', 'LibraryController@booksByAuthor')->name('books.by_author');
         $router->get('/library/genres/{genre}', 'LibraryController@booksByGenre')->name('books.by_genre');
     });

@@ -4,7 +4,7 @@
 <div id="breadcrumb">
     <a href="{{ route("home") }}" class="nes-text is-primary">Homepage</a>
     <span>Library</span>
-    <a href="{{ route("book", ["slug"=> $book->slug]) }}"
+    <a href="{{ route("book", ["book"=> $book->slug]) }}"
         class="nes-text is-primary">{{ Str::limit($book->title, 50) }}</a>
 </div>
 @endsection

@@ -13,7 +13,7 @@
     {{--        {% endwith %}--}}
         </div>
         <div class="card-action">
-            <a href="{{ route("book", ["slug" => $book->slug]) }}" class="view-book-link nes-btn is-warning">
+            <a href="{{ route("book", ["book" => $book->slug]) }}" class="view-book-link nes-btn is-warning">
                 View book
             </a>
         </div>
