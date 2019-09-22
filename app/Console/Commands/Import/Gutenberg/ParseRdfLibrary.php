@@ -5,6 +5,7 @@ namespace App\Console\Commands\Import\Gutenberg;
 use App\Import\LibraryDatabaseBridge;
 use App\Import\ProjectGutenberg\BookAssetsAnalyser;
 use App\Import\ProjectGutenberg\BookRdfParser;
+use FilesystemIterator;
 use GlobIterator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -53,7 +54,7 @@ class ParseRdfLibrary extends Command
 
         $startTime = microtime(true);
 
-        $iterator = new GlobIterator("${libraryPath}/**/*.rdf", \FilesystemIterator::CURRENT_AS_PATHNAME);
+        $iterator = new GlobIterator("${libraryPath}/**/*.rdf", FilesystemIterator::CURRENT_AS_PATHNAME);
         $filesParsedCount = 0;
         $createdBooksCount = 0;
         /* @var \SplFileInfo $rdfFile */

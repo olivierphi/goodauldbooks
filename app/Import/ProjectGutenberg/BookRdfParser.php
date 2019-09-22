@@ -61,7 +61,8 @@ class BookRdfParser
         }
 
         // Other books properties
-        $book->id = self::MODELS_PUBLIC_IDS_PREFIX . Arr::last(explode('/', (string) $rdfFileXmlContent->xpath('/rdf:RDF/pgterms:ebook/@rdf:about')[0]));
+        $bookIdRaw = (string) $rdfFileXmlContent->xpath('/rdf:RDF/pgterms:ebook/@rdf:about')[0];
+        $book->id = self::MODELS_PUBLIC_IDS_PREFIX . Arr::last(explode('/', $bookIdRaw));
         $book->lang = (string) $rdfFileXmlContent->xpath('//dcterms:language/rdf:Description/rdf:value')[0];
 
         // related entities
@@ -85,15 +86,15 @@ class BookRdfParser
             $parsedAuthor = new AuthorToImport();
 
             // id
-            $authorGutenbergUri = $author->xpath('//pgterms:agent/@rdf:about')[$i];
-            if ($authorGutenbergUri) {
-                $parsedAuthor->id = self::MODELS_PUBLIC_IDS_PREFIX . Arr::last(explode('/', (string) $authorGutenbergUri['about']));
+            $authorIdRaw = (string) $author->xpath('./@rdf:about')[0];
+            if ($authorIdRaw) {
+                $parsedAuthor->id = self::MODELS_PUBLIC_IDS_PREFIX . Arr::last(explode('/', (string) $authorIdRaw));
             } else {
                 continue;
             }
 
             // first/last name
-            $authorName = (string) $author->xpath('//pgterms:name')[$i];
+            $authorName = (string) $author->xpath('.//pgterms:name')[0];
             if ($authorName) {
                 $firstNameAndLastName = false;
                 foreach ([',', ' '] as $separator) {
@@ -114,7 +115,7 @@ class BookRdfParser
 
             // alias
             try {
-                $authorAlias = (string) $author->xpath('//pgterms:alias')[$i];
+                $authorAlias = (string) $author->xpath('.//pgterms:alias')[0];
                 if ($authorAlias) {
                     $parsedAuthor->alias = $authorAlias;
                 }
@@ -123,14 +124,14 @@ class BookRdfParser
 
             // birth/death year
             try {
-                $birthDate = (int) $author->xpath('//pgterms:birthdate')[$i];
+                $birthDate = (int) $author->xpath('.//pgterms:birthdate')[0];
                 if ($birthDate) {
                     $parsedAuthor->birthYear = $birthDate;
                 }
             } catch (ErrorException $e) {
             }
             try {
-                $deathDate = (int) $author->xpath('//pgterms:deathdate')[$i];
+                $deathDate = (int) $author->xpath('.//pgterms:deathdate')[0];
                 if ($deathDate) {
                     $parsedAuthor->deathYear = $deathDate;
                 }
@@ -153,7 +154,7 @@ class BookRdfParser
         $parsedGenres = [];
 
         $genres = $rdfFileXmlContent->xpath('//dcterms:subject/rdf:Description/rdf:value');
-        foreach ($genres as $i => $genre) {
+        foreach ($genres as $genre) {
             $parsedGenre = new GenreToImport();
 
             $name = (string) $genre;
