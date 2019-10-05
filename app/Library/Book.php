@@ -4,6 +4,38 @@ namespace App\Library;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * App\Library\Book.
+ *
+ * @property int $id
+ * @property string $public_id
+ * @property string $title
+ * @property string|null $subtitle
+ * @property string $lang
+ * @property string $slug
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $deleted_at
+ * @property \Illuminate\Database\Eloquent\Collection|\App\Library\Author[] $authors
+ * @property int|null $authors_count
+ * @property \Illuminate\Database\Eloquent\Collection|\App\Library\Genre[] $genres
+ * @property int|null $genres_count
+ * @property \App\Library\BookMetadata $metadata
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book whereLang($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book wherePublicId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book whereSubtitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Library\Book whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
 class Book extends Model
 {
     /**
