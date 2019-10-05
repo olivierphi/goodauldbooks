@@ -16,6 +16,7 @@
     },
     "require-dev": {
         "ext-bcmath": "*",
+        "barryvdh/laravel-debugbar": "^3.2",
         "barryvdh/laravel-ide-helper": "^2.6",
         "facade/ignition": "^1.4",
         "friendsofphp/php-cs-fixer": "^2.15",
