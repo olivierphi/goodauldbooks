@@ -1,0 +1,13 @@
+{
+    "sqltools.connections": [
+        {
+            "database": "goodauldbooks_db",
+            "dialect": "PostgreSQL",
+            "name": "goodaulbooks@localhost",
+            "password": "goodauldbooks_pass",
+            "port": 5433,
+            "server": "localhost",
+            "username": "goodauldbooks_user"
+        }
+    ]
+}
