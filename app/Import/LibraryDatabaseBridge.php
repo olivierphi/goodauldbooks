@@ -155,20 +155,19 @@ class LibraryDatabaseBridge
         $bookAsTxt = $getAsset(BookAsset::ASSET_TYPE_BOOK_AS_TXT);
         $hasIntro = null !== $bookAsTxt;
         if ($hasIntro) {
-            // (drop first 6 bytes, since we don't want BOMs in our intros)
-            $intro = substr(
-                utf8_encode(
-                    file_get_contents($bookAsTxt->path, false, null, 0, self::BOOK_INTRO_SIZE)
-                ), 6);
+            $intro = mb_convert_encoding(
+                file_get_contents($bookAsTxt->path, false, null, 0, self::BOOK_INTRO_SIZE),
+                'UTF-8'
+            );
         } else {
             $intro = null;
         }
 
         BookMetadata::create([
-           'book_id' => $bookModel->id,
-           'has_cover' => null !== $getAsset(BookAsset::ASSET_TYPE_COVER),
-           'epub_size' => $getAssetSize(BookAsset::ASSET_TYPE_EPUB),
-           'mobi_size' => $getAssetSize(BookAsset::ASSET_TYPE_MOBI),
+            'book_id' => $bookModel->id,
+            'has_cover' => null !== $getAsset(BookAsset::ASSET_TYPE_COVER),
+            'epub_size' => $getAssetSize(BookAsset::ASSET_TYPE_EPUB),
+            'mobi_size' => $getAssetSize(BookAsset::ASSET_TYPE_MOBI),
             'intro' => $intro,
         ]);
     }
