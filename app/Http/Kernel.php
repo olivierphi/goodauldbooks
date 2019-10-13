@@ -58,6 +58,5 @@ class Kernel extends HttpKernel
      *
      * @var array
      */
-    protected $middlewarePriority = [
-    ];
+    protected $middlewarePriority = [];
 }

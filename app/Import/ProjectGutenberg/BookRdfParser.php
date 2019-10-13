@@ -44,13 +44,14 @@ class BookRdfParser
     {
         $book = new BookToImport();
 
-        $bookTitle = $rdfFileXmlContent->xpath('//dcterms:title');
-        if (!$bookTitle) {
+        $title = $rdfFileXmlContent->xpath('//dcterms:title');
+
+        if (!$title) {
             return null;
         }
 
         // Title (could contain a subtitle, with ";" as separator)
-        $book->title = (string) $bookTitle[0];
+        $book->title = (string) $title[0];
         if (false !== strpos($book->title, ';')) {
             [$book->title, $book->subtitle] = explode(';', $book->title);
         }
