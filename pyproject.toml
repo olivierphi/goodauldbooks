@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "goodauldbooks-django"
+name = "goodauldbooks-flask"
 version = "0.1.0"
 description = ""
 authors = ["Olivier Philippon <olivier@rougemine.com>"]
@@ -7,25 +7,15 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-Django = "^2.1"
-psycopg2 = "^2.7"
-Jinja2 = "^2.10"
+psycopg2 = "^2.8"
 gunicorn = "^19.9"
-django_heroku = "^0.3.1"
+Flask = "^1.1.2"
 
 [tool.poetry.dev-dependencies]
 black = "=18.9b0"
 pylint = "^2.2"
 coloredlogs = "^10.0"
-# Let's install pyinotify!
-# "This offers better scaling to large projects,
-# reduction in response time to code modification,
-# more robust change detection, and battery usage reduction."
-# @link https://docs.djangoproject.com/en/2.1/ref/django-admin/#runserver
-pyinotify = "^0.9.6"
-django-debug-toolbar = "^1.11"
-ipython = "^7.3"
 
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry>=1.1"]
 build-backend = "poetry.masonry.api"
