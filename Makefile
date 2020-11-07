@@ -3,8 +3,16 @@ PYTHONPATH ?= ${PWD}/src
 PYTHON_W_PATH ?= PYTHONPATH=${PYTHONPATH} ${PYTHON}
 FLASK_ENV ?= development
 FLASK_APP ?= server
-PSQL ?= psql 'postgresql://goodauldbooks:goodauldbooks@localhost:5433/goodauldbooks' -v ON_ERROR_STOP=1
-SQLITE_DB_PATH ?= $(pwd)/data/raw_books.db
+FLASK_PREAMBLE = PYTHONPATH=${PYTHONPATH} FLASK_ENV=${FLASK_ENV} FLASK_APP=${FLASK_APP}
+
+DATABASE_URL ?= postgresql://goodauldbooks:goodauldbooks@localhost:5433/goodauldbooks
+
+SQLITE_TRANSITIONAL_DB_PATH ?= ${PWD}/raw_books.db
+
+# @link https://gutenberg.org/help/mirroring.html
+PROJECT_GUTENBERG_GENERATED_COLLECTION_PATH ?= ~/gutenberg-mirror/generated-collection/
+PROJECT_GUTENBERG_RSYNC_EXCLUDED_FILE_PATH ?= ${PWD}/src/apps/book_sources/project_gutenberg/data/project-gutenberg-rsync-excludes.txt
+
 FRONTEND_ROOT ?= src/app/website/css_js_src
 
 .PHONY: install
@@ -14,7 +22,7 @@ install:
 .PHONY: dev
 dev: OPTS ?=
 dev:
-	PYTHONPATH=${PYTHONPATH} FLASK_ENV=${FLASK_ENV} FLASK_APP=${FLASK_APP} flask run ${OPTS}
+	${FLASK_PREAMBLE} flask run ${OPTS}
 
 .PHONY: python-install
 python-install: .venv
@@ -23,15 +31,15 @@ python-install: .venv
 
 .PHONY: python-black
 python-black:
-	@${POETRY} run black src/ --exclude node_modules
+	@black src/ --exclude node_modules
 
 .PHONY: python-pylint
 python-pylint:
-	@${POETRY} run pylint project app
+	@pylint project apps
 
 .PHONY: psql
 psql:
-	${PSQL}
+	psql '${DATABASE_URL}' -v ON_ERROR_STOP=1
 
 .PHONY: yarn-install
 yarn-install:
@@ -45,13 +53,28 @@ yarn-dev:
 yarn-prettier:
 	cd ${FRONTEND_ROOT} && yarn prettier
 
+.PHONY: rsync-project-gutenberg-generated-collection
+rsync-project-gutenberg-generated-collection:
+	rsync -av --progress \
+		--exclude-from=${PROJECT_GUTENBERG_RSYNC_EXCLUDED_FILE_PATH} \
+		aleph.gutenberg.org::gutenberg-epub \
+		${PROJECT_GUTENBERG_GENERATED_COLLECTION_PATH}
+
+.PHONY: rsync-project-gutenberg-book
+rsync-project-gutenberg-book: _guard-BOOK_ID
+	rsync -av --progress \
+		--exclude-from=${PROJECT_GUTENBERG_RSYNC_EXCLUDED_FILE_PATH} \
+		aleph.gutenberg.org::gutenberg-epub/${BOOK_ID} \
+		${PROJECT_GUTENBERG_GENERATED_COLLECTION_PATH}
+
 .PHONY: store-raw-gutenberg-library-in-transitional-db
-store-raw-gutenberg-library-in-transitional-db: GENERATED_COLLECTION_PATH ?= ~/gutenberg-mirror/generated-collection/
 store-raw-gutenberg-library-in-transitional-db: OPTS ?=
 store-raw-gutenberg-library-in-transitional-db:
-	@${MAKE} --no-print-directory django-manage \
-		DOCKER_COMPOSE_OPTS="-v ${GENERATED_COLLECTION_PATH}:/collection" \
-	 	CMD="store_rsynced_library_in_transitional_db /collection '${SQLITE_DB_PATH}' ${OPTS}"
+	${FLASK_PREAMBLE} flask \
+		import store_rsynced_library_in_transitional_db \
+		${PROJECT_GUTENBERG_GENERATED_COLLECTION_PATH} \
+		${SQLITE_TRANSITIONAL_DB_PATH} \
+		${OPTS}
 
 .PHONY: populate-postgres-from-transitional-db
 populate-postgres-from-transitional-db: OPTS ?=
@@ -64,3 +87,10 @@ test-book-parsing: OPTS ?=
 test-book-parsing:
 	@${MAKE} --no-print-directory django-manage \
 	 	CMD="test_book_parsing '${SQLITE_DB_PATH}' ${OPTS}"
+
+_guard-%:
+# @link https://dev.to/rlespinasse/how-to-check-a-mandatory-variable-in-a-makefile-1k9n
+	@if [ "${${*}}" = "" ]; then \
+		echo "Environment variable $* not set"; \
+		exit 1; \
+	fi

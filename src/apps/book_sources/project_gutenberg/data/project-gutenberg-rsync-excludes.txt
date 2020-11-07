@@ -1,0 +1,16 @@
+*.mp3
+*.zip
+*.iso
+*.iso.*
+*.avi
+*.mov
+*.mpeg
+*.mpg
+*.rar
+*.rar.*
+*.log
+*.gzip
+*.qrcode.*
+debug-*
+
+old*

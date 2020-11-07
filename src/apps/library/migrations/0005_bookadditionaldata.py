@@ -6,19 +6,24 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('library', '0004_auto_20190302_1707'),
-    ]
+    dependencies = [("library", "0004_auto_20190302_1707")]
 
     operations = [
         migrations.CreateModel(
-            name='BookAdditionalData',
+            name="BookAdditionalData",
             fields=[
-                ('book', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='additional_data', serialize=False, to='library.Book')),
-                ('intro', models.TextField(null=True)),
+                (
+                    "book",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        related_name="additional_data",
+                        serialize=False,
+                        to="library.Book",
+                    ),
+                ),
+                ("intro", models.TextField(null=True)),
             ],
-            options={
-                'db_table': 'book_additional_data',
-            },
-        ),
+            options={"db_table": "book_additional_data"},
+        )
     ]
