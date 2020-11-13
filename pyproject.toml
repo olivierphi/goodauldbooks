@@ -10,11 +10,15 @@ python = "^3.7"
 psycopg2 = "^2.8"
 gunicorn = "^19.9"
 Flask = "^1.1.2"
+Flask-SQLAlchemy = "^2.4.4"
+python-dotenv = "^0.15.0"
 
 [tool.poetry.dev-dependencies]
 black = "=18.9b0"
 pylint = "^2.2"
 coloredlogs = "^10.0"
+ipython = "^7.19.0"
+flask-shell-ipython = "^0.4.1"
 
 [build-system]
 requires = ["poetry>=1.1"]

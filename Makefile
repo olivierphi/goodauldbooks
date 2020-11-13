@@ -3,8 +3,8 @@ PYTHONPATH ?= ${PWD}/src
 PYTHON_W_PATH ?= PYTHONPATH=${PYTHONPATH} ${PYTHON}
 FLASK_ENV ?= development
 FLASK_APP ?= server
-FLASK_PREAMBLE = PYTHONPATH=${PYTHONPATH} FLASK_ENV=${FLASK_ENV} FLASK_APP=${FLASK_APP}
-
+FLASK_SETTINGS_MODULE ?= project.settings.development
+FLASK_PREAMBLE = PYTHONPATH=${PYTHONPATH} FLASK_ENV=${FLASK_ENV} FLASK_APP=${FLASK_APP} FLASK_SETTINGS_MODULE=${FLASK_SETTINGS_MODULE}
 DATABASE_URL ?= postgresql://goodauldbooks:goodauldbooks@localhost:5433/goodauldbooks
 
 SQLITE_TRANSITIONAL_DB_PATH ?= ${PWD}/raw_books.db
@@ -16,13 +16,17 @@ PROJECT_GUTENBERG_RSYNC_EXCLUDED_FILE_PATH ?= ${PWD}/src/apps/book_sources/proje
 FRONTEND_ROOT ?= src/app/website/css_js_src
 
 .PHONY: install
-install:
-	@${MAKE} python-install
+install: python-install
+
 
 .PHONY: dev
-dev: OPTS ?=
+dev: OPTS ?= --eager-loading
 dev:
 	${FLASK_PREAMBLE} flask run ${OPTS}
+
+.PHONY: shell
+shell:
+	${FLASK_PREAMBLE} flask shell
 
 .PHONY: python-install
 python-install: .venv

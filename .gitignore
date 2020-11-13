@@ -1,9 +1,10 @@
+/.env
+/log/*
+!/log/.gitkeep
+
 /.venv
 
 /.cache/*
 /.cache/.ipython/*
-
-/log/*
-!/log/.gitkeep
 
 /raw_books.db

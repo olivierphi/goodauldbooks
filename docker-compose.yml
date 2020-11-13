@@ -3,25 +3,8 @@ version: "3"
 services:
 
   postgres:
-    image: postgres:10-alpine
+    image: postgres:12-alpine
     ports:
     - 5433:5432
     env_file:
-    - .dev.env
-
-  python:
-    build: ./.docker/python
-    volumes:
-    - .:/app
-    - ./.cache:/.cache
-    - ./.cache/.ipython:/.ipython
-    - ./.cache/.pylint.d:/.pylint.d
-    - ./.docker/python/venv-shell.sh:/venv-shell.sh:ro
-    working_dir: /app
-    env_file:
-    - .dev.env
-    environment:
-      DJANGO_SETTINGS_MODULE: project.settings.dev
-      IPYTHONDIR: /.ipython
-    depends_on:
-    - postgres
+    - .postgres.env
