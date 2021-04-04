@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "goodauldbooks"
+version = "0.1.0"
+description = "A Django frontend for public domain libraries, such as Project Gutenberg"
+authors = ["Olivier Philippon <olivier@rougemine.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Django = "^3.1.7"
+django-environ = "^0.4.5"
+psycopg2 = "^2.8.6"
+
+[tool.poetry.dev-dependencies]
+black = "^20.8b1"
+mypy = "^0.812"
+isort = "^5.8.0"
+pytest = "^6.2.3"
+pytest-django = "^4.1.0"
+pytest-cov = "^2.11.1"
+pywatchman = "^1.4.1"
+
+[tool.black]
+line-length = 119 # same as Django - @link https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/coding-style/#python-style
+
+[tool.isort]
+line_length = 119 # ditto
+multi_line_output = 3 # @link https://timothycrosley.github.io/isort/docs/configuration/options/#multi-line-output
+known_first_party = ["apps", "lib"]
+combine_as_imports = true
+include_trailing_comma = true # so it produces the same result than Black for multi-line imports
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

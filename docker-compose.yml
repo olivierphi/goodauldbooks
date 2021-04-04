@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+
+  postgres:
+    image: postgres:13-alpine
+    ports:
+      - 5433:5432
+    env_file:
+      - .docker.local.env
+
+
+  #########################################
+  # Local dev utils
+  #########################################
+
+  adminer:
+    image: adminer:4-standalone
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
