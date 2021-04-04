@@ -1,0 +1,81 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.9
+      - image: circleci/postgres:13
+        environment:
+          POSTGRES_USER: goodauldbooks_user
+          POSTGRES_PASSWORD: localci
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - deps-{{ .Branch }}-{{ checksum "poetry.lock" }}
+
+      - run:
+          name: "[backend] Upgrade Pip (system)"
+          command: |
+            sudo python -m pip install --upgrade pip
+
+      - run:
+          name: "[backend] Initialise Python venv, upgrade Pip, install Poetry"
+          command: |
+            python -m venv .venv
+            source .venv/bin/activate
+            python -m pip install --upgrade pip
+            pip install poetry
+
+      - run:
+          name: "[backend] Install Python dependencies"
+          command: |
+            source .venv/bin/activate
+            python -m poetry install
+
+      - save_cache:
+          paths:
+            - ./.venv
+          key: deps-{{ .Branch }}-{{ checksum "poetry.lock" }}
+
+      # Run code quality tools, and then our tests!
+      - run:
+          name: "[backend] Check Python code style (powered by Black)"
+          command: |
+            make python-black OPTS='--check'
+
+      - run:
+          name: "[backend] Check Python imports style (powered by isort)"
+          command: |
+            make python-isort OPTS='--check --diff'
+
+      - run:
+          name: "[backend] MyPy"
+          command: |
+            make python-mypy
+
+      - run:
+          name: "[backend] Set '.env' file for the tests, with some overridden values for the CI environment"
+          command: |
+            cp  .env.dist .env
+            sed -i -r 's/^DATABASE_URL=.*$/DATABASE_URL=postgresql:\/\/goodauldbooks_user:localci@localhost\/circle_test/g' .env
+
+      - run:
+          name: "[backend] Run Pytest"
+          # TODO: fail if the code coverage is under a given threshold (85% would be nice :-)
+          command: |
+            make python-pytest
+
+      - run:
+          name: "[backend] Make sure that we don't have models changes that have not been applied to database migrations"
+          command: |
+            source .venv/bin/activate
+            python src/manage.py makemigrations | head -n 1 | grep "No changes detected"
+          environment:
+            DEBUG: Y
+            DJANGO_SETTINGS_MODULE: project.settings.test
+
+      - store_artifacts:
+          path: backend-test-reports
+          destination: backend-test-reports
+
