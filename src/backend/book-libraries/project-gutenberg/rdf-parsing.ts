@@ -1,6 +1,5 @@
 import { DOMParser, Node } from "xmldom";
 import * as xpath from "xpath";
-import type { BookToParse } from "./domain";
 import type { Book, Author } from "../../../domain";
 import { PROVIDER_CODE } from "./consts";
 
