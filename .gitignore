@@ -1,5 +1,12 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Our SQLite databases
+/db/*
+!/db/.gitkeep
+
+# Our generated Prisma clients
+/src/domain/import/project-gutenberg/prisma-client/
+
 # dependencies
 /node_modules
 /.pnp

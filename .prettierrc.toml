@@ -1,0 +1,9 @@
+trailingComma = "es5"
+printWidth = 120
+tabWidth = 4
+semi = false
+quoteProps = "consistent"
+
+importOrder = ["^node:", "^react$", "^next", "<THIRD_PARTY_MODULES>", "^[./]"]
+importOrderSeparation = false
+importOrderSortSpecifiers = true

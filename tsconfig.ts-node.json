@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "isolatedModules": false,
+    "moduleResolution": "Node",
+    "module": "commonjs",
+    "target": "ES2022"
+  }
+}
