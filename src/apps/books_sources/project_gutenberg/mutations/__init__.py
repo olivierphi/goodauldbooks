@@ -1,0 +1,1 @@
+from ._index_collection_in_db import index_collection_in_db
