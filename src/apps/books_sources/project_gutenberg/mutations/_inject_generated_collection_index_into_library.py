@@ -17,6 +17,7 @@ def inject_generated_collection_index_into_library(
     db_create_schema: bool,
     db_destroy_schema_first: bool,
     traversal_limit: int = 0,
+    commit_after_each_book: bool = False,  # useful for debugging
 ):
     if db_create_schema:
         library_helpers.create_schema(drop_all_first=db_destroy_schema_first)
@@ -30,6 +31,8 @@ def inject_generated_collection_index_into_library(
                 book = get_library_book_from_raw_pg_book(raw_book=raw_book)
                 library_model_book = _get_library_models_for_book(book)
                 library_db_session.add(library_model_book)
+                if commit_after_each_book:
+                    library_db_session.commit()
 
             library_db_session.commit()
 
@@ -59,5 +62,9 @@ def _get_library_models_for_book(book: Book) -> library_models.Book:
 
     book_model.authors = author_models
     book_model.genres = genre_models
+
+    for author in author_models:
+        if author.id == 0:
+            raise RuntimeError(f"Spotted Author with ID=0: {author.full_name()}")
 
     return book_model

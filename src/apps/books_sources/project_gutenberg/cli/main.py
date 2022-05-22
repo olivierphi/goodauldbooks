@@ -12,23 +12,28 @@ app = typer.Typer()
 
 @app.command()
 def index_generated_collection(
-    collection_path: Path = typer.Argument(..., exists=True, file_okay=False, dir_okay=True, readable=True)
+    collection_path: Path = typer.Argument(..., exists=True, file_okay=False, dir_okay=True, readable=True),
+    traversal_limit: int = typer.Option(default=0),
 ):
     typer.echo(f"Indexing collection: {collection_path}")
     index_collection_in_db(
         collection_path=collection_path,
-        traversal_limit=4,
+        traversal_limit=traversal_limit,
         db_create_schema=True,
         db_destroy_schema_first=True,
     )
 
 
 @app.command()
-def inject_generated_collection_index_into_library_database():
+def inject_generated_collection_index_into_library_database(
+    traversal_limit: int = typer.Option(default=0),
+    commit_after_each_book: bool = typer.Option(default=False),
+):
     inject_generated_collection_index_into_library(
-        traversal_limit=4,
+        traversal_limit=traversal_limit,
         db_create_schema=True,
         db_destroy_schema_first=True,
+        commit_after_each_book=commit_after_each_book,
     )
 
 

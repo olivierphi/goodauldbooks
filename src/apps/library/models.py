@@ -10,8 +10,8 @@ Base = declarative_base()
 books_and_authors_association_table = Table(
     "books_and_authors",
     Base.metadata,
-    Column("book_id", ForeignKey("books.id"), primary_key=True),
-    Column("author_id", ForeignKey("authors.id"), primary_key=True),
+    Column("book_id", ForeignKey("books.id"), primary_key=True, sqlite_on_conflict_unique="IGNORE"),
+    Column("author_id", ForeignKey("authors.id"), primary_key=True, sqlite_on_conflict_unique="IGNORE"),
 )
 
 books_and_genres_association_table = Table(
@@ -41,7 +41,7 @@ class Author(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     public_id = Column(String, unique=True, nullable=False)
-    slug = Column(String, unique=True, nullable=False)
+    slug = Column(String, unique=True, nullable=False, sqlite_on_conflict_unique="IGNORE")
     first_name = Column(String)
     last_name = Column(String)
     birth_year = Column(SmallInteger)
@@ -53,7 +53,7 @@ class Author(Base):
 class Genre(Base):
     __tablename__ = "genres"
 
-    id = Column(Integer, primary_key=True, autoincrement=False)
+    id = Column(Integer, primary_key=True, autoincrement=False, sqlite_on_conflict_primary_key="IGNORE")
     name = Column(String, unique=True, nullable=False)
     slug = Column(String, unique=True, nullable=False)
 
