@@ -1,20 +1,18 @@
 from pathlib import Path
 
-from ..constants import BOOK_ASSET_SUFFIXES, BOOK_INTRO_SIZE
+from ..constants import BOOK_INTRO_SIZE
 from ..domain import BookToParse
 
 
 def get_book_to_parse_from_book_rdf(*, pg_book_id: int, rdf_file_path: Path) -> BookToParse:
     rdf_content = rdf_file_path.read_text()
 
-    assets_sizes = {
-        file.name: file.stat().st_size for file in rdf_file_path.parent.iterdir() if file.suffix in BOOK_ASSET_SUFFIXES
-    }
+    assets_sizes = {file.name: file.stat().st_size for file in rdf_file_path.parent.iterdir()}
 
     intro_file_path: Path = rdf_file_path.parent / f"pg{pg_book_id}.txt.utf8"
     has_intro = intro_file_path.exists()
     if has_intro:
-        with intro_file_path.open() as intro_file:
+        with intro_file_path.open("rt", encoding="utf8") as intro_file:
             intro = intro_file.read(BOOK_INTRO_SIZE)
     else:
         intro = None

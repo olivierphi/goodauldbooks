@@ -1,6 +1,7 @@
 from sqlalchemy import JSON, Boolean, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
 
-from .db import Base
+Base = declarative_base()
 
 
 class RawBook(Base):
@@ -12,8 +13,3 @@ class RawBook(Base):
     has_intro = Column(Boolean, nullable=False)
     has_cover = Column(Boolean, nullable=False)
     intro = Column(String)
-    # email = Column(String, unique=True, index=True)
-    # hashed_password = Column(String)
-    # is_active = Column(Boolean, default=True)
-    #
-    # items = relationship("Item", back_populates="owner")

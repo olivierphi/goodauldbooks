@@ -1,1 +1,2 @@
 from ._index_collection_in_db import index_collection_in_db
+from ._inject_generated_collection_index_into_library import inject_generated_collection_index_into_library

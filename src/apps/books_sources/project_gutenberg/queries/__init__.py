@@ -1,3 +1,3 @@
 from ._get_book_to_parse_from_book_rdf import get_book_to_parse_from_book_rdf
-from ._parse_book_rdf import parse_book_rdf
+from ._get_library_book_from_raw_pg_book import get_library_book_from_raw_pg_book
 from ._traverse_collection import traverse_collection
