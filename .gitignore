@@ -5,6 +5,7 @@
 !/db/.gitkeep
 
 # Our generated Prisma clients
+/src/domain/library/prisma-client/
 /src/domain/import/project-gutenberg/prisma-client/
 
 # dependencies

@@ -1,0 +1,20 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:../../../db/library.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./prisma-client"
+}
+
+model Book {
+  id        Int      @id @default(autoincrement())
+  publicId  String   @unique @map("public_id")
+  title     String
+  subTitle  String?   @map("sub_title")
+  lang      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("book")
+}

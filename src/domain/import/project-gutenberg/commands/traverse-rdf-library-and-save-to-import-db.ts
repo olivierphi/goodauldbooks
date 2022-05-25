@@ -1,11 +1,11 @@
 import type { BookToParse } from "../types.ts"
 import { traverseGeneratedCollectionDirectory } from "./traverse-rdf-library.ts"
 import { parseBookFromRdf } from "../queries/parse-book-from-rdf.ts"
-import * as Prisma from "../prisma-client/index.js"
+import { PrismaClient as ProjectGutenbergImportPrismaClient } from "../prisma-client/index.js"
 
 const DB_BATCH_SIZE_DEFAULT = 100 // we will store books in DB only every N books
 
-const prisma = new Prisma.PrismaClient()
+const prisma = new ProjectGutenbergImportPrismaClient()
 
 type TraverseGeneratedCollectionDirectoryAndSaveToImportDbArgs = {
     collectionPath: string

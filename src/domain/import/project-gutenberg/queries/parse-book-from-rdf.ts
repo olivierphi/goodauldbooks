@@ -1,7 +1,7 @@
 import { dirname, join } from "node:path"
 import fs from "node:fs/promises"
 import type { BookToParse } from "../types.ts"
-import type { BookAsset, BookAssetType } from "../../../types.ts"
+import type { BookAsset, BookAssetType } from "../../../library/types.ts"
 import { BOOK_ASSETS_FILES_TYPES } from "../constants.ts"
 
 // /!\ This is a length in bytes, not in chars.

@@ -1,7 +1,7 @@
 import { DOMParser } from "xmldom"
 import * as xpath from "xpath"
 import { BookToParse } from "../types.ts"
-import type { Author, Book } from "../../../types.ts"
+import type { Author, Book } from "../../../library/types.ts"
 import { PROVIDER_CODE } from "../constants.ts"
 
 const parser = new DOMParser()
