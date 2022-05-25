@@ -1,6 +1,6 @@
-import { parseBookFromRdf } from "../../domain/import/project-gutenberg/queries/parse-book-from-rdf"
-import { parseBook } from "../../domain/import/project-gutenberg/queries/parse-book"
-import { Book } from "../../domain/types"
+import { parseBookFromRdf } from "../../domain/import/project-gutenberg/queries/parse-book-from-rdf.ts"
+import { parseBook } from "../../domain/import/project-gutenberg/queries/parse-book.ts"
+import { Book } from "../../domain/types.ts"
 
 async function runScript(): Promise<Book | null> {
     if (process.argv.length < 3) {

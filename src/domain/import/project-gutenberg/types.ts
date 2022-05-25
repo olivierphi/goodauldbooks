@@ -1,4 +1,4 @@
-import type { BookAsset } from "../../types"
+import type { BookAsset } from "../../types.ts"
 
 export type BookToParse = {
     pgBookId: number

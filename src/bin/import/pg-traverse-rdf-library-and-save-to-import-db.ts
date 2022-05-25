@@ -1,4 +1,4 @@
-import { traverseGeneratedCollectionDirectoryAndSaveToImportDb } from "../../domain/import/project-gutenberg/commands/traverse-rdf-library-and-save-to-import-db"
+import { traverseGeneratedCollectionDirectoryAndSaveToImportDb } from "../../domain/import/project-gutenberg/commands/traverse-rdf-library-and-save-to-import-db.ts"
 
 async function runScript(): Promise<void> {
     if (process.argv.length < 3) {
@@ -8,6 +8,8 @@ async function runScript(): Promise<void> {
     const collectionPath = process.argv[2]
     await traverseGeneratedCollectionDirectoryAndSaveToImportDb({ collectionPath })
 }
+
+export default {}
 
 runScript().then(
     () => {

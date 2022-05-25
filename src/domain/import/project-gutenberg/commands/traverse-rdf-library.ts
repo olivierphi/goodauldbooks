@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events"
 import * as fastGlob from "fast-glob"
-import { RDF_FILE_REGEX, EmittedEvents, RDF_FILES_COLLECTION_GLOB } from "../constants"
+import { RDF_FILE_REGEX, EmittedEvents, RDF_FILES_COLLECTION_GLOB } from "../constants.ts"
 
 type TraverseGeneratedCollectionDirectoryArgs = {
     collectionPath: string

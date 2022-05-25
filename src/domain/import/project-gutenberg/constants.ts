@@ -1,4 +1,4 @@
-import { BookAssetType } from "../../types"
+import { BookAssetType } from "../../types.ts"
 
 export const PROVIDER_CODE = "pg"
 

@@ -1,8 +1,8 @@
-import { BookToParse } from "../types"
 import { DOMParser } from "xmldom"
 import * as xpath from "xpath"
-import type { Author, Book } from "../../../types"
-import { PROVIDER_CODE } from "../constants"
+import { BookToParse } from "../types.ts"
+import type { Author, Book } from "../../../types.ts"
+import { PROVIDER_CODE } from "../constants.ts"
 
 const parser = new DOMParser()
 
