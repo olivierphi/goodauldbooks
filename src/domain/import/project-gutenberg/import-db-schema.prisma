@@ -9,11 +9,13 @@ generator client {
 }
 
 model RawBook {
-  pgBookId   Int      @id
-  rdfContent String
-  assets     String // actually a JSON field, but not supported by Prisma yet for SQLite
-  hasIntro   Boolean
+  @@map("raw_book")
+
+  pgBookId   Int      @map("pg_book_id") @id
+  rdfContent String   @map("rdf_content")
+  assets     String // actually a JSON field, but not supported by Prisma yet for SQLite :-/
+  hasIntro   Boolean  @map("has_intro")
   intro      String?
-  hasCover   Boolean
-  createdAt  DateTime @default(now())
+  hasCover   Boolean @map("has_cover")
+  createdAt  DateTime @map("created_at") @default(now())
 }

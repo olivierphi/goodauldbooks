@@ -1,10 +1,10 @@
 -- CreateTable
-CREATE TABLE "RawBook" (
-    "pgBookId" INTEGER NOT NULL PRIMARY KEY,
-    "rdfContent" TEXT NOT NULL,
+CREATE TABLE "raw_book" (
+    "pg_book_id" INTEGER NOT NULL PRIMARY KEY,
+    "rdf_content" TEXT NOT NULL,
     "assets" TEXT NOT NULL,
-    "hasIntro" BOOLEAN NOT NULL,
+    "has_intro" BOOLEAN NOT NULL,
     "intro" TEXT,
-    "hasCover" BOOLEAN NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "has_cover" BOOLEAN NOT NULL,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
