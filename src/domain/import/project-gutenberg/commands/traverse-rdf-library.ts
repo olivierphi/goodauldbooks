@@ -2,18 +2,22 @@ import { EventEmitter } from "node:events"
 import * as fastGlob from "fast-glob"
 import { RDF_FILE_REGEX, EmittedEvents, RDF_FILES_COLLECTION_GLOB } from "../constants"
 
-type Args = {
+type TraverseGeneratedCollectionDirectoryArgs = {
     collectionPath: string
     onRdfCallback: (rdfFilePath: string, pgBookId: number) => void
     options?: { eventEmitter?: EventEmitter }
 }
 
-export async function traverseGeneratedCollectionDirectory(args: Args): Promise<number> {
+export async function traverseGeneratedCollectionDirectory({
+    collectionPath,
+    onRdfCallback,
+    options,
+}: TraverseGeneratedCollectionDirectoryArgs): Promise<number> {
     return new Promise<number>((resolve, reject) => {
         let rdfFileStreamFinished: boolean = false
         let nbBooksTraversed: number = 0
 
-        const rdfFilesStream = fastGlob.stream([`${args.collectionPath}/${RDF_FILES_COLLECTION_GLOB}`], {
+        const rdfFilesStream = fastGlob.stream([`${collectionPath}/${RDF_FILES_COLLECTION_GLOB}`], {
             absolute: true,
             unique: true,
         })
@@ -23,9 +27,9 @@ export async function traverseGeneratedCollectionDirectory(args: Args): Promise<
             if (rdfRegexMatch?.length) {
                 const bookId = parseInt(rdfRegexMatch[1], 10)
                 try {
-                    args.onRdfCallback(rdfFilePath, bookId)
+                    onRdfCallback(rdfFilePath, bookId)
                 } catch (e) {
-                    args.options?.eventEmitter?.emit(EmittedEvents.IMPORT_ERROR, e)
+                    options?.eventEmitter?.emit(EmittedEvents.IMPORT_ERROR, e)
                 }
                 nbBooksTraversed++
             }

@@ -12,7 +12,7 @@
     "lint": "next lint",
     "format:check": "prettier --check src/",
     "format:fix": "prettier --write src/",
-    "prisma:import:project-gutenberg:rsync": "rsync -av --progress --exclude-from=./src/bin/import/pg-rsync-excludes.txt ftp@ftp.ibiblio.org::gutenberg-epub ~/gutenberg-epub",
+    "import:project-gutenberg:rsync": "rsync -av --progress --exclude-from=./src/bin/import/pg-rsync-excludes.txt ftp@ftp.ibiblio.org::gutenberg-epub ~/gutenberg-epub",
     "prisma:import:project-gutenberg:format": "prisma format --schema=./src/domain/import/project-gutenberg/import-db-schema.prisma",
     "prisma:import:project-gutenberg:prisma-init": "pnpm prisma:import:project-gutenberg:generate && pnpm prisma:import:project-gutenberg:migrate:reset",
     "prisma:import:project-gutenberg:generate": "prisma generate --schema=./src/domain/import/project-gutenberg/import-db-schema.prisma",

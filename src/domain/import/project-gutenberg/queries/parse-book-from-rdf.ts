@@ -8,22 +8,22 @@ import { BOOK_ASSETS_FILES_TYPES } from "../constants"
 // But we take the intro in a very vague way anyhow... :-)
 const BOOK_INTRO_LENGTH = 5000
 
-type Args = {
+type ParseBookFromRdfArgs = {
     pgBookId: number
     rdfFilePath: string
 }
 
-export async function parseBookFromRdf(args: Args): Promise<BookToParse> {
-    const bookFolderPath = dirname(args.rdfFilePath)
-    const rdfContent = await getBookRdfFileContent(args.rdfFilePath)
+export async function parseBookFromRdf({ pgBookId, rdfFilePath }: ParseBookFromRdfArgs): Promise<BookToParse> {
+    const bookFolderPath = dirname(rdfFilePath)
+    const rdfContent = await getBookRdfFileContent(rdfFilePath)
 
     const assets = await getBookAssets(bookFolderPath)
 
-    const introFilePath = join(bookFolderPath, `pg${args.pgBookId}.txt.utf8`)
+    const introFilePath = join(bookFolderPath, `pg${pgBookId}.txt.utf8`)
     const intro = await getBookIntro(introFilePath)
     const hasIntro = intro !== null
 
-    const coverFilePath = join(bookFolderPath, `pg${args.pgBookId}.cover.medium.jpg`)
+    const coverFilePath = join(bookFolderPath, `pg${pgBookId}.cover.medium.jpg`)
     let hasCover = true
     try {
         await fs.access(coverFilePath)
@@ -32,7 +32,7 @@ export async function parseBookFromRdf(args: Args): Promise<BookToParse> {
     }
 
     return {
-        pgBookId: args.pgBookId,
+        pgBookId,
         rdfContent,
         assets,
         hasIntro,

@@ -6,12 +6,12 @@ import { PROVIDER_CODE } from "../constants"
 
 const parser = new DOMParser()
 
-type Args = {
+type ParseBookArgs = {
     bookToParse: BookToParse
 }
 
-export function parseBook(args: Args): Book | null {
-    const doc = parser.parseFromString(args.bookToParse.rdfContent)
+export function parseBook({ bookToParse }: ParseBookArgs): Book | null {
+    const doc = parser.parseFromString(bookToParse.rdfContent)
     const select = xpath.useNamespaces({
         rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         dcterms: "http://purl.org/dc/terms/",
@@ -39,7 +39,7 @@ export function parseBook(args: Args): Book | null {
         lang: bookLang as string,
         title: bookTitle,
         genres: bookGenres,
-        assets: args.bookToParse.assets,
+        assets: bookToParse.assets,
         authors,
     }
 }

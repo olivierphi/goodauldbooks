@@ -7,23 +7,29 @@ const DB_BATCH_SIZE_DEFAULT = 150 // we will store books in DB only every N book
 
 const prisma = new PrismaClient()
 
-type Args = {
+type TraverseGeneratedCollectionDirectoryAndSaveToImportDbArgs = {
     collectionPath: string
 }
 
-export async function traverseGeneratedCollectionDirectoryAndSaveToImportDb(args: Args): Promise<void> {
+export async function traverseGeneratedCollectionDirectoryAndSaveToImportDb({
+    collectionPath,
+}: TraverseGeneratedCollectionDirectoryAndSaveToImportDbArgs): Promise<void> {
     let currentBatch: BookToParse[] = []
 
     const saveCurrentBatch = async () => {
         await prisma.$transaction(
             currentBatch.map((bookToParse) => {
-                return prisma.rawBook.create({
-                    data: {
+                return prisma.rawBook.upsert({
+                    where: {
+                        pgBookId: bookToParse.pgBookId,
+                    },
+                    update: {},
+                    create: {
                         pgBookId: bookToParse.pgBookId,
                         assets: JSON.stringify(bookToParse.assets),
                         hasCover: bookToParse.hasCover,
                         hasIntro: bookToParse.hasIntro,
-                        intro: "",
+                        intro: bookToParse.intro,
                         rdfContent: bookToParse.rdfContent,
                     },
                 })
@@ -40,6 +46,6 @@ export async function traverseGeneratedCollectionDirectoryAndSaveToImportDb(args
         }
     }
 
-    await traverseGeneratedCollectionDirectory({ collectionPath: args.collectionPath, onRdfCallback })
+    await traverseGeneratedCollectionDirectory({ collectionPath, onRdfCallback })
     await saveCurrentBatch()
 }

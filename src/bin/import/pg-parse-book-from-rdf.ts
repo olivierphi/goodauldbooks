@@ -1,6 +1,8 @@
 import { parseBookFromRdf } from "../../domain/import/project-gutenberg/queries/parse-book-from-rdf"
 import { parseBook } from "../../domain/import/project-gutenberg/queries/parse-book"
-;(async () => {
+import { Book } from "../../domain/types"
+
+async function runScript(): Promise<Book | null> {
     if (process.argv.length < 3) {
         console.error("Mandatory RDF file path argument missing.")
         process.exit(1)
@@ -18,7 +20,9 @@ import { parseBook } from "../../domain/import/project-gutenberg/queries/parse-b
     const parsedBook = parseBook({ bookToParse })
     console.log("parsedBook=", parsedBook)
     return parsedBook
-})().then(
+}
+
+runScript().then(
     (book) => {
         console.log("Success!")
     },
