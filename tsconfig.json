@@ -16,5 +16,18 @@
     "incremental": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "ts-node": {
+    "esm": true,
+    "experimentalResolver": true,
+    "swc": true,
+    "transpileOnly": true,
+    "compilerOptions": {
+      "isolatedModules": false,
+      "moduleResolution": "NodeNext",
+      "module": "NodeNext",
+      "target": "ES2022",
+      "esModuleInterop": true
+    }
+  }
 }

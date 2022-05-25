@@ -3,7 +3,7 @@ import { traverseGeneratedCollectionDirectory } from "./traverse-rdf-library.ts"
 import { parseBookFromRdf } from "../queries/parse-book-from-rdf.ts"
 import * as Prisma from "../prisma-client/index.js"
 
-const DB_BATCH_SIZE_DEFAULT = 150 // we will store books in DB only every N books
+const DB_BATCH_SIZE_DEFAULT = 100 // we will store books in DB only every N books
 
 const prisma = new Prisma.PrismaClient()
 
@@ -40,12 +40,18 @@ export async function traverseGeneratedCollectionDirectoryAndSaveToImportDb({
     const onRdfCallback = async (rdfFilePath: string, pgBookId: number) => {
         const bookToParse = await parseBookFromRdf({ rdfFilePath, pgBookId })
         currentBatch.push(bookToParse)
+        process.stdout.write(".")
+        if (currentBatch.length % 80 === 0) {
+            process.stdout.write("\n")
+        }
         if (currentBatch.length === DB_BATCH_SIZE_DEFAULT) {
             await saveCurrentBatch()
             currentBatch = []
         }
     }
 
+    console.log(`Starting traversal of Project Gutenberg generated collection in "${collectionPath}"...`)
     await traverseGeneratedCollectionDirectory({ collectionPath, onRdfCallback })
     await saveCurrentBatch()
+    console.log("")
 }
