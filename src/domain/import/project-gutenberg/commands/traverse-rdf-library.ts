@@ -1,10 +1,10 @@
 import { EventEmitter } from "node:events"
 import * as fastGlob from "fast-glob"
-import { RDF_FILE_REGEX, EmittedEvents, RDF_FILES_COLLECTION_GLOB } from "../constants.ts"
+import { EmittedEvents, RDF_FILES_COLLECTION_GLOB, RDF_FILE_REGEX } from "../constants.ts"
 
 type TraverseGeneratedCollectionDirectoryArgs = {
     collectionPath: string
-    onRdfCallback: (rdfFilePath: string, pgBookId: number) => void
+    onRdfCallback?: (rdfFilePath: string, pgBookId: number) => void
     options?: { eventEmitter?: EventEmitter }
 }
 
@@ -26,10 +26,12 @@ export async function traverseGeneratedCollectionDirectory({
             const rdfRegexMatch = rdfFilePath.match(RDF_FILE_REGEX)
             if (rdfRegexMatch?.length) {
                 const bookId = parseInt(rdfRegexMatch[1], 10)
-                try {
-                    onRdfCallback(rdfFilePath, bookId)
-                } catch (e) {
-                    options?.eventEmitter?.emit(EmittedEvents.IMPORT_ERROR, e)
+                if (onRdfCallback) {
+                    try {
+                        onRdfCallback(rdfFilePath, bookId)
+                    } catch (e) {
+                        options?.eventEmitter?.emit(EmittedEvents.IMPORT_ERROR, e)
+                    }
                 }
                 nbBooksTraversed++
             }

@@ -8,6 +8,7 @@ export type BookAsset = {
 export type Author = {
     provider: string
     id: string
+    publicId: string
     firstName: string | null
     lastName: string | null
     birthYear: number | null
@@ -17,6 +18,7 @@ export type Author = {
 export type Book = {
     provider: string
     id: string
+    publicId: string
     title: string
     lang: string
     genres: string[]

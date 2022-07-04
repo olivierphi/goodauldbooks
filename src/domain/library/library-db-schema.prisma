@@ -12,9 +12,35 @@ model Book {
   id        Int      @id @default(autoincrement())
   publicId  String   @unique @map("public_id")
   title     String
-  subTitle  String?   @map("sub_title")
+  subTitle  String?  @map("sub_title")
   lang      String
   createdAt DateTime @default(now()) @map("created_at")
 
+  authors AuthorBooks[]
+
   @@map("book")
+}
+
+model Author {
+  id        Int      @id @default(autoincrement())
+  publicId  String   @unique @map("public_id")
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  birthYear Int?     @map("birth_year")
+  deathYear Int?     @map("death_year")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  books AuthorBooks[]
+
+  @@map("author")
+}
+
+model AuthorBooks {
+  author         Author @relation(fields: [authorPublicId], references: [publicId])
+  authorPublicId String @map("author_public_id")
+  book           Book   @relation(fields: [bookPublicId], references: [publicId])
+  bookPublicId   String @map("book_public_id")
+
+  @@id([authorPublicId, bookPublicId])
+  @@map("authors_books")
 }

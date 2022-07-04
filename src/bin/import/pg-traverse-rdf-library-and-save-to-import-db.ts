@@ -6,7 +6,18 @@ async function runScript(): Promise<void> {
         process.exit(1)
     }
     const collectionPath = process.argv[2]
-    await traverseGeneratedCollectionDirectoryAndSaveToImportDb({ collectionPath })
+    console.log(`Starting traversal of Project Gutenberg generated collection in "${collectionPath}"...`)
+    await traverseGeneratedCollectionDirectoryAndSaveToImportDb({ collectionPath, onRdfCallback })
+    console.log("")
+}
+
+let booksCounter = 0
+const onRdfCallback = async (_rdfFilePath: string, _pgBookId: number) => {
+    process.stdout.write(".")
+    booksCounter++
+    if (booksCounter % 80 === 0) {
+        process.stdout.write("\n")
+    }
 }
 
 export default {}

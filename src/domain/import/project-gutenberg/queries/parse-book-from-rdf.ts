@@ -1,8 +1,8 @@
-import { dirname, join } from "node:path"
 import fs from "node:fs/promises"
-import type { BookToParse } from "../types.ts"
+import { dirname, join } from "node:path"
 import type { BookAsset, BookAssetType } from "../../../library/types.ts"
 import { BOOK_ASSETS_FILES_TYPES } from "../constants.ts"
+import type { BookToParse } from "../types.ts"
 
 // /!\ This is a length in bytes, not in chars.
 // But we take the intro in a very vague way anyhow... :-)

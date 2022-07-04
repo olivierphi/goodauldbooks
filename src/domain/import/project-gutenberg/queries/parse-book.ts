@@ -1,8 +1,8 @@
 import { DOMParser } from "xmldom"
 import * as xpath from "xpath"
-import { BookToParse } from "../types.ts"
 import type { Author, Book } from "../../../library/types.ts"
 import { PROVIDER_CODE } from "../constants.ts"
+import { BookToParse } from "../types.ts"
 
 const parser = new DOMParser()
 
@@ -36,6 +36,7 @@ export function parseBook({ bookToParse }: ParseBookArgs): Book | null {
     return {
         id: bookId,
         provider: PROVIDER_CODE,
+        publicId: `${PROVIDER_CODE}:${bookId}`,
         lang: bookLang as string,
         title: bookTitle,
         genres: bookGenres,
@@ -92,6 +93,7 @@ function parseAuthor(select: xpath.XPathSelect, authorNode: Node): Author | null
     return {
         id: authorId,
         provider: PROVIDER_CODE,
+        publicId: `${PROVIDER_CODE}:${authorId}`,
         firstName: authorFirstName,
         lastName: authorLastName,
         birthYear: authorBirthYear ? parseInt(authorBirthYear, 10) : null,

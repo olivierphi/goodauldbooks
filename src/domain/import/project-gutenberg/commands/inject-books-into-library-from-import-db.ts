@@ -1,35 +1,76 @@
+import { PrismaClient as LibraryPrismaClient, PrismaPromise } from "../../../library/prisma-client/index.js"
+import { Author, Book } from "../../../library/types.ts"
 import { PrismaClient as ProjectGutenbergImportPrismaClient, RawBook } from "../prisma-client/index.js"
-import { PrismaClient as LibraryPrismaClient } from "../../../library/prisma-client/index.js"
 import { parseBook } from "../queries/parse-book.ts"
-import { Book } from "../../../library/types.ts"
 
 const DB_BATCH_SIZE_DEFAULT = 100 // we will read (and store) books from DB only every N books
 
 const prismaProjectGutenbergImport = new ProjectGutenbergImportPrismaClient()
 const prismaLibrary = new LibraryPrismaClient()
 
-type InjectBooksIntoLibraryFromImportDbArgs = {}
+type InjectBooksIntoLibraryFromImportDbArgs = {
+    onParsedBookCallback?: (book: Book) => void
+}
 
-export async function injectBooksIntoLibraryFromImportDb({}: InjectBooksIntoLibraryFromImportDbArgs): Promise<void> {
+export async function injectBooksIntoLibraryFromImportDb({
+    onParsedBookCallback,
+}: InjectBooksIntoLibraryFromImportDbArgs): Promise<void> {
     let currentBatch: Book[] = []
 
     const saveCurrentBatch = async () => {
-        await prismaLibrary.$transaction(
-            currentBatch.map((book) => {
-                const publicId = `${book.provider}:${book.id}`
-                return prismaLibrary.book.upsert({
+        const prismaPromises: PrismaPromise<any>[] = []
+        for (const book of currentBatch) {
+            // Upsert authors:
+            prismaPromises.push(
+                ...book.authors.map((author: Author) => {
+                    return prismaLibrary.author.upsert({
+                        where: { publicId: author.publicId },
+                        update: {},
+                        create: {
+                            publicId: author.publicId,
+                            firstName: author.firstName,
+                            lastName: author.lastName,
+                            birthYear: author.birthYear,
+                            deathYear: author.deathYear,
+                        },
+                    })
+                })
+            )
+            // Upsert Book:
+            prismaPromises.push(
+                prismaLibrary.book.upsert({
                     where: {
-                        publicId,
+                        publicId: book.publicId,
                     },
                     update: {},
                     create: {
-                        publicId,
+                        publicId: book.publicId,
                         title: book.title,
                         lang: book.lang,
                     },
                 })
-            })
-        )
+            )
+            // Upsert Authors<->Book relations:
+            prismaPromises.push(
+                ...book.authors.map((author: Author) => {
+                    return prismaLibrary.authorBooks.upsert({
+                        where: {
+                            authorPublicId_bookPublicId: {
+                                bookPublicId: book.publicId,
+                                authorPublicId: author.publicId,
+                            },
+                        },
+                        update: {},
+                        create: {
+                            bookPublicId: book.publicId,
+                            authorPublicId: author.publicId,
+                        },
+                    })
+                })
+            )
+        }
+
+        await prismaLibrary.$transaction(prismaPromises)
     }
 
     console.log(`Starting injection of Project Gutenberg from import database...`)
@@ -38,18 +79,14 @@ export async function injectBooksIntoLibraryFromImportDb({}: InjectBooksIntoLibr
         if (!book) {
             continue
         }
-        process.stdout.write(".")
+        onParsedBookCallback?.(book)
         currentBatch.push(book)
-        if (currentBatch.length % 80 === 0) {
-            process.stdout.write("\n")
-        }
         if (currentBatch.length === DB_BATCH_SIZE_DEFAULT) {
             await saveCurrentBatch()
             currentBatch = []
         }
     }
     await saveCurrentBatch()
-    console.log("")
 }
 
 async function* traverseImportDatabase(): AsyncGenerator<RawBook, void, void> {
