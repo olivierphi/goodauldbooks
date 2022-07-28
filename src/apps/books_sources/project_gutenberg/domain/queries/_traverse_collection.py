@@ -1,9 +1,9 @@
 import re
-import typing as t
 from pathlib import Path
+from typing import Any, Callable, TypeAlias
 
 RDF_FILE_REGEX = re.compile(r"^pg(\d+)\.rdf$")
-OnBookRdf: t.TypeAlias = t.Callable[[int, Path], t.Any]
+OnBookRdf: TypeAlias = Callable[[int, Path], Any]
 
 
 def traverse_collection(*, base_folder: Path, on_book_rdf: OnBookRdf, traversal_limit: int = 0) -> int:

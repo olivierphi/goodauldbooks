@@ -1,63 +1,71 @@
-import zlib
+from __future__ import annotations
 
-from slugify import slugify
-from sqlalchemy import Column, Integer, String, SmallInteger, Table, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from typing import Callable
 
-Base = declarative_base()
-
-books_and_authors_association_table = Table(
-    "books_and_authors",
-    Base.metadata,
-    Column("book_id", ForeignKey("books.id"), primary_key=True, sqlite_on_conflict_unique="IGNORE"),
-    Column("author_id", ForeignKey("authors.id"), primary_key=True, sqlite_on_conflict_unique="IGNORE"),
-)
-
-books_and_genres_association_table = Table(
-    "books_and_genres",
-    Base.metadata,
-    Column("book_id", ForeignKey("books.id"), primary_key=True),
-    Column("genre_id", ForeignKey("genres.id"), primary_key=True),
-)
+from django.db import models
+from django.utils.text import slugify
 
 
-class Book(Base):
-    __tablename__ = "books"
+class Book(models.Model):
+    public_id = models.CharField(max_length=15, unique=True)
+    source = models.CharField(max_length=15)
+    # yeah, some books from Project Gutenberg have *really* long names :-)
+    title = models.CharField(max_length=500)
+    subtitle = models.CharField(max_length=500, null=True)
+    lang = models.CharField(max_length=3, null=True)
+    size = models.PositiveIntegerField(null=True)
+    slug = models.SlugField(max_length=255, unique=True)
+    assets = models.JSONField()
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    public_id = Column(String, unique=True, nullable=False)
-    slug = Column(String, unique=True, nullable=False)
-    title = Column(String, nullable=False)
-    subtitle = Column(String)
-    lang = Column(String(3), nullable=False)
+    authors = models.ManyToManyField("Author", related_name="books")
+    genres = models.ManyToManyField("Genre", related_name="books")
 
-    authors = relationship("Author", back_populates="books", secondary=books_and_authors_association_table)
-    genres = relationship("Genre", secondary=books_and_genres_association_table)
+    @property
+    def main_author(self) -> Author | None:
+        authors = self.authors.all()  # hopefully pre-fetched, if it's a books list :-)
+        return authors[0] if authors else None
 
-
-class Author(Base):
-    __tablename__ = "authors"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    public_id = Column(String, unique=True, nullable=False)
-    slug = Column(String, unique=True, nullable=False, sqlite_on_conflict_unique="IGNORE")
-    first_name = Column(String)
-    last_name = Column(String)
-    birth_year = Column(SmallInteger)
-    death_year = Column(SmallInteger)
-
-    books = relationship("Book", back_populates="authors", secondary=books_and_authors_association_table)
+    def __str__(self):
+        return f"{self.public_id}: {self.title}"
 
 
-class Genre(Base):
-    __tablename__ = "genres"
+class Author(models.Model):
+    public_id = models.CharField(max_length=15, unique=True)
+    source = models.CharField(max_length=15)
+    first_name = models.CharField(max_length=255, null=True)
+    last_name = models.CharField(max_length=255, null=True)
+    birth_year = models.SmallIntegerField(null=True)
+    death_year = models.SmallIntegerField(null=True)
+    slug = models.SlugField(max_length=255, unique=True)
 
-    id = Column(Integer, primary_key=True, autoincrement=False, sqlite_on_conflict_primary_key="IGNORE")
-    name = Column(String, unique=True, nullable=False)
-    slug = Column(String, unique=True, nullable=False)
+    def __str__(self):
+        return f"{self.public_id}: {self.first_name} {self.last_name}"
+
+
+def _genre_name_to_id_default(genre_name: str) -> int:
+    import zlib
+
+    return zlib.adler32(genre_name.encode())
+
+
+class Genre(models.Model):
+    # N.B. No auto increment on this one, we'll be in charge of generating the ID from the Genre's name
+    id = models.BigIntegerField(primary_key=True, verbose_name="ID")
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+
+    id_from_name: Callable[[str], int] = _genre_name_to_id_default
+    slug_from_name: Callable[[str], str] = slugify
 
     @classmethod
-    def from_name(cls, genre_name: str) -> "Genre":
-        id_ = zlib.adler32(genre_name.encode())
-        return Genre(id=id_, name=genre_name, slug=slugify(genre_name))
+    def from_name(cls, genre_name: str) -> Genre:
+        id_ = cls.id_from_name(genre_name)
+        return Genre(id=id_, name=genre_name, slug=cls.slug_from_name(genre_name))
+
+    def __str__(self):
+        return f"{self.id}: {self.name}"
+
+
+class BookAdditionalData(models.Model):
+    book = models.OneToOneField(Book, on_delete=models.CASCADE, primary_key=True, related_name="additional_data")
+    intro = models.TextField(null=True)

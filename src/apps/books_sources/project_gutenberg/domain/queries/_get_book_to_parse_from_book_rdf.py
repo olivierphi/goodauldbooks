@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from ..constants import BOOK_INTRO_SIZE
-from ..domain import BookToParse
+from ..types import BookToParse
 
 
 def get_book_to_parse_from_book_rdf(*, pg_book_id: int, rdf_file_path: Path) -> BookToParse:

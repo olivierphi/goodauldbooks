@@ -1,26 +1,21 @@
-import typing as t
-from enum import Enum
+from typing import Literal, NamedTuple
+
+BookAssetType = Literal["epub", "mobi", "txt"]
 
 
-class BookAssetType(Enum):
-    EPUB = "epub"
-    MOBI = "mobi"
-    TXT = "txt"
-
-
-class BookAsset(t.NamedTuple):
+class BookAsset(NamedTuple):
     type: BookAssetType
     size: int
 
 
-class Author(t.NamedTuple):
+class Author(NamedTuple):
     provider: str
     id: str
     name: str
-    first_name: t.Optional[str] = None
-    last_name: t.Optional[str] = None
-    birth_year: t.Optional[int] = None
-    death_year: t.Optional[int] = None
+    first_name: str | None = None
+    last_name: str | None = None
+    birth_year: int | None = None
+    death_year: int | None = None
 
     def full_name(self) -> str:
         res = []
@@ -31,7 +26,7 @@ class Author(t.NamedTuple):
         return " ".join(res)
 
 
-class Book(t.NamedTuple):
+class Book(NamedTuple):
     provider: str
     id: str
     title: str
@@ -40,4 +35,4 @@ class Book(t.NamedTuple):
     genres: list[str]
     assets: list[BookAsset]
     authors: list[Author]
-    intro: t.Optional[str]
+    intro: str | None
