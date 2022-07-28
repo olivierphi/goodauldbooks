@@ -78,7 +78,10 @@ def inject_generated_collection_index_into_library(
     return CollectionInjectionResult(books_processed_count, books_injected_count)
 
 
-_author_ids_cache: dict[str, int] = {}
+# For Authors we need to maintain a "slug -> auto-incremented ID" mapping...
+_created_author_ids_cache: dict[str, int] = {}
+# ... But for literary Genres we just need to maintain a list of IDs, since we're generating them deterministically:
+_created_genre_ids_cache: list[int] = []
 
 
 def _save_data_to_library(library_data: LibraryBookData):
@@ -90,7 +93,7 @@ def _save_data_to_library(library_data: LibraryBookData):
     author_ids: list[int] = []
     for author in authors:
         try:
-            author_ids.append(_author_ids_cache[author.public_id])
+            author_ids.append(_created_author_ids_cache[author.public_id])
             continue
         except KeyError:
             pass
@@ -100,17 +103,20 @@ def _save_data_to_library(library_data: LibraryBookData):
             author_id = author.id
         except IntegrityError:
             author_id = Author.objects.values_list("id").get(public_id=author.public_id)[0]
-        _author_ids_cache[author.public_id] = author_id
+        _created_author_ids_cache[author.public_id] = author_id
         author_ids.append(author.id)
     book.authors.set(author_ids)
 
     # It's a bit simpler for literary Genres, since *we* set their primary key
     genre_ids: list[int] = []
     for genre in genres:
+        if genre.id in _created_genre_ids_cache:
+            continue
         try:
             genre.save(force_insert=True)
         except IntegrityError:
             pass
+        _created_genre_ids_cache.append(genre.id)
         genre_ids.append(genre.id)
     book.genres.set(genre_ids)
 
