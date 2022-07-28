@@ -47,6 +47,14 @@ def _get_book_library_data(rdf_data: ET.Element, raw_book: BookToParse) -> Libra
         subtitle = None
 
     pg_book_id = raw_book["pg_book_id"]
+
+    book_assets = _get_book_assets(raw_book)
+
+    try:
+        size = [asset.size for asset in book_assets if asset.type == "epub"][0]
+    except IndexError:
+        size = None
+
     book = Book(
         public_id=f"{SOURCE_ID}:{pg_book_id}",
         slug=f"{SOURCE_ID}-{pg_book_id}-{slugify(title[:50] or '')}",
@@ -54,7 +62,8 @@ def _get_book_library_data(rdf_data: ET.Element, raw_book: BookToParse) -> Libra
         title=title,
         subtitle=subtitle,
         lang=lang,
-        assets=_get_book_assets(raw_book),
+        assets=book_assets,
+        size=size,
         additional_data=BookAdditionalData(intro=raw_book["intro"]),  # type: ignore
     )
     authors = _get_authors(rdf_data)

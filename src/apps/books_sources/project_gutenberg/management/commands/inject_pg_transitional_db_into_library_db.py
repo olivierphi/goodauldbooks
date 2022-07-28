@@ -27,7 +27,6 @@ class Command(BaseCommand):
             duration = round(time.monotonic() - start_time, 1)
             logger.info(f"{current_books_injected_count} books injected. In progress... ({duration}s)")
 
-        # books_processed_count, books_stored_count = index_collection_in_db(
         books_processed_count, books_injected_count = inject_generated_collection_index_into_library(
             db_con=db_con,
             traversal_limit=traversal_limit,
